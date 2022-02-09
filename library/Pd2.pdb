@@ -1,0 +1,55 @@
+HEADER    
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+ATOM      1  PD  PD1 M   1       2.617  23.012  13.458  0.00  0.00      SYST P
+ATOM      2  C1  LN1 M   2       5.978  18.848  13.468  0.00  0.00      SYST C
+ATOM      3  C2  LN1 M   2       5.813  20.267  13.619  0.00  0.00      SYST C
+ATOM      4  C3  LN1 M   2       6.934  21.080  13.749  0.00  0.00      SYST C
+ATOM      5  C4  LN1 M   2       6.771  22.445  13.894  0.00  0.00      SYST C
+ATOM      6  C5  LN1 M   2       5.525  23.010  13.913  0.00  0.00      SYST C
+ATOM      7  N6  LN1 M   2       4.448  22.229  13.788  0.00  0.00      SYST N
+ATOM      8  C7  LN1 M   2       4.577  20.873  13.643  0.00  0.00      SYST C
+ATOM      9  H8  LN1 M   2       7.912  20.652  13.736  0.00  0.00      SYST H
+ATOM     10  H9  LN1 M   2       7.628  23.084  13.995  0.00  0.00      SYST H
+ATOM     11  H10 LN1 M   2       5.416  24.062  14.025  0.00  0.00      SYST H
+ATOM     12  H11 LN1 M   2       3.675  20.286  13.546  0.00  0.00      SYST H
+ATOM     13  C1  LN2 M   3       2.263  21.385   8.411  0.00  0.00      SYST C
+ATOM     14  C2  LN2 M   3       2.701  22.413   9.312  0.00  0.00      SYST C
+ATOM     15  C3  LN2 M   3       3.142  23.631   8.806  0.00  0.00      SYST C
+ATOM     16  C4  LN2 M   3       3.563  24.618   9.676  0.00  0.00      SYST C
+ATOM     17  C5  LN2 M   3       3.552  24.418  11.030  0.00  0.00      SYST C
+ATOM     18  N6  LN2 M   3       3.129  23.248  11.518  0.00  0.00      SYST N
+ATOM     19  C7  LN2 M   3       2.705  22.250  10.680  0.00  0.00      SYST C
+ATOM     20  H8  LN2 M   3       3.155  23.800   7.751  0.00  0.00      SYST H
+ATOM     21  H9  LN2 M   3       3.906  25.563   9.298  0.00  0.00      SYST H
+ATOM     22  H10 LN2 M   3       3.879  25.188  11.687  0.00  0.00      SYST H
+ATOM     23  H11 LN2 M   3       2.372  21.323  11.124  0.00  0.00      SYST H
+ATOM     24  C1  LN3 M   4      -2.673  22.657  12.146  0.00  0.00      SYST C
+ATOM     25  C2  LN3 M   4      -1.576  23.481  12.580  0.00  0.00      SYST C
+ATOM     26  C3  LN3 M   4      -1.732  24.824  12.885  0.00  0.00      SYST C
+ATOM     27  C4  LN3 M   4      -0.662  25.600  13.302  0.00  0.00      SYST C
+ATOM     28  C5  LN3 M   4       0.579  25.026  13.416  0.00  0.00      SYST C
+ATOM     29  N6  LN3 M   4       0.743  23.725  13.123  0.00  0.00      SYST N
+ATOM     30  C7  LN3 M   4      -0.300  22.962  12.715  0.00  0.00      SYST C
+ATOM     31  H8  LN3 M   4      -2.699  25.289  12.801  0.00  0.00      SYST H
+ATOM     32  H9  LN3 M   4      -0.747  26.648  13.548  0.00  0.00      SYST H
+ATOM     33  H10 LN3 M   4       1.429  25.614  13.740  0.00  0.00      SYST H
+ATOM     34  H11 LN3 M   4      -0.090  21.931  12.500  0.00  0.00      SYST H
+ATOM     35  C1  LN4 M   5       0.527  20.257  17.730  0.00  0.00      SYST C
+ATOM     36  C2  LN4 M   5       1.270  21.390  17.247  0.00  0.00      SYST C
+ATOM     37  C3  LN4 M   5       1.834  22.327  18.099  0.00  0.00      SYST C
+ATOM     38  C4  LN4 M   5       2.546  23.412  17.612  0.00  0.00      SYST C
+ATOM     39  C5  LN4 M   5       2.696  23.562  16.257  0.00  0.00      SYST C
+ATOM     40  N6  LN4 M   5       2.154  22.661  15.420  0.00  0.00      SYST N
+ATOM     41  C7  LN4 M   5       1.457  21.599  15.892  0.00  0.00      SYST C
+ATOM     42  H8  LN4 M   5       1.725  22.223  19.165  0.00  0.00      SYST H
+ATOM     43  H9  LN4 M   5       2.998  24.159  18.247  0.00  0.00      SYST H
+ATOM     44  H10 LN4 M   5       3.249  24.402  15.855  0.00  0.00      SYST H
+ATOM     45  H11 LN4 M   5       1.054  20.923  15.160  0.00  0.00      SYST H
+END
