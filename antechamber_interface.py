@@ -4,16 +4,12 @@ from tempfile import mkdtemp
 import os
 import shutil
 
-
-
-
 def antechamber(pdbfile, charge, output):
     print("[ ] Interfacing antechamber")
     pwd = os.getcwd()
     tmpdir_path = mkdtemp()
     os.chdir(tmpdir_path)
     shutil.copyfile(f'{pwd:s}/{pdbfile:s}', 'temp.pdb')
-
 
     File = open("tleap.in", "w")
     File.write("source leaprc.gaff\n")

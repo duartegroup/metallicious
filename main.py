@@ -2,34 +2,15 @@ import warnings
 
 warnings.filterwarnings('ignore')
 import os
-
-import gromacs
-from gromacs.cbook import edit_mdp
-import nglview
 import MDAnalysis
-import pandas as pd
-import re
-
 import numpy as np
-
 import networkx as nx
 
 from networkx.algorithms import isomorphism
-
-import MDAnalysis as mda
 from MDAnalysis.analysis import align
-from MDAnalysis.analysis.rms import rmsd
-from MDAnalysis.analysis.distances import distance_array
 import argparse
-
-# input
-
 from itertools import permutations
-
 import parmed as pmd
-
-from cgbind import Cage
-
 import shutil
 from tempfile import mkdtemp
 
@@ -649,8 +630,8 @@ def get_args():
     parser.add_argument("-name", default='UNK', help="trajectory (traj_comp.xtc)")
     parser.add_argument("-smiles", default=None, help="Smiles of the linker")
     parser.add_argument("-arch_name", default=None, help="Architecture")
-    parser.add_argument("-metal", default='UNK', help="Metal name")
-    parser.add_argument("-charge", default='UNK', help="Metal charge")
+    parser.add_argument("-metal", default='Pd', help="Metal name")
+    parser.add_argument("-charge", default='2', help="Metal charge")
 
     parser.add_argument("-o", default='cage.gro', help="Output coordination file")
     parser.add_argument("-ot", default='cage.top', help="Output topology file")
