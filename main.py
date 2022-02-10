@@ -68,7 +68,6 @@ class cgbind2gmx():
     def __init__(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None, name_of_binding_side=None,
                  cage_cgbind=None, smiles=None, arch_name=None, output_topol=None, output_coords=None):
 
-        print("We start the program")
         print(os.path.dirname(__file__))
 
         if output_topol is not None:
@@ -77,21 +76,8 @@ class cgbind2gmx():
         if output_coords is not None:
             self.output_coords = output_coords
 
-
         self.tmp_directory()
         print("temp dir", self.tmpdir_path)
-
-        '''
-        if smiles is not None:
-            #assert TODO
-            self.initilize_from_smiles(smiles, arch_name, metal_name, metal_charge)
-        elif cage_cgbind is not None:
-            None
-        elif cage_file is not None:
-            None
-        else:
-            print("[] You need add output")
-        '''
 
     def from_cgbind(self): #TODO
         os.chdir(self.tmpdir_path)
@@ -116,7 +102,7 @@ class cgbind2gmx():
         shutil.copy('cage.gro', f'{self.path:s}/{self.output_coords:s}')
         shutil.copy('cage.top', f'{self.path:s}/{self.output_topol:s}')
         os.chdir(self.path)
-        #shutil.rmtree(self.tmpdir_path)
+        shutil.rmtree(self.tmpdir_path)
 
 
     def construct_cage(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None, name_of_binding_side=None,):
@@ -598,25 +584,10 @@ class cgbind2gmx():
                 self.topol_new.dihedral_types.append(type_to_assign)
                 print("      [b] New dihedral:",dihedral_fp.atom1.name,"-",dihedral_fp.atom2.name, mapping_fp_to_new[dihedral_fp.atom1.idx], mapping_fp_to_new[dihedral_fp.atom2.idx], mapping_fp_to_new[dihedral_fp.atom3.idx], type_to_assign)
 
-                """
-                print("              ", topol_fp.atoms[dihedral_fp.atom1.idx])
-                print("              ", topol_fp.atoms[dihedral_fp.atom2.idx])
-                print("              ", topol_fp.atoms[dihedral_fp.atom3.idx])
-                print("              ", topol_fp.atoms[dihedral_fp.atom4.idx])
-                """
-
-                atom1= self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom1.idx]]
-                atom2= self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom2.idx]]
-                atom3= self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom3.idx]]
-                atom4= self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
-
-                """"
-                print("              [ ] Mapping to:")
-                print("              ", atom1)
-                print("              ", atom2)
-                print("              ", atom3)
-                print("              ", atom4)
-                """
+                atom1 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom1.idx]]
+                atom2 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom2.idx]]
+                atom3 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom3.idx]]
+                atom4 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
 
                 self.topol_new.dihedrals.append(pmd.topologyobjects.Dihedral(atom1, atom2, atom3, atom4, type=type_to_assign))
 
