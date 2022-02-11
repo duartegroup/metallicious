@@ -30,5 +30,7 @@ def antechamber(pdbfile, charge, output):
     parm.save('topol.top', format='gromacs')
     shutil.copyfile('topol.top', f'{pwd:s}/{output:s}')
     print("[ ] Molecule parametrized")
+
+
     os.chdir(pwd)
     shutil.rmtree(tmpdir_path)

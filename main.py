@@ -1,6 +1,6 @@
 import warnings
-
 warnings.filterwarnings('ignore')
+
 import os
 import MDAnalysis
 import numpy as np
@@ -61,6 +61,7 @@ class cgbind2gmx():
     topol_new = None # this is our new topology
     n_metals = None
     n_ligands = None
+    name_of_binding_side=None
 
     output_topol = "cage.top"
     output_coords = "cage.gro"
@@ -88,8 +89,14 @@ class cgbind2gmx():
         self.construct_cage(cage_file='cage.xyz', ligand_file='linker.top', metal_name=metal, metal_charge=metal_charge)
         self.clean_up()
 
-    def from_coords(self): #TODO
+    def from_coords(self, cage_file, ligand_file, metal_name, metal_charge):
+
+        shutil.copy(cage_file, f'{self.tmpdir_path:s}/{cage_file:s}')
+        shutil.copy(ligand_file, f'{self.tmpdir_path:s}/{ligand_file:s}')
         os.chdir(self.tmpdir_path)
+        self.construct_cage(cage_file=cage_file, ligand_file=ligand_file, metal_name=metal_name, metal_charge=metal_charge)
+        self.clean_up()
+
 
     def tmp_directory(self):
         self.path = os.getcwd()
@@ -143,7 +150,7 @@ class cgbind2gmx():
         syst = MDAnalysis.Universe('linker.xyz')
         syst.atoms.write('linker.pdb')
 
-        print("[ ] Calling antechamber to parametrize linker")
+        print("[ ] Calling antechamber to parametrize linker") # TODO, that should not be hidden here
         antechamber('linker.pdb', linker.charge, 'linker.top')
 
 
@@ -176,10 +183,10 @@ class cgbind2gmx():
 
 
     def load_fingerprint(self, name_of_binding_side):
-        if name_of_binding_side is None:
+        if self.name_of_binding_side is None:
             self.name_of_binding_side = self.guess_fingerprint()
-        else:
-            self.name_of_binding_side = name_of_binding_side  # TODO check if it exists
+        #else:
+        #    self.name_of_binding_side = name_of_binding_side  # TODO check if it exists
 
         # Input
         self.topol_fp = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.top')
@@ -283,6 +290,7 @@ class cgbind2gmx():
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
 
         if len(G_sub_cages) > len(G_fingerprint_subs) and guessing:
+            print("Not the same number of sites", guessing)
             return None, 1e10
         elif len(G_sub_cages) > len(G_fingerprint_subs) and not guessing:
             print("Not the same number of sites", guessing)
@@ -293,6 +301,7 @@ class cgbind2gmx():
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
                 if not len(G_fingerprint_subs[0]) < len(G_sub_cages[a]):
+                    print("not subgroup", guessing)
                     return None, 1e10
             else:
                 # Check if cutted ligands from cage are larger then the ligands in finerprint (they should be if cutoff is 10!)
@@ -597,12 +606,13 @@ def get_args():
     parser.add_argument("-f", help="Structure pf the cage ")
     parser.add_argument("-linker_topol", help="Topology of the linker ") # TODO
     parser.add_argument("-linker_coords", help="Structure of the linker ")  # TODO
+    parser.add_argument("-fingerprint", default=None, help="Structure of the linker ")  # TODO
 
     parser.add_argument("-name", default='UNK', help="trajectory (traj_comp.xtc)")
     parser.add_argument("-smiles", default=None, help="Smiles of the linker")
     parser.add_argument("-arch_name", default=None, help="Architecture")
     parser.add_argument("-metal", default='Pd', help="Metal name")
-    parser.add_argument("-charge", default='2', help="Metal charge")
+    parser.add_argument("-metal_charge", default='2', help="Metal charge")
 
     parser.add_argument("-o", default='cage.gro', help="Output coordination file")
     parser.add_argument("-ot", default='cage.top', help="Output topology file")
@@ -614,16 +624,17 @@ if __name__ == '__main__':
     args = get_args()
     cgbind2gmx = cgbind2gmx(output_coords=args.o, output_topol=args.ot)
 
-    if args.smiles is not None and args.arch_name is not None and args.metal is not None and args.charge is not None:
-        cgbind2gmx.from_smiles(args.smiles, args.arch_name, args.metal, int(args.charge))
-    elif args.f is not None:
-        None
+    if args.fingerprint is not None:
+        cgbind2gmx.name_of_binding_side = args.fingerprint
+
+    if args.smiles is not None and args.arch_name is not None and args.metal is not None and args.metal_charge is not None:
+        cgbind2gmx.from_smiles(args.smiles, args.arch_name, args.metal, int(args.metal_charge))
+    elif args.f is not None and args.linker_topol is not None and args.metal is not None and args.metal_charge is not None:
+        cgbind2gmx.from_coords(args.f, args.linker_topol, args.metal, int(args.metal_charge))
     else:
         print("One of the three values needs to be specified:")
         print('a) smiles, arch_name, metal, charge')
         print("b) f, linker_topol, metal, charge")
-
-
 
 
     #cgbind2gmx(cage_file="/media/piskorz/Oxford/Zincage/big_cage/cage.pdb", ligand_file='/media/piskorz/Oxford/Zincage/parameters/large_ligand/ZnL.top',
