@@ -8,6 +8,8 @@ import networkx as nx
 
 from networkx.algorithms import isomorphism
 from MDAnalysis.analysis import align
+from MDAnalysis.lib.distances import distance_array
+
 import argparse
 from itertools import permutations
 import parmed as pmd
@@ -54,7 +56,6 @@ class cgbind2gmx():
     ligand = None
     metal_name = None
     metal_charge =None
-    number_ligands_bound = 0
     topol_fp = None
     syst_fingerprint = None
     metal_indices =None
@@ -177,10 +178,21 @@ class cgbind2gmx():
 
         # Find how many ligands are bound to single metal:
         metal_index = self.metal_indices[0] # TODO check if all have the same number of ligands bound to single side
+
+    def find_bound_ligands_nx(self,metal_index, cutoff=10, cutoff_covalent=3):
         cut_sphere = self.cage.select_atoms(f'around {cutoff:f} index {metal_index:d}')
         G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
-        self.number_ligands_bound = len(list(nx.connected_components(G_cage)))  # TODO
+        nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
+        G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
 
+        G_sub_cages_bound = []
+        for G_sub_cage in G_sub_cages:
+            clusters_of_atoms = self.cage.atoms[G_sub_cage]
+            metal = self.cage.atoms[metal_index]
+            if np.min(distance_array(clusters_of_atoms.positions, metal.position)) < cutoff_covalent:
+                G_sub_cages_bound.append(G_sub_cage)
+
+        return G_sub_cages_bound
 
     def load_fingerprint(self, name_of_binding_side):
         if self.name_of_binding_side is None:
@@ -281,32 +293,39 @@ class cgbind2gmx():
         nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint.atoms}, "name")
         G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
 
-        print("[ ] Mapping fingerprint to metal center:", metal_index)
+        print("     [ ] Mapping fingerprint to metal center:", metal_index)
+        '''
         cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
         G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
         nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
         G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
+        '''
 
-        if len(G_sub_cages) < len(G_fingerprint_subs) and guessing:
-            print("Not the same number of sites", guessing)
+        G_sub_cages = self.find_bound_ligands_nx(metal_index)
+        number_ligands_bound = len(G_sub_cages)
+
+        print("         Number of ligands bound to metal", number_ligands_bound)
+
+        if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
+            print("[!] Not the same number of sites", guessing)
             return None, 1e10
-        elif len(G_sub_cages) < len(G_fingerprint_subs) and not guessing:
-            print("Not the same number of sites", guessing)
+        elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
+            print("[!] Not the same number of sites", guessing)
             raise
 
         selected_atoms = [metal_index]
-        for a in range(self.number_ligands_bound):
+        for G_sub_cage in G_sub_cages:
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
-                if not len(G_fingerprint_subs[0]) < len(G_sub_cages[a]):
-                    print("not subgroup", guessing)
+                if not len(G_fingerprint_subs[0]) < len(G_sub_cage):
+                    print("not subgroup", len(G_fingerprint_subs[0]), len(G_sub_cage))
                     return None, 1e10
             else:
                 # Check if cutted ligands from cage are larger then the ligands in finerprint (they should be if cutoff is 10!)
-                assert len(G_fingerprint_subs[0]) < len(G_sub_cages[a])
+                assert len(G_fingerprint_subs[0]) < len(G_sub_cage)
 
-            ismags = nx.isomorphism.ISMAGS(G_sub_cages[a], G_fingerprint_subs[0],
+            ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_subs[0],
                                            node_match=lambda n1, n2: n1['name'] == n2['name'])
 
             largest_common_subgraph = list(ismags.largest_common_subgraph())
@@ -320,12 +339,12 @@ class cgbind2gmx():
 
             selected_atoms += largest_common_subgraph[0].keys()
 
+        cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
         connected_cut_system = cut_sphere.select_atoms("index " + " ".join(map(str, selected_atoms)))
 
         G_site = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(connected_cut_system.atoms, connected_cut_system.atoms.positions))
         nx.set_node_attributes(G_site, {atom.index: atom.name[0] for atom in connected_cut_system.atoms}, "name")
-
         G_site_subs = [G_site.subgraph(a) for a in nx.connected_components(G_site)]
 
         best_rmsd = 1e10
@@ -335,28 +354,18 @@ class cgbind2gmx():
         for a, b in enumerate(connected_cut_system.indices):
             indecies2number[b] = a
 
-        permutations_list = permutations(range(self.number_ligands_bound))
+        permutations_list = permutations(range(number_ligands_bound))
 
         for perm in list(permutations_list):
-            # print("A")
             mappings = []
             for a, b in enumerate(perm):
-                # print(a, b)
                 iso = isomorphism.GraphMatcher(G_fingerprint_subs[a], G_site_subs[b],
                                                node_match=lambda n1, n2: n1['name'] == n2['name'])
-
-                # if len(list(iso.subgraph_isomorphisms_iter()))>1:
-                #    print("MORE THEN ONE")
-
-                # print(iso.is_isomorphic(), iso.mapping)
                 mappings.append([subgraph_mapping for subgraph_mapping in iso.subgraph_isomorphisms_iter()])
-
-                # whole_map = []
 
             all_possible_mappings = []
 
             def recursive(mapping, index, new_mapping):
-                # print(index, len(new_mapping))
                 if index == len(mapping):
                     all_possible_mappings.append(new_mapping)
                 else:
