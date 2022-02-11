@@ -275,13 +275,12 @@ class cgbind2gmx():
 
     #TODO assert rediculsy small ligands
 
-    def find_mapping(self, metal_index, syst_fingerprint, cutoff=10, guessing=False):
+    def find_mapping(self, metal_index, syst_fingerprint, cutoff=9, guessing=False):
         G_fingerprint = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint.atoms, syst_fingerprint.atoms.positions))
         nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint.atoms}, "name")
         G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
 
-        print("[ ] Match the center with fingerprint")
         print("[ ] Mapping fingerprint to metal center:", metal_index)
         cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
         G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
@@ -289,10 +288,10 @@ class cgbind2gmx():
         G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
 
-        if len(G_sub_cages) > len(G_fingerprint_subs) and guessing:
+        if len(G_sub_cages) < len(G_fingerprint_subs) and guessing:
             print("Not the same number of sites", guessing)
             return None, 1e10
-        elif len(G_sub_cages) > len(G_fingerprint_subs) and not guessing:
+        elif len(G_sub_cages) < len(G_fingerprint_subs) and not guessing:
             print("Not the same number of sites", guessing)
             raise
 
