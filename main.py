@@ -73,7 +73,7 @@ class cgbind2gmx():
     def __init__(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None, name_of_binding_side=None,
                  cage_cgbind=None, smiles=None, arch_name=None, output_topol=None, output_coords=None):
 
-        logger.info(os.path.dirname(__file__))
+        logger.info(f"Pathway of the library {os.path.dirname(__file__):s}")
 
         if output_topol is not None:
             self.output_topol = output_topol
@@ -83,7 +83,7 @@ class cgbind2gmx():
 
         self.tmp_directory()
         logger.info('Current directory:' )
-        logger.info('Created temporary directory:', self.tmpdir_path)
+        logger.info(f'Created temporary directory: {self.tmpdir_path:s}')
 
     def from_cgbind(self): #TODO
         os.chdir(self.tmpdir_path)
@@ -157,11 +157,11 @@ class cgbind2gmx():
 
             self.adjust_dihedrals(mapping_fp_to_new)
 
-        logger.info('saving as ', self.output_topol)
+        logger.info('Saving as {self.output_topol:s}')
         self.topol_new.write("temp_topol.top") #for some reason I cannot just save it to other formats immediatly TODO
         topol = pmd.load_file("temp_topol.top")
         topol.save(self.output_topol, overwrite=True)
-        logger.info('done')
+        logger.info('Finished')
 
     def create_cage_and_linker_cgbind(self, smiles, arch_name, metal, metal_charge):
         '''
@@ -212,19 +212,23 @@ class cgbind2gmx():
         self.metal_indices = [a for a, name in enumerate(self.cage.atoms.names) if
                          name[:len(self.metal_name)].upper() == self.metal_name]
         self.n_metals = len(self.metal_indices)
+
+
         logger.info(self.metal_indices)
         logger.info(self.metal_name)
-        logger.info("[test]", (len(self.cage.atoms) - self.n_metals) % len(self.ligand.atoms), len(self.cage.atoms),
-                                                                                          self.n_metals, len(self.ligand.atoms))
+        logger.info(f"[test {(len(self.cage.atoms) - self.n_metals) % len(self.ligand.atoms):} {len(self.cage.atoms):} "
+                    f"{self.n_metals:} {len(self.ligand.atoms):}")
         assert (len(self.cage.atoms) - self.n_metals) % len(self.ligand.atoms) == 0
         self.n_ligands = int((len(self.cage.atoms) - self.n_metals) / len(self.ligand.atoms))
 
 
-        # Find the lowest distance between metal sites
-        mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
+        # Find the lowest distance between metal sites, if there are more than 1
+        if self.n_metals>1:
+            mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
+            self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1
 
-        self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1
-        logger.info("The distance between closest metals:", self.m_m_cutoff)
+
+        logger.info(f"The distance between closest metals: {self.m_m_cutoff:f}")
         logger.info(f"Detected M{self.n_metals:d}L{self.n_ligands:d} cage")
 
         # Find how many ligands are bound to single metal:
@@ -245,13 +249,19 @@ class cgbind2gmx():
         nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
         G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
 
+        closest_atoms_string = f"Closest atoms around {metal_index:d}:"
         G_sub_cages_bound = []
         for G_sub_cage in G_sub_cages:
             clusters_of_atoms = self.cage.atoms[G_sub_cage]
             metal = self.cage.atoms[metal_index]
-            if np.min(distance_array(clusters_of_atoms.positions, metal.position)) < cutoff_covalent:
+
+            all_metal_cluster_distances = distance_array(clusters_of_atoms.positions, metal.position)
+            if np.min(all_metal_cluster_distances) < cutoff_covalent:
                 G_sub_cages_bound.append(G_sub_cage)
 
+                temp_atom = clusters_of_atoms.atoms[np.argmin(all_metal_cluster_distances)]
+                closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {np.min(all_metal_cluster_distances):f} A"
+        logger.info(closest_atoms_string)
         return G_sub_cages_bound
 
     def load_fingerprint(self, name_of_binding_side):
@@ -332,7 +342,7 @@ class cgbind2gmx():
                 # print(len(new_ligands),new_ligands )
             else:
                 logger.info("The subgraphs are not isomorphic, are you sure these are the same molecules?")
-                logger.info("Number of atoms:", len(Gsub), len(G1))
+                logger.info(f"Number of atoms: {len(Gsub):d}, {len(G1):d}")
                 raise Error
 
         new_cage = MDAnalysis.Merge(*new_ligands)  # , dimensions=crystal.dimensions)
@@ -350,11 +360,11 @@ class cgbind2gmx():
 
         metal_index = self.metal_indices[0]
 
-        logger.info("Trying to guess which site it is:", finerprints_names)
+        logger.info(f"Trying to guess which site it is: {finerprints_names:}")
         rmsd_best = 1e10
         name_of_binding_side = None
         for finerprint_name in finerprints_names:
-            logger.info("[ ] Guessing fingerprint", finerprint_name)
+            logger.info(f"[ ] Guessing fingerprint {finerprint_name:s}")
             syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{finerprint_name:s}.pdb")
             mapping_fp_to_new, rmsd = self.find_mapping(metal_index, syst_fingerprint, guessing=True, cutoff=self.m_m_cutoff)
             if rmsd < rmsd_best:
@@ -362,7 +372,7 @@ class cgbind2gmx():
                 name_of_binding_side = finerprint_name
             logger.info(f"    [ ] RMSD {rmsd:f}")
 
-        logger.info("[+] Best fingerprint", name_of_binding_side, "rmsd", rmsd_best)
+        logger.info(f"[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
         if rmsd_best > 1.0:
             logger.info("[!] Rmsd is quite large, want to proceed?") #TODO
         return name_of_binding_side
@@ -375,7 +385,7 @@ class cgbind2gmx():
         nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint.atoms}, "name")
         G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
 
-        logger.info("     [ ] Mapping fingerprint to metal center:", metal_index)
+        logger.info(f"     [ ] Mapping fingerprint to metal center: {metal_index:d}")
         '''
         cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
         G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
@@ -387,13 +397,13 @@ class cgbind2gmx():
         G_sub_cages = self.find_bound_ligands_nx(metal_index, cutoff=self.m_m_cutoff)
         number_ligands_bound = len(G_sub_cages)
 
-        logger.info("         Number of ligands bound to metal", number_ligands_bound)
+        logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
 
         if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
-            logger.info("[!] Not the same number of sites", guessing)
+            logger.info(f"[!] Not the same number of sites {guessing:}")
             return None, 1e10
         elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
-            logger.info("[!] Not the same number of sites", guessing)
+            logger.info(f"[!] Not the same number of sites {guessing:}")
             raise
 
         selected_atoms = [metal_index]
@@ -401,7 +411,7 @@ class cgbind2gmx():
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
                 if not len(G_fingerprint_subs[0]) < len(G_sub_cage):
-                    logger.info("not subgroup", len(G_fingerprint_subs[0]), len(G_sub_cage))
+                    logger.info(f"Not subgroup, becasue dismatch of size {len(G_fingerprint_subs[0]):d} < {len(G_sub_cage):d}")
                     return None, 1e10
             else:
                 # Check if cutted ligands from cage are larger then the ligands in finerprint (they should be if cutoff is 10!)
@@ -513,13 +523,15 @@ class cgbind2gmx():
         sum_of_charge_diffrences = 0
 
         for a in mapping_fp_to_new:
-            logger.info("         ", self.topol_new.atoms[mapping_fp_to_new[a]].type, self.topol_new.atoms[mapping_fp_to_new[a]].name,
-                  self.topol_new.atoms[mapping_fp_to_new[a]].charge, "-->",
-                  self.topol_fp.atoms[a].type, self.topol_fp.atoms[a].name, self.topol_fp.atoms[a].charge)
+            logger.info(f"          {self.topol_new.atoms[mapping_fp_to_new[a]].type:s} "
+                        f"{self.topol_new.atoms[mapping_fp_to_new[a]].name:s} "
+                        f"{self.topol_new.atoms[mapping_fp_to_new[a]].charge:} --> "
+                        f"{self.topol_fp.atoms[a].type, self.topol_fp.atoms[a].name:} {self.topol_fp.atoms[a].charge:}")
+
             atom = self.topol_fp.atoms[a]
 
             if atom.type not in self.topol_new.parameterset.atom_types.keys():
-                logger.info("      [^] Adding new atomtype:", atom.type)
+                logger.info(f"      [^] Adding new atomtype: {atom.type:s}")
                 atomtype = pmd.topologyobjects.AtomType(name=atom.type, number=atom.number, mass=atom.mass)
                 self.topol_new.parameterset.atom_types[atom.type] = atomtype
 
@@ -544,7 +556,7 @@ class cgbind2gmx():
                             ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
                               mapping_fp_to_new[bond_fp.atom1.idx]))):
                         if (bond_fp.type != bond_new.type):
-                            logger.info("      [o] Diffrent bond type ", bond_new.type, bond_fp.type)
+                            logger.info(f"      [o] Diffrent bond type  {bond_new.type:} {bond_fp.type:}")
                             type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
                                                                           list=self.topol_new.bond_types)
                             # if type_to_assign not in topol_new.bond_types:
@@ -570,7 +582,7 @@ class cgbind2gmx():
                             ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
                               mapping_fp_to_new[bond_fp.atom1.idx]))):
                         if (bond_fp.type != bond_new.type):
-                            logger.info("      [o] Diffrent bond type ", bond_new.type, bond_fp.type)
+                            logger.info(f"      [o] Diffrent bond type {bond_new.type:} {bond_fp.type:}")
                         found = True
                 else:
                     found = True
@@ -583,8 +595,8 @@ class cgbind2gmx():
                 type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
                                                               list=self.topol_new.bond_types)
 
-                logger.info("      [o] New bond:", mapping_fp_to_new[bond_fp.atom1.idx],
-                      mapping_fp_to_new[bond_fp.atom2.idx], type_to_assign)
+                logger.info(f"      [o] New bond: {mapping_fp_to_new[bond_fp.atom1.idx]:} "
+                            f"{mapping_fp_to_new[bond_fp.atom2.idx]:}, {type_to_assign:}")
                 # if type_to_assign not in topol_new.bond_types:
                 self.topol_new.bond_types.append(type_to_assign)
 
@@ -603,7 +615,7 @@ class cgbind2gmx():
                     if ((angle_new.atom1.idx==mapping_fp_to_new[angle_fp.atom1.idx] and angle_new.atom2.idx==mapping_fp_to_new[angle_fp.atom2.idx] and angle_new.atom3.idx==mapping_fp_to_new[angle_fp.atom3.idx]) or
                         ((angle_new.atom1.idx==mapping_fp_to_new[angle_fp.atom3.idx] and angle_new.atom2.idx==mapping_fp_to_new[angle_fp.atom2.idx] and angle_new.atom3.idx==mapping_fp_to_new[angle_fp.atom1.idx]))):
                         if (angle_fp.type!=angle_new.type):
-                            logger.info("      [o] Diffrent angle type ",angle_new.type,"->", angle_fp.type )
+                            logger.info("      [o] Diffrent angle type {angle_new.type:} -> {angle_fp.type:}")
                             #angle_new.funct = angle_fp.funct
                             #angle_new.type.k = angle_fp.type.k
                             #angle_new.type.theteq = angle_fp.type.theteq
@@ -617,11 +629,11 @@ class cgbind2gmx():
 
                         found = True
             else:
-                    logger.info("[-] Not found:", angle_fp.atom1.idx+1, angle_fp.atom2.idx+1, angle_fp.atom3.idx+1 )
-                    logger.info("              ", self.topol_fp.atoms[angle_fp.atom1.idx])
-                    logger.info("              ", self.topol_fp.atoms[angle_fp.atom2.idx])
-                    logger.info("              ", self.topol_fp.atoms[angle_fp.atom3.idx])
-                    logger.info("And you should be worry if missing")
+                    logger.info(f"[-] Not found: {angle_fp.atom1.idx+1:d} {angle_fp.atom2.idx+1:d} {angle_fp.atom3.idx+1:d}")
+                    logger.info(f"              {self.topol_fp.atoms[angle_fp.atom1.idx]:}")
+                    logger.info(f"              {self.topol_fp.atoms[angle_fp.atom2.idx]:}")
+                    logger.info(f"              {self.topol_fp.atoms[angle_fp.atom3.idx]:}")
+                    logger.info(f"And you should be worry if missing")
                     found = True
                     raise
 
@@ -630,9 +642,11 @@ class cgbind2gmx():
                 type_to_assign = pmd.topologyobjects.AngleType(angle_fp.type.k, angle_fp.type.theteq,  list = self.topol_new.angle_types )
                 #if type_to_assign not in topol_new.angle_types:
                 self.topol_new.angle_types.append(type_to_assign)
-                logger.info("new type", len(self.topol_new.angle_types))
+                logger.info(f"new type {len(self.topol_new.angle_types):}")
 
-                logger.info("      [x] New angle:",angle_fp.atom1.name,'-',angle_fp.atom2.name,'-',angle_fp.atom3.name, mapping_fp_to_new[angle_fp.atom1.idx], mapping_fp_to_new[angle_fp.atom2.idx], mapping_fp_to_new[angle_fp.atom3.idx], type_to_assign)
+                logger.info(f"      [x] New angle:{angle_fp.atom1.name:}-{angle_fp.atom2.name:}-{angle_fp.atom3.name:} "
+                            f"{mapping_fp_to_new[angle_fp.atom1.idx]:} {mapping_fp_to_new[angle_fp.atom2.idx]:} "
+                            f"{mapping_fp_to_new[angle_fp.atom3.idx]:} {type_to_assign:}")
                 #print("              ", topol_fp.atoms[angle_fp.atom1.idx])
                 #print("              ", topol_fp.atoms[angle_fp.atom2.idx])
                 #print("              ", topol_fp.atoms[angle_fp.atom3.idx])
@@ -653,9 +667,9 @@ class cgbind2gmx():
                         ((dihedral_new.atom1.idx==mapping_fp_to_new[dihedral_fp.atom4.idx] and dihedral_new.atom2.idx==mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom3.idx==mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom4.idx==mapping_fp_to_new[dihedral_fp.atom1.idx]))) and
                        (dihedral_new.type.per==dihedral_fp.type.per)):
                         if (dihedral_fp.type!=dihedral_new.type):
-                            logger.info("      [a] Diffrent Dihedral type ",dihedral_fp.atom1.name,"-",dihedral_fp.atom2.name,"-",dihedral_fp.atom3.name,"-",dihedral_fp.atom4.name)
-                            logger.info("          ", dihedral_new.type)
-                            logger.info("        ->", dihedral_fp.type)
+                            logger.info(f"      [a] Diffrent Dihedral type: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:}")
+                            logger.info(f"           {dihedral_new.type:}")
+                            logger.info(f"        -> {dihedral_fp.type:}")
 
                             type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k, per=dihedral_fp.type.per,
                                                                              phase=dihedral_fp.type.phase, scee=dihedral_fp.type.scee,
@@ -666,11 +680,11 @@ class cgbind2gmx():
 
                         found = True
             else:
-                    logger.info("[-] Not found:", dihedral_fp.atom1.idx+1, dihedral_fp.atom2.idx+1, dihedral_fp.atom3.idx+1 , dihedral_fp.atom4.idx+1 )
-                    logger.info("              ", self.topol_fp.atoms[dihedral_fp.atom1.idx])
-                    logger.info("              ", self.topol_fp.atoms[dihedral_fp.atom2.idx])
-                    logger.info("              ", self.topol_fp.atoms[dihedral_fp.atom3.idx])
-                    logger.info("              ", self.topol_fp.atoms[dihedral_fp.atom4.idx])
+                    logger.info(f"[-] Not found: {dihedral_fp.atom1.idx+1:} {dihedral_fp.atom2.idx+1:} {dihedral_fp.atom3.idx+1:} {dihedral_fp.atom4.idx+1:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom1.idx]:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom2.idx]:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom3.idx]:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom4.idx]:}")
                     logger.info("And you should be worry if missing")
                     found = True
                     raise
@@ -681,7 +695,9 @@ class cgbind2gmx():
                                                                 scnb=dihedral_fp.type.scnb, list = self.topol_new.dihedral_types)
                 #if type_to_assign not in topol_new.dihedral_types:
                 self.topol_new.dihedral_types.append(type_to_assign)
-                logger.info("      [b] New dihedral:",dihedral_fp.atom1.name,"-",dihedral_fp.atom2.name, mapping_fp_to_new[dihedral_fp.atom1.idx], mapping_fp_to_new[dihedral_fp.atom2.idx], mapping_fp_to_new[dihedral_fp.atom3.idx], type_to_assign)
+                logger.info(f"      [b] New dihedral: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:} "
+                            f"{mapping_fp_to_new[dihedral_fp.atom1.idx]:} {mapping_fp_to_new[dihedral_fp.atom2.idx]:} "
+                            f"{mapping_fp_to_new[dihedral_fp.atom3.idx]:} {type_to_assign:}")
 
                 atom1 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom1.idx]]
                 atom2 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom2.idx]]
