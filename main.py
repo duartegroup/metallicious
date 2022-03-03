@@ -225,7 +225,8 @@ class cgbind2gmx():
         # Find the lowest distance between metal sites, if there are more than 1
         if self.n_metals>1:
             mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
-            self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1
+            self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1 #this acctually does not make it better TODO
+            #self.m_m_cutoff=9
 
 
         logger.info(f"The distance between closest metals: {self.m_m_cutoff:f}")
@@ -250,6 +251,8 @@ class cgbind2gmx():
         G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
 
         closest_atoms_string = f"Closest atoms around {metal_index:d}:"
+        closest_atoms = [] # closest atoms, we assume that they are donors of electrons
+
         G_sub_cages_bound = []
         for G_sub_cage in G_sub_cages:
             clusters_of_atoms = self.cage.atoms[G_sub_cage]
@@ -261,8 +264,9 @@ class cgbind2gmx():
 
                 temp_atom = clusters_of_atoms.atoms[np.argmin(all_metal_cluster_distances)]
                 closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {np.min(all_metal_cluster_distances):f} A"
+                closest_atoms.append(temp_atom.index)
         logger.info(closest_atoms_string)
-        return G_sub_cages_bound
+        return G_sub_cages_bound, closest_atoms
 
     def load_fingerprint(self, name_of_binding_side):
         '''
@@ -394,9 +398,8 @@ class cgbind2gmx():
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
         '''
 
-        G_sub_cages = self.find_bound_ligands_nx(metal_index, cutoff=self.m_m_cutoff)
+        G_sub_cages, closest_atoms = self.find_bound_ligands_nx(metal_index, cutoff=self.m_m_cutoff)
         number_ligands_bound = len(G_sub_cages)
-
         logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
 
         if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
@@ -407,6 +410,8 @@ class cgbind2gmx():
             raise
 
         selected_atoms = [metal_index]
+
+        #
         for G_sub_cage in G_sub_cages:
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
@@ -420,16 +425,31 @@ class cgbind2gmx():
             ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_subs[0],
                                            node_match=lambda n1, n2: n1['name'] == n2['name'])
 
-            largest_common_subgraph = list(ismags.largest_common_subgraph())
+
+            # There can be many possibilities of isomorphism, not only due to the symmetry, but sometimes becasue
+            # ligand has more sites. In such case we need to make sure that closest to the metal atoms ("donors")
+            # are included
+            largest_common_subgraph = []
+            logger.info(f"There are {len(list(ismags.largest_common_subgraph())):} matching patterns")
+            for largest_common_subgraph_iter in ismags.largest_common_subgraph():
+                is_donor_included = [closest_atom in largest_common_subgraph_iter for closest_atom in closest_atoms]
+                if any(is_donor_included):
+                    largest_common_subgraph = largest_common_subgraph_iter
+                    logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
+                    break
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
-                if not len(G_fingerprint_subs[0]) == len(largest_common_subgraph[0]):
+                if len(largest_common_subgraph) == 0:
+                    return None, 1e10
+                elif not len(G_fingerprint_subs[0]) == len(largest_common_subgraph):
                     return None, 1e10
             else:
                 # Check if the subgraph is the same size as fingerprint,
-                assert len(G_fingerprint_subs[0]) == len(largest_common_subgraph[0])
+                assert len(largest_common_subgraph)>0
+                assert len(G_fingerprint_subs[0]) == len(largest_common_subgraph)
 
-            selected_atoms += largest_common_subgraph[0].keys()
+
+            selected_atoms += largest_common_subgraph.keys()
 
         cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
         connected_cut_system = cut_sphere.select_atoms("index " + " ".join(map(str, selected_atoms)))
@@ -495,6 +515,9 @@ class cgbind2gmx():
             logger.info("ERROR, more than one metal in the site")
             raise
 
+        logger.info(f"Best mapping:")
+        logger.info(f"    Mapping: {best_mapping}")
+        logger.info(f"    RMSD: {best_rmsd:}")
         return best_mapping, best_rmsd
 
     def prepare_new_topology(self):
