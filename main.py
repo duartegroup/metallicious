@@ -16,7 +16,7 @@ import parmed as pmd
 import shutil
 from tempfile import mkdtemp
 
-from log import logger
+from cgbind2pmd.log import logger
 
 
 # Taken form: https://gist.github.com/lukasrichters14/
@@ -52,7 +52,7 @@ name2mass = {'H' : 1.008,'HE' : 4.003, 'LI' : 6.941, 'BE' : 9.012,\
                  'OG' : 294}
 
 
-class cgbind2gmx():
+class cgbind2pmd():
     path = None
     tmpdir_path = None
     cage = None
@@ -751,10 +751,9 @@ def get_args():
 
 
 
-# MAKE it less louder
-if __name__ == '__main__':
+if __name__ == '__cgbind2pmd__':
     args = get_args()
-    cgbind2gmx = cgbind2gmx(output_coords=args.o, output_topol=args.ot)
+    cgbind2gmx = cgbind2pmd(output_coords=args.o, output_topol=args.ot)
 
     if args.fingerprint is not None:
         cgbind2gmx.name_of_binding_side = args.fingerprint
