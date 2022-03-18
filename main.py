@@ -1,3 +1,5 @@
+
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -16,8 +18,12 @@ import parmed as pmd
 import shutil
 from tempfile import mkdtemp
 
-from cgbind2pmd.log import logger
+try:
+    from cgbind2pmd.log import logger
+except:
+    from log import logger
 
+from copy import deepcopy
 
 # Taken form: https://gist.github.com/lukasrichters14/
 # Dictionary of all elements matched with their atomic masses.
@@ -93,14 +99,16 @@ class cgbind2pmd():
 
         self.create_cage_and_linker_cgbind(smiles, arch_name, metal, metal_charge)
         self.construct_cage(cage_file='cage.xyz', ligand_file='linker.top', metal_name=metal, metal_charge=metal_charge)
-        self.clean_up()
+        #self.clean_up()
+        os.chdir(self.path)
 
     def from_coords(self, cage_file, ligand_file, metal_name, metal_charge):
         shutil.copy(cage_file, f'{self.tmpdir_path:s}/{cage_file:s}')
         shutil.copy(ligand_file, f'{self.tmpdir_path:s}/{ligand_file:s}')
         os.chdir(self.tmpdir_path)
         self.construct_cage(cage_file=cage_file, ligand_file=ligand_file, metal_name=metal_name, metal_charge=metal_charge)
-        self.clean_up()
+        #self.clean_up()
+        os.chdir(self.path)
 
 
     def tmp_directory(self):
@@ -108,17 +116,19 @@ class cgbind2pmd():
         self.tmpdir_path = mkdtemp()
 
 
-    def clean_up(self):
+    def save(self, output_topol,output_coords):
         # copy everything TODO
-
         if not self.output_coords.endswith('.gro'): #TODO the same with the topology
-            coord = pmd.load_file(self.output_topol, 'cage.gro')
-            coord.save(f'{self.path:s}/{self.output_coords:s}', overwrite=True)
+            coord = pmd.load_file(f'{self.tmpdir_path:s}/{output_topol:s}', 'cage.gro')
+            coord.save(f'{self.path:s}/{output_coords:s}', overwrite=True)
         else:
-            shutil.copy('cage.gro', f'{self.path:s}/{self.output_coords:s}')
+            shutil.copy(f'{self.tmpdir_path:s}/cage.gro', f'{self.path:s}/{output_coords:s}')
 
-        shutil.copy(self.output_topol, f'{self.path:s}/{self.output_topol:s}') #TODO this is so stupid: it should allow all formats of parmed
-        os.chdir(self.path)
+        shutil.copy(f'{self.tmpdir_path:s}/{self.output_topol:s}', f'{self.path:s}/{output_topol:s}') #TODO this is so stupid: it should allow all formats of parmed
+        #os.chdir(self.path)
+
+
+    def close(self):
         shutil.rmtree(self.tmpdir_path)
 
 
@@ -147,15 +157,15 @@ class cgbind2pmd():
         self.prepare_new_topology()
 
         for metal_index in self.metal_indices:
-            mapping_fp_to_new, _ = self.find_mapping(metal_index, self.syst_fingerprint, cutoff=self.m_m_cutoff)
+            mapping_fp_to_new, _ = self.find_mapping(metal_index, self.syst_fingerprint, cutoff=self.ligand_cutoff)
 
-            self.adjust_charge(mapping_fp_to_new)
+            #self.adjust_charge(mapping_fp_to_new)
 
             self.adjust_bonds(mapping_fp_to_new)
 
-            self.adjust_angles(mapping_fp_to_new)
+            #self.adjust_angles(mapping_fp_to_new)
 
-            self.adjust_dihedrals(mapping_fp_to_new)
+            #self.adjust_dihedrals(mapping_fp_to_new)
 
         logger.info('Saving as {self.output_topol:s}')
         self.topol_new.write("temp_topol.top") #for some reason I cannot just save it to other formats immediatly TODO
@@ -370,10 +380,19 @@ class cgbind2pmd():
         for finerprint_name in finerprints_names:
             logger.info(f"[ ] Guessing fingerprint {finerprint_name:s}")
             syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{finerprint_name:s}.pdb")
-            mapping_fp_to_new, rmsd = self.find_mapping(metal_index, syst_fingerprint, guessing=True, cutoff=self.m_m_cutoff)
+            # we need to find what is smaller
+
+            metal_position = syst_fingerprint.atoms[0].position
+            nometal_position = syst_fingerprint.atoms[1:].positions
+            cutoff = np.min([np.max(distance_array(metal_position, nometal_position))+1.5, self.m_m_cutoff])
+
+            mapping_fp_to_new, rmsd = self.find_mapping(metal_index, syst_fingerprint, guessing=True, cutoff=cutoff)
+
+
             if rmsd < rmsd_best:
                 rmsd_best = rmsd
                 name_of_binding_side = finerprint_name
+                self.ligand_cutoff = cutoff
             logger.info(f"    [ ] RMSD {rmsd:f}")
 
         logger.info(f"[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
@@ -398,7 +417,7 @@ class cgbind2pmd():
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
         '''
 
-        G_sub_cages, closest_atoms = self.find_bound_ligands_nx(metal_index, cutoff=self.m_m_cutoff)
+        G_sub_cages, closest_atoms = self.find_bound_ligands_nx(metal_index, cutoff=cutoff)
         number_ligands_bound = len(G_sub_cages)
         logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
 
@@ -499,6 +518,8 @@ class cgbind2pmd():
                     new_new_dict[d] = new_dict[d]
 
                 # TODO REMOVE METAL,or ADD ITS INDEX!
+
+
                 reordered_system = connected_cut_system.atoms[
                     [0] + [indecies2number[value] for value in new_new_dict.values()]]  # Find where metal is
                 _, rmsd = align.alignto(syst_fingerprint, reordered_system)
@@ -517,6 +538,8 @@ class cgbind2pmd():
 
         logger.info(f"Best mapping:")
         logger.info(f"    Mapping: {best_mapping}")
+        for index1 in best_mapping:
+            logger.info(f"      Map: {index1} -> {best_mapping[index1]} ({syst_fingerprint.atoms[index1]} -> {self.cage.atoms[best_mapping[index1]]})")
         logger.info(f"    RMSD: {best_rmsd:}")
         return best_mapping, best_rmsd
 
@@ -579,12 +602,21 @@ class cgbind2pmd():
                             ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
                               mapping_fp_to_new[bond_fp.atom1.idx]))):
                         if (bond_fp.type != bond_new.type):
-                            logger.info(f"      [o] Diffrent bond type  {bond_new.type:} {bond_fp.type:}")
+                            logger.info(f"      [o] Diffrent bond type  {bond_new.type:} -> {bond_fp.type:}")
+                            logger.info(f"          Mapping ({bond_fp.atom1.idx},{bond_fp.atom2.idx}) to ({bond_new.atom1.idx:},{bond_new.atom2.idx:})")
+                            logger.info(f"          Mapping ({bond_fp.atom1.name},{bond_fp.atom2.name}) to ({bond_new.atom1.name:},{bond_new.atom2.name:})")
                             type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
                                                                           list=self.topol_new.bond_types)
-                            # if type_to_assign not in topol_new.bond_types:
+                            #if type_to_assign not in self.topol_new.bond_types:
                             self.topol_new.bond_types.append(type_to_assign)
-                            bond_new.type = bond_fp.type
+
+                            logger.info(f"          Bondtypes {len(self.topol_new.bond_types)} ({self.topol_new.bond_types})")
+                            logger.info(f"          Bondtype {bond_new.type.idx}")
+                            logger.info(f"          Bondtype {bond_fp.type.idx}")
+
+
+                            #bond_new.type = deepcopy(bond_fp.type)
+                            bond_new.type = type_to_assign #bond_fp.type
 
         logger.info("   [ ] Adding new bonds to topology")
 
@@ -751,17 +783,21 @@ def get_args():
 
 
 
-if __name__ == '__cgbind2pmd__':
+if __name__ == '__main__':
     args = get_args()
-    cgbind2gmx = cgbind2pmd(output_coords=args.o, output_topol=args.ot)
+    cgbind2gmx = cgbind2pmd()
 
     if args.fingerprint is not None:
         cgbind2gmx.name_of_binding_side = args.fingerprint
 
     if args.smiles is not None and args.arch_name is not None and args.metal is not None and args.metal_charge is not None:
         cgbind2gmx.from_smiles(args.smiles, args.arch_name, args.metal, int(args.metal_charge))
+        cgbind2gmx.save(output_coords=args.o, output_topol=args.ot)
+        cgbind2gmx.close()
     elif args.f is not None and args.linker_topol is not None and args.metal is not None and args.metal_charge is not None:
         cgbind2gmx.from_coords(args.f, args.linker_topol, args.metal, int(args.metal_charge))
+        cgbind2gmx.save(output_coords=args.o, output_topol=args.ot)
+        cgbind2gmx.close()
     else:
         print("One of the three values needs to be specified:")
         print('a) smiles, arch_name, metal, charge')
