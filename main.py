@@ -159,13 +159,13 @@ class cgbind2pmd():
         for metal_index in self.metal_indices:
             mapping_fp_to_new, _ = self.find_mapping(metal_index, self.syst_fingerprint, cutoff=self.ligand_cutoff)
 
-            #self.adjust_charge(mapping_fp_to_new)
+            self.adjust_charge(mapping_fp_to_new)
 
             self.adjust_bonds(mapping_fp_to_new)
 
-            #self.adjust_angles(mapping_fp_to_new)
+            self.adjust_angles(mapping_fp_to_new)
 
-            #self.adjust_dihedrals(mapping_fp_to_new)
+            self.adjust_dihedrals(mapping_fp_to_new)
 
         logger.info('Saving as {self.output_topol:s}')
         self.topol_new.write("temp_topol.top") #for some reason I cannot just save it to other formats immediatly TODO
@@ -431,6 +431,7 @@ class cgbind2pmd():
         selected_atoms = [metal_index]
 
         #
+        end_atoms = []
         for G_sub_cage in G_sub_cages:
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
@@ -469,6 +470,15 @@ class cgbind2pmd():
 
 
             selected_atoms += largest_common_subgraph.keys()
+
+
+            # Let's find the end atoms, they have diffrent degree: in cage they are connected, in the template not
+            G_sub_cage_degree = G_sub_cage.degree
+            G_fingerprint_subs_degree = G_fingerprint_subs[0].degree
+
+            for key in largest_common_subgraph:
+                if G_sub_cage_degree[key] != G_fingerprint_subs_degree[largest_common_subgraph[key]]:
+                    end_atoms.append(key)
 
         cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
         connected_cut_system = cut_sphere.select_atoms("index " + " ".join(map(str, selected_atoms)))
@@ -517,7 +527,7 @@ class cgbind2pmd():
                 for d in sorted(new_dict.keys()):
                     new_new_dict[d] = new_dict[d]
 
-                # TODO REMOVE METAL,or ADD ITS INDEX!
+                # TODO We assume that metal is first
 
 
                 reordered_system = connected_cut_system.atoms[
@@ -536,11 +546,26 @@ class cgbind2pmd():
             logger.info("ERROR, more than one metal in the site")
             raise
 
+
+        # Remove the end atoms from the mapping:
+
+
         logger.info(f"Best mapping:")
         logger.info(f"    Mapping: {best_mapping}")
+
+        mapping_end_atoms=[]
         for index1 in best_mapping:
             logger.info(f"      Map: {index1} -> {best_mapping[index1]} ({syst_fingerprint.atoms[index1]} -> {self.cage.atoms[best_mapping[index1]]})")
+            if best_mapping[index1] in end_atoms:
+                mapping_end_atoms.append(index1)
+                logger.info("          End atom! Will be removed")
+
         logger.info(f"    RMSD: {best_rmsd:}")
+        logger.info(f"    Removing end atoms: {end_atoms:} in fingerprint nonation: {mapping_end_atoms:}")
+        for end_atom in mapping_end_atoms:
+            best_mapping.pop(end_atom)
+
+
         return best_mapping, best_rmsd
 
     def prepare_new_topology(self):
@@ -609,11 +634,6 @@ class cgbind2pmd():
                                                                           list=self.topol_new.bond_types)
                             #if type_to_assign not in self.topol_new.bond_types:
                             self.topol_new.bond_types.append(type_to_assign)
-
-                            logger.info(f"          Bondtypes {len(self.topol_new.bond_types)} ({self.topol_new.bond_types})")
-                            logger.info(f"          Bondtype {bond_new.type.idx}")
-                            logger.info(f"          Bondtype {bond_fp.type.idx}")
-
 
                             #bond_new.type = deepcopy(bond_fp.type)
                             bond_new.type = type_to_assign #bond_fp.type
@@ -688,9 +708,9 @@ class cgbind2pmd():
                     logger.info(f"              {self.topol_fp.atoms[angle_fp.atom1.idx]:}")
                     logger.info(f"              {self.topol_fp.atoms[angle_fp.atom2.idx]:}")
                     logger.info(f"              {self.topol_fp.atoms[angle_fp.atom3.idx]:}")
-                    logger.info(f"And you should be worry if missing")
+                    logger.info(f"And you should be worry if it is not the end of fingerprint")
                     found = True
-                    raise
+                    #raise
 
             if not found:
                 #type_to_assign= angle_fp.type
@@ -740,9 +760,9 @@ class cgbind2pmd():
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom2.idx]:}")
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom3.idx]:}")
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom4.idx]:}")
-                    logger.info("And you should be worry if missing")
+                    logger.info("And you should be worry if it is not the end of fingerprint")
                     found = True
-                    raise
+                    #raise
 
             if not found:
                 type_to_assign= pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k, per=dihedral_fp.type.per,
