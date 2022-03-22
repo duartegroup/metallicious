@@ -118,15 +118,20 @@ class cgbind2pmd():
 
     def save(self, output_topol,output_coords):
         # copy everything TODO
-        if not self.output_coords.endswith('.gro'): #TODO the same with the topology
-            coord = pmd.load_file(f'{self.tmpdir_path:s}/{output_topol:s}', 'cage.gro')
-            coord.save(f'{self.path:s}/{output_coords:s}', overwrite=True)
-        else:
+
+        if output_coords.endswith('.gro'):
             shutil.copy(f'{self.tmpdir_path:s}/cage.gro', f'{self.path:s}/{output_coords:s}')
+        else:
+            coord = pmd.load_file(f'{self.tmpdir_path:s}/cage.gro')
+            coord.save(f'{self.path:s}/{output_coords:s}', overwrite=True)
 
-        shutil.copy(f'{self.tmpdir_path:s}/{self.output_topol:s}', f'{self.path:s}/{output_topol:s}') #TODO this is so stupid: it should allow all formats of parmed
-        #os.chdir(self.path)
+        self.topol_new.write(f"{self.tmpdir_path:s}/temp_topol.top")
 
+        if output_topol.endswith('.top'):
+            shutil.copy(f'{self.tmpdir_path:s}/temp_topol.top', f'{self.path:s}/{output_topol:s}')
+        else:
+            topol = pmd.load_file(f'{self.tmpdir_path:s}/temp_topol.top')
+            topol.save(f'{self.path:s}/{output_topol:s}', overwrite=True)
 
     def close(self):
         shutil.rmtree(self.tmpdir_path)
@@ -167,10 +172,8 @@ class cgbind2pmd():
 
             self.adjust_dihedrals(mapping_fp_to_new)
 
-        logger.info('Saving as {self.output_topol:s}')
-        self.topol_new.write("temp_topol.top") #for some reason I cannot just save it to other formats immediatly TODO
-        topol = pmd.load_file("temp_topol.top")
-        topol.save(self.output_topol, overwrite=True)
+        logger.info(f'Saving as {self.output_topol:s}')
+
         logger.info('Finished')
 
     def create_cage_and_linker_cgbind(self, smiles, arch_name, metal, metal_charge):
