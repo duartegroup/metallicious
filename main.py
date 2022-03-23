@@ -248,7 +248,7 @@ class cgbind2pmd():
         # Find how many ligands are bound to single metal:
         metal_index = self.metal_indices[0] # TODO check if all have the same number of ligands bound to single side
 
-    def find_bound_ligands_nx(self,metal_index, cutoff=7, cutoff_covalent=3):
+    def find_bound_ligands_nx(self,metal_index, cutoff=7, cutoff_covalent=3.0):
         '''
         Finds bound ligands to metal, assuems that atoms within cutoff_covalent (default 3) are bound to metal.
         Returns list of subgraphs of bound ligands  it does not cutoff ligands (so they can be uneven)
@@ -387,7 +387,8 @@ class cgbind2pmd():
 
             metal_position = syst_fingerprint.atoms[0].position
             nometal_position = syst_fingerprint.atoms[1:].positions
-            cutoff = np.min([np.max(distance_array(metal_position, nometal_position))+1.5, self.m_m_cutoff])
+            cutoff = np.min([np.max(distance_array(metal_position, nometal_position))+2.0, self.m_m_cutoff])
+            #cutoff = 0.5*(cutoff+self.m_m_cutoff) # we make it 75% close to metal
 
             mapping_fp_to_new, rmsd = self.find_mapping(metal_index, syst_fingerprint, guessing=True, cutoff=cutoff)
 
@@ -420,6 +421,8 @@ class cgbind2pmd():
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
         '''
 
+        print("CUTOFF", cutoff)
+        #sleep(1)
         G_sub_cages, closest_atoms = self.find_bound_ligands_nx(metal_index, cutoff=cutoff)
         number_ligands_bound = len(G_sub_cages)
         logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
@@ -427,13 +430,13 @@ class cgbind2pmd():
         if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
             logger.info(f"[!] Not the same number of sites {guessing:}")
             return None, 1e10
+
         elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
             logger.info(f"[!] Not the same number of sites {guessing:}")
             raise
 
         selected_atoms = [metal_index]
 
-        #
         end_atoms = []
         for G_sub_cage in G_sub_cages:
 
@@ -483,12 +486,17 @@ class cgbind2pmd():
                 if G_sub_cage_degree[key] != G_fingerprint_subs_degree[largest_common_subgraph[key]]:
                     end_atoms.append(key)
 
-        cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
-        connected_cut_system = cut_sphere.select_atoms("index " + " ".join(map(str, selected_atoms)))
+        # do we need this (?)
+        #cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
+        #connected_cut_system = cut_sphere.select_atoms("index " + " ".join(map(str, selected_atoms)))
+        # I think this should work just fine, no? TODO:
+        connected_cut_system =  self.cage.select_atoms("index " + " ".join(map(str, selected_atoms)))
+        print("selected", len(selected_atoms))
 
+        no_metal = connected_cut_system.select_atoms(f"not index {metal_index:d}")
         G_site = nx.Graph(
-            MDAnalysis.topology.guessers.guess_bonds(connected_cut_system.atoms, connected_cut_system.atoms.positions))
-        nx.set_node_attributes(G_site, {atom.index: atom.name[0] for atom in connected_cut_system.atoms}, "name")
+            MDAnalysis.topology.guessers.guess_bonds(no_metal.atoms, no_metal.atoms.positions))
+        nx.set_node_attributes(G_site, {atom.index: atom.name[0] for atom in no_metal.atoms}, "name")
         G_site_subs = [G_site.subgraph(a) for a in nx.connected_components(G_site)]
 
         best_rmsd = 1e10
@@ -500,16 +508,29 @@ class cgbind2pmd():
 
         permutations_list = permutations(range(number_ligands_bound))
 
+        print('adfdsafads')
+        print('adfdsafads')
+        print('adfdsafads')
+        print('qwewqeqw')
+
         for perm in list(permutations_list):
+            print('fdsafdasfasd',perm, len(perm))
             mappings = []
+
             for a, b in enumerate(perm):
+                print("comp", len(G_fingerprint_subs[a].nodes), len(G_site_subs[b].nodes))
+                print("a", [G_fingerprint_subs[a].nodes[node] for node in G_fingerprint_subs[a].nodes])
+                print("b", [G_site_subs[b].nodes[node] for node in G_site_subs[b].nodes])
+
                 iso = isomorphism.GraphMatcher(G_fingerprint_subs[a], G_site_subs[b],
                                                node_match=lambda n1, n2: n1['name'] == n2['name'])
                 mappings.append([subgraph_mapping for subgraph_mapping in iso.subgraph_isomorphisms_iter()])
 
             all_possible_mappings = []
+            print("mappings", mappings)
 
             def recursive(mapping, index, new_mapping):
+                print(len(mapping), index)
                 if index == len(mapping):
                     all_possible_mappings.append(new_mapping)
                 else:
@@ -519,6 +540,8 @@ class cgbind2pmd():
                         recursive(mapping, index + 1, copy)
 
             recursive(mappings, 0, [])
+
+            print("dasfasdfasdf",all_possible_mappings)
 
             for c in range(len(all_possible_mappings)):
                 new_dict = {}
@@ -536,12 +559,16 @@ class cgbind2pmd():
                 reordered_system = connected_cut_system.atoms[
                     [0] + [indecies2number[value] for value in new_new_dict.values()]]  # Find where metal is
                 _, rmsd = align.alignto(syst_fingerprint, reordered_system)
+                print(rmsd)
 
                 # print(rmsd)
                 if rmsd < best_rmsd:
                     best_rmsd = rmsd
                     best_mapping = new_new_dict
 
+        print(self.metal_name)
+        print(syst_fingerprint.atoms.names)
+        print(best_mapping)
         temp = np.where([syst_fingerprint.atoms.names == self.metal_name])[0]
         if len(temp) == 1:
             best_mapping[temp[0]] = metal_index
