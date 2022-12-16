@@ -1,0 +1,103 @@
+;
+;   File topol.top  was generated
+;   By user: chem1540 (20152)
+;   On host: comp0814
+;   At date: Mon. December  1 20:14:09 2022
+;
+;   This is a standalone topology file
+;
+;   Created by:
+;   ParmEd:       parametrize_new_sites.py, VERSION 3.4.3
+;   Executable:   parametrize_new_sites.py
+;   Library dir:  /usr/local/gromacs/share/gromacs/top
+;   Command line:
+;     /u/fd/chem1540/github/cgbind2pmd/parametrize_new_sites.py -metal_charge 2 -metal_name Zn -f 1sp1.pdb -keywords PBE0 D3BJ def2-SVP tightOPT freq
+;
+
+[ defaults ]
+; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+1               2               yes             0.5          0.83333333  
+
+[ atomtypes ]
+; name    at.num    mass    charge ptype  sigma      epsilon
+hc             1   1.008000  0.00000000  A     0.26495328      0.0656888
+c3             6  12.010000  0.00000000  A     0.33996695      0.4577296
+sh            16  32.060000  0.00000000  A     0.35635949          1.046
+h1             1   1.008000  0.00000000  A      0.2471353      0.0656888
+hs             1   1.008000  0.00000000  A     0.10690785      0.0656888
+
+
+[ moleculetype ]
+; Name            nrexcl
+CYS          3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr    charge       mass  typeB    chargeB      massB
+; residue    1 CYS rtp CYS q -0.0
+     1         hc      1     CYS    H0      1  0.043478   1.008000 ; qtot  0.043478
+     2         c3      1     CYS   CA1      2 -0.098989  12.010000 ; qtot -0.055511
+     3         c3      1     CYS   CB2      3  0.005811  12.010000 ; qtot -0.049700
+     4         hc      1     CYS    H3      4  0.043478   1.008000 ; qtot -0.006222
+     5         hc      1     CYS    H4      5  0.043478   1.008000 ; qtot  0.037256
+     6         sh      1     CYS   SG5      6 -0.381789  32.060000 ; qtot -0.344533
+     7         h1      1     CYS  HB26      7  0.072311   1.008000 ; qtot -0.272222
+     8         h1      1     CYS  HB37      8  0.072311   1.008000 ; qtot -0.199911
+     9         hs      1     CYS    H8      9  0.199911   1.008000 ; qtot  0.000000
+
+[ bonds ]
+;    ai     aj funct         c0         c1         c2         c3
+      2      3     1   0.15375 251793.120000
+      3      6     1   0.18435 178824.160000
+      1      2     1   0.10969 276646.080000
+      2      4     1   0.10969 276646.080000
+      2      5     1   0.10969 276646.080000
+      3      7     1   0.10969 276646.080000
+      3      8     1   0.10969 276646.080000
+      6      9     1   0.13473 244261.920000
+
+[ pairs ]
+;    ai     aj funct         c0         c1         c2         c3
+      1      6     1
+      1      7     1
+      1      8     1
+      2      9     1
+      4      6     1
+      4      7     1
+      4      8     1
+      5      6     1
+      5      7     1
+      5      8     1
+      7      9     1
+      8      9     1
+
+[ angles ]
+;    ai     aj     ak funct         c0         c1         c2         c3
+      2      3      6     1   113.1300485 505.427200
+      1      2      3     1   109.8000471 387.438400
+      1      2      4     1   107.5800459 329.699200
+      1      2      5     1   107.5800459 329.699200
+      2      3      7     1   109.5600471 388.275200
+      2      3      8     1   109.5600471 388.275200
+      3      2      4     1   109.8000471 387.438400
+      3      2      5     1   109.8000471 387.438400
+      3      6      9     1   96.4000413 372.376000
+      4      2      5     1   107.5800459 329.699200
+      6      3      7     1   108.4200467 351.456000
+      6      3      8     1   108.4200467 351.456000
+      7      3      8     1   108.4600466 328.025600
+
+[ dihedrals ]
+;    ai     aj     ak     al funct         c0         c1         c2         c3         c4         c5
+      1      2      3      6     1  0.0000000  0.6508444  3
+      1      2      3      7     1  0.0000000  0.6508444  3
+      1      2      3      8     1  0.0000000  0.6508444  3
+      2      3      6      9     1  0.0000000  1.0460000  3
+      4      2      3      6     1  0.0000000  0.6508444  3
+      4      2      3      7     1  0.0000000  0.6508444  3
+      4      2      3      8     1  0.0000000  0.6508444  3
+      5      2      3      6     1  0.0000000  0.6508444  3
+      5      2      3      7     1  0.0000000  0.6508444  3
+      5      2      3      8     1  0.0000000  0.6508444  3
+      7      3      6      9     1  0.0000000  1.0460000  3
+      8      3      6      9     1  0.0000000  1.0460000  3
+

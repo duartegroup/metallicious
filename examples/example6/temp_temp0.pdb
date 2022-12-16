@@ -1,0 +1,92 @@
+HEADER    
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+COMPND    FAWCEN02_clean
+CRYST1   14.716   14.716   14.716 109.47 109.47 109.47 P 1           1
+HETATM    1  H   UNL X   1       4.759   9.561   5.047  1.00  0.00      SYST H  
+HETATM    2  C   UNL X   1       4.104  10.218   4.985  1.00  0.00      SYST C  
+HETATM    3  N   UNL X   1       2.995  10.151   4.201  1.00  0.00      SYST N  
+ATOM      4  H   UNK X   4       0.982  11.251   2.771  1.00  0.00      SYST H  
+ATOM      5  H   UNK X   5       0.193  11.207   4.456  1.00  0.00      SYST H  
+ATOM      6  H   UNK X   8      -3.269  -0.164  11.068  1.00  0.00      SYST H  
+HETATM    7  H   UNL X   1      -0.403   8.171   1.634  1.00  0.00      SYST H  
+HETATM    8  C   UNL X   1      -0.444   8.006   2.549  1.00  0.00      SYST C  
+HETATM    9  N   UNL X   1       0.597   8.121   3.415  1.00  0.00      SYST N  
+HETATM   10  H   UNL X   1      -1.973   4.350  10.803  1.00  0.00      SYST H  
+HETATM   11  C   UNL X   1      -2.114   3.605  11.342  1.00  0.00      SYST C  
+HETATM   12  N   UNL X   1      -2.354   2.345  10.891  1.00  0.00      SYST N  
+HETATM   13  H   UNL X   1       4.502   4.267   4.123  1.00  0.00      SYST H  
+HETATM   14  C   UNL X   1       4.461   5.141   3.808  1.00  0.00      SYST C  
+HETATM   15  N   UNL X   1       5.503   5.834   3.276  1.00  0.00      SYST N  
+HETATM   16  H   UNL X   1       2.522   5.667   4.123  1.00  0.00      SYST H  
+HETATM   17  C   UNL X   1       3.360   5.920   3.808  1.00  0.00      SYST C  
+HETATM   18  N   UNL X   1       3.666   7.133   3.276  1.00  0.00      SYST N  
+HETATM   19  H   UNL X   1       2.932  11.288   1.212  1.00  0.00      SYST H  
+HETATM   20  C   UNL X   1       2.791  10.543   0.674  1.00  0.00      SYST C  
+HETATM   21  N   UNL X   1       2.552   9.282   1.125  1.00  0.00      SYST N  
+HETATM   22  H   UNL X   1       9.665  -2.214   6.259  1.00  0.00      SYST H  
+HETATM   23  C   UNL X   1       9.009  -2.489   5.659  1.00  0.00      SYST C  
+HETATM   24  N   UNL X   1       7.901  -1.776   5.325  1.00  0.00      SYST N  
+HETATM   25  H   UNL X   1      -2.383   7.471   2.847  1.00  0.00      SYST H  
+HETATM   26  C   UNL X   1      -1.545   7.617   3.223  1.00  0.00      SYST C  
+HETATM   27  N   UNL X   1      -1.239   7.472   4.540  1.00  0.00      SYST N  
+HETATM   28 ZN   UNL X   1       2.453   8.672   3.004  1.00  0.00      SYSTZN  
+HETATM   29  C   UNL X   1       7.260  -2.565   4.443  1.00  0.00      SYST C  
+HETATM   30  C   UNL X   1       5.938  -2.213   3.833  1.00  0.00      SYST C  
+HETATM   31  C   UNL X   1       0.067   7.791   4.607  1.00  0.00      SYST C  
+HETATM   32  C   UNL X   1       0.840   7.827   5.890  1.00  0.00      SYST C  
+HETATM   33  C   UNL X   1       2.417   8.555   0.000  1.00  0.00      SYST C  
+HETATM   34  C   UNL X   1       2.194   7.073   0.000  1.00  0.00      SYST C  
+HETATM   35  C   UNL X   1       4.972   7.032   2.966  1.00  0.00      SYST C  
+HETATM   36  C   UNL X   1       5.745   8.125   2.293  1.00  0.00      SYST C  
+HETATM   37  H   UNL X   1       5.821  -1.079   3.808  1.00  0.00      SYST H  
+HETATM   38  H   UNL X   1       0.838   6.790   6.364  1.00  0.00      SYST H  
+HETATM   39  H   UNL X   1       0.356   8.572   6.605  1.00  0.00      SYST H  
+HETATM   40  H   UNL X   1       1.913   8.146   5.678  1.00  0.00      SYST H  
+HETATM   41  H   UNL X   1       1.575   6.782   0.912  1.00  0.00      SYST H  
+HETATM   42  H   UNL X   1       3.199   6.537   0.036  1.00  0.00      SYST H  
+HETATM   43  H   UNL X   1       5.402   9.135   2.694  1.00  0.00      SYST H  
+HETATM   44  H   UNL X   1       5.565   8.081   1.168  1.00  0.00      SYST H  
+HETATM   45  H   UNL X   1       6.857   7.990   2.504  1.00  0.00      SYST H  
+CONECT    1    2
+CONECT    2    1    3
+CONECT    3    2   28
+CONECT    7    8
+CONECT    8    7    9   26
+CONECT    9    8   28   31
+CONECT   10   11
+CONECT   11   10   12
+CONECT   12   11
+CONECT   13   14
+CONECT   14   13   15   17
+CONECT   15   14   35
+CONECT   16   17
+CONECT   17   14   16   18
+CONECT   18   17   28   35
+CONECT   19   20
+CONECT   20   19   21
+CONECT   21   20   28   33
+CONECT   22   23
+CONECT   23   22   24
+CONECT   24   23   29
+CONECT   25   26
+CONECT   26    8   25   27
+CONECT   27   26   31
+CONECT   28    3    9   18   21
+CONECT   29   24   30
+CONECT   30   29   37
+CONECT   31    9   27   32
+CONECT   32   31   38   39   40
+CONECT   33   21   34
+CONECT   34   33   41   42
+CONECT   35   15   18   36
+CONECT   36   35   43   44   45
+CONECT   37   30
+CONECT   38   32
+CONECT   39   32
+CONECT   40   32
+CONECT   41   34
+CONECT   42   34
+CONECT   43   36
+CONECT   44   36
+CONECT   45   36
+END

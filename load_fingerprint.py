@@ -4,7 +4,7 @@ import MDAnalysis
 import numpy as np
 
 
-def load_fingerprint(name_of_binding_side, fingerprint_style):
+def load_fingerprint_from_file(name_of_binding_side, fingerprint_style):
     topol = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{name_of_binding_side:s}.top')
     syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{name_of_binding_side:s}.pdb")
 
@@ -35,9 +35,12 @@ def load_fingerprint(name_of_binding_side, fingerprint_style):
             else:
                 topol.atoms[idx].charge = 0.0
 
-        new_topol = topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
+        topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
         new_syst_fingerprint = syst_fingerprint.select_atoms(f"not index {' '.join(list(map(str, np.array(atoms_to_strip)))):s}")
-        return new_topol, new_syst_fingerprint
+        new_syst_fingerprint.write("temp.pdb")
+        print(os.getcwd())
+        new_syst_fingerprint = MDAnalysis.Universe("temp.pdb")
+        return topol, new_syst_fingerprint.atoms
 
     elif fingerprint_style=='min':
         metal_topology = topol.atoms[0]
@@ -51,6 +54,10 @@ def load_fingerprint(name_of_binding_side, fingerprint_style):
         for atom in topol.atoms:
             atom.charge = 0.0
 
-        new_topol = topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
+        topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
         new_syst_fingerprint = syst_fingerprint.select_atoms(f"not index {' '.join(list(map(str, np.array(atoms_to_strip)))):s}")
-        return new_topol, new_syst_fingerprint
+        new_syst_fingerprint.write("temp.pdb") #TODO this probably can be rediex in a nicer way...
+        new_syst_fingerprint = MDAnalysis.Universe("temp.pdb")
+        return topol, new_syst_fingerprint.atoms
+    else:
+        raise

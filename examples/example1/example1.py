@@ -1,7 +1,3 @@
-
-
-
-
 try:
     from main import cgbind2pmd
 except:

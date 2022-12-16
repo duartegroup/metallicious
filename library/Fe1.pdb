@@ -1,0 +1,112 @@
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+HETATM    1  Fe  UNL X   0       0.607  11.612  26.628  1.00  0.00      SYSTFE  
+HETATM    2  C   UNL X   0       2.512  11.840  29.258  1.00  0.00      X    C  
+HETATM    3  N   UNL X   0       1.266  11.580  28.642  1.00  0.00      X    N  
+HETATM    4  C   UNL X   0       0.216  11.206  29.285  1.00  0.00      X    C  
+HETATM    5  C   UNL X   0      -1.063  10.938  28.662  1.00  0.00      X    C  
+HETATM    6  C   UNL X   0      -2.115  10.545  29.446  1.00  0.00      X    C  
+HETATM    7  C   UNL X   0      -3.328  10.288  28.870  1.00  0.00      X    C  
+HETATM    8  C   UNL X   0      -3.476  10.427  27.514  1.00  0.00      X    C  
+HETATM    9  C   UNL X   0      -2.414  10.824  26.719  1.00  0.00      X    C  
+HETATM   10  N   UNL X   0      -1.255  11.060  27.343  1.00  0.00      X    N  
+HETATM   11  H   UNL X   0       0.312  11.091  30.351  1.00  0.00      X    H  
+HETATM   12  H   UNL X   0       3.223  12.134  28.514  1.00  0.00      X    H  
+HETATM   13  H   UNL X   0       2.857  10.956  29.751  1.00  0.00      X    H  
+HETATM   14  H   UNL X   0       2.399  12.627  29.974  1.00  0.00      X    H  
+HETATM   15  H   UNL X   0      -1.983  10.437  30.537  1.00  0.00      X    H  
+HETATM   16  H   UNL X   0      -4.168   9.973  29.509  1.00  0.00      X    H  
+HETATM   17  H   UNL X   0      -2.560  10.925  25.653  1.00  0.00      X    H  
+HETATM   18  H   UNL X   0      -4.454  10.216  27.078  1.00  0.00      X    H  
+HETATM   19  C   UNL X   0       3.747  11.751  25.266  1.00  0.00      X    C  
+HETATM   20  N   UNL X   0       2.581  12.346  25.801  1.00  0.00      X    N  
+HETATM   21  C   UNL X   0       2.390  13.617  25.857  1.00  0.00      X    C  
+HETATM   22  C   UNL X   0       1.199  14.234  26.404  1.00  0.00      X    C  
+HETATM   23  C   UNL X   0       1.102  15.599  26.413  1.00  0.00      X    C  
+HETATM   24  C   UNL X   0      -0.017  16.194  26.926  1.00  0.00      X    C  
+HETATM   25  C   UNL X   0      -1.029  15.416  27.425  1.00  0.00      X    C  
+HETATM   26  C   UNL X   0      -0.934  14.034  27.417  1.00  0.00      X    C  
+HETATM   27  N   UNL X   0       0.186  13.514  26.902  1.00  0.00      X    N  
+HETATM   28  H   UNL X   0       3.173  14.246  25.470  1.00  0.00      X    H  
+HETATM   29  H   UNL X   0       3.667  10.686  25.333  1.00  0.00      X    H  
+HETATM   30  H   UNL X   0       4.601  12.080  25.820  1.00  0.00      X    H  
+HETATM   31  H   UNL X   0       3.855  12.037  24.241  1.00  0.00      X    H  
+HETATM   32  H   UNL X   0       1.924  16.216  26.008  1.00  0.00      X    H  
+HETATM   33  H   UNL X   0      -0.085  17.293  26.929  1.00  0.00      X    H  
+HETATM   34  H   UNL X   0      -1.746  13.445  27.817  1.00  0.00      X    H  
+HETATM   35  H   UNL X   0      -1.912  15.913  27.829  1.00  0.00      X    H  
+HETATM   36  C   UNL X   0       1.746   8.460  26.879  1.00  0.00      X    C  
+HETATM   37  N   UNL X   0       1.118   9.511  26.173  1.00  0.00      X    N  
+HETATM   38  C   UNL X   0       0.479   9.349  25.068  1.00  0.00      X    C  
+HETATM   39  C   UNL X   0      -0.167  10.421  24.340  1.00  0.00      X    C  
+HETATM   40  C   UNL X   0      -0.820  10.132  23.172  1.00  0.00      X    C  
+HETATM   41  C   UNL X   0      -1.434  11.135  22.474  1.00  0.00      X    C  
+HETATM   42  C   UNL X   0      -1.387  12.419  22.953  1.00  0.00      X    C  
+HETATM   43  C   UNL X   0      -0.727  12.714  24.134  1.00  0.00      X    C  
+HETATM   44  N   UNL X   0      -0.148  11.689  24.768  1.00  0.00      X    N  
+HETATM   45  H   UNL X   0       0.431   8.348  24.675  1.00  0.00      X    H  
+HETATM   46  H   UNL X   0       2.207   8.849  27.762  1.00  0.00      X    H  
+HETATM   47  H   UNL X   0       2.490   8.008  26.258  1.00  0.00      X    H  
+HETATM   48  H   UNL X   0       1.016   7.727  27.152  1.00  0.00      X    H  
+HETATM   49  H   UNL X   0      -0.850   9.094  22.796  1.00  0.00      X    H  
+HETATM   50  H   UNL X   0      -1.956  10.892  21.536  1.00  0.00      X    H  
+HETATM   51  H   UNL X   0      -0.706  13.734  24.488  1.00  0.00      X    H  
+HETATM   52  H   UNL X   0      -1.884  13.202  22.379  1.00  0.00      X    H  
+CONECT    2    3   12   13   14
+CONECT    3    2    4
+CONECT    4    3    5   11
+CONECT    5    4    6   10
+CONECT    6    5    7   15
+CONECT    7    6    8   16
+CONECT    8    7    9   18
+CONECT    9    8   10   17
+CONECT   10    5    9
+CONECT   11    4
+CONECT   12    2
+CONECT   13    2
+CONECT   14    2
+CONECT   15    6
+CONECT   16    7
+CONECT   17    9
+CONECT   18    8
+CONECT   19   20   29   30   31
+CONECT   20   19   21
+CONECT   21   20   22   28
+CONECT   22   21   23   27
+CONECT   23   22   24   32
+CONECT   24   23   25   33
+CONECT   25   24   26   35
+CONECT   26   25   27   34
+CONECT   27   22   26
+CONECT   28   21
+CONECT   29   19
+CONECT   30   19
+CONECT   31   19
+CONECT   32   23
+CONECT   33   24
+CONECT   34   26
+CONECT   35   25
+CONECT   36   37   46   47   48
+CONECT   37   36   38
+CONECT   38   37   39   45
+CONECT   39   38   40   44
+CONECT   40   39   41   49
+CONECT   41   40   42   50
+CONECT   42   41   43   52
+CONECT   43   42   44   51
+CONECT   44   39   43
+CONECT   45   38
+CONECT   46   36
+CONECT   47   36
+CONECT   48   36
+CONECT   49   40
+CONECT   50   41
+CONECT   51   43
+CONECT   52   42
+END

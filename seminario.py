@@ -1,27 +1,19 @@
 path_to_mod_seminario = "/u/fd/chem1540/github/ModSeminario_Py/Python_Modified_Seminario_Method"
 
-
 import autode as ade
-method = ade.methods.XTB()
+#method = ade.methods.XTB()
 import os
 import re
 from subprocess import Popen, DEVNULL
+import numpy as np
+
+from MDAnalysis.lib.distances import calc_dihedrals
+import MDAnalysis
+
+method = ade.methods.ORCA()
 
 
-name_to_atomic_number = {'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10, 'Na': 11,
-                         'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18, 'K': 19, 'Ca': 20,
-                         'Sc': 21, 'Ti': 22, 'V': 23, 'Cr': 24, 'Mn': 25, 'Fe': 26, 'Co': 27, 'Ni': 28, 'Cu': 29,
-                         'Zn': 30, 'Ga': 31, 'Ge': 32, 'As': 33, 'Se': 34, 'Br': 35, 'Kr': 36, 'Rb': 37, 'Sr': 38,
-                         'Y': 39, 'Zr': 40, 'Nb': 41, 'Mo': 42, 'Tc': 43, 'Ru': 44, 'Rh': 45, 'Pd': 46, 'Ag': 47,
-                         'Cd': 48, 'In': 49, 'Sn': 50, 'Sb': 51, 'Te': 52, 'I': 53, 'Xe': 54, 'Cs': 55, 'Ba': 56,
-                         'La': 57, 'Ce': 58, 'Pr': 59, 'Nd': 60, 'Pm': 61, 'Sm': 62, 'Eu': 63, 'Gd': 64, 'Tb': 65,
-                         'Dy': 66, 'Ho': 67, 'Er': 68, 'Tm': 69, 'Yb': 70, 'Lu': 71, 'Hf': 72, 'Ta': 73, 'W': 74,
-                         'Re': 75, 'Os': 76, 'Ir': 77, 'Pt': 78, 'Au': 79, 'Hg': 80, 'Tl': 81, 'Pb': 82, 'Bi': 83,
-                         'Po': 84, 'At': 85, 'Rn': 86, 'Fr': 87, 'Ra': 88, 'Ac': 89, 'Th': 90, 'Pa': 91, 'U': 92,
-                         'Np': 93, 'Pu': 94, 'Am': 95, 'Cm': 96, 'Bk': 97, 'Cf': 98, 'Es': 99, 'Fm': 100, 'Md': 101,
-                         'No': 102, 'Lr': 103, 'Rf': 104, 'Db': 105, 'Sg': 106, 'Bh': 107, 'Hs': 108, 'Mt': 109,
-                         'Ds': 110, 'Rg': 111, 'Uub': 112}
-
+from data import name_to_atomic_number
 
 def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
     File = open(filename)
@@ -140,24 +132,287 @@ def orca_to_log(filename="site_opt_orca.out", log_output="lig.log"):
     print(" --------------------------------------------------------------------------------\n", file=File)
     File.close()
 
+def strip_numbers_from_atom_name(atom_name):
+    return re.match("([a-zA-Z]+)", atom_name).group(0)
 
-def frequencies(filename, charge = 0):
-    site = ade.Molecule(filename)
-    site.charge = charge
-    site.optimise(method=method, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'])
+def read_bonds(metal_name, donors):
+    File = open("Modified_Seminario_Bonds")
+    text = File.read()
+    File.close()
 
-def seminario(filename, metal_charge):
+    bonds = {}
+    for line in text.splitlines():
+        striped_bond = [strip_numbers_from_atom_name(name) for name in line.split()[0].split('-')]
+
+        if metal_name.title() in line.split()[0]:
+            if (striped_bond[0] == metal_name.title() and striped_bond[1] in donors) or (
+                    striped_bond[1] == metal_name.title() and striped_bond[0] in donors):
+                bonds[tuple(sorted((int(line.split()[3]) - 1, int(line.split()[4]) - 1)))] = (
+                float(line.split()[2]), float(line.split()[1]))
+            else:
+                print("nope", striped_bond)
+        else:
+            bonds[tuple(sorted((int(line.split()[3]) - 1, int(line.split()[4]) - 1)))] = (
+            float(line.split()[2]), float(line.split()[1]))
+    return bonds
+
+def read_and_symmetrize_bonds(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O", "S"]):
+    bonds = read_bonds(metal_name, donors)
+    metal_index = 0
+
+    for unique_ligand in list(set(unique_ligands_pattern)):
+        unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
+        print(unique_ligand_indecies)
+        index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
+        index_distance = index_select - index_select[0]
+        print(index_distance)
+
+        for atom_indeces in (indecies[unique_ligand + 1]):
+            for bond in bonds:
+                if atom_indeces in bond:
+
+                    if metal_index not in bond:
+                        length = 0
+                        k = 0
+                        for distance in index_distance:
+                            temp = bonds[bond[0] + distance, bond[1] + distance]
+                            length += temp[0]
+                            k += temp[1]
+
+                        length /= len(index_distance)
+                        k /= len(index_distance)
+
+                        for distance in index_distance:
+                            bonds[bond[0] + distance, bond[1] + distance] = (np.round(length, 3), np.round(k, 3))
+                    else:
+                        length = 0
+                        k = 0
+                        for distance in index_distance:
+                            temp = bonds[bond[0], bond[1] + distance]
+                            length += temp[0]
+                            k += temp[1]
+
+                        length /= len(index_distance)
+                        k /= len(index_distance)
+
+                        for distance in index_distance:
+                            bonds[bond[0], bond[1] + distance] = (np.round(length, 3), np.round(k, 3))
+    return bonds
+
+def read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O"]):
+    metal_index = 0
+
+    File = open("Modified_Seminario_Angle")
+    text = File.read()
+    File.close()
+
+    angles = {}
+    for line in text.splitlines():
+
+        striped_angle = [strip_numbers_from_atom_name(name) for name in line.split()[0].split('-')]
+        print(striped_angle, line)
+
+        if metal_name.title() in line.split()[0]:
+
+            metal_on_side_condition = (
+                        (striped_angle[0] == metal_name.title() or striped_angle[2] == metal_name.title()) and (
+                            striped_angle[1] in donors))
+            metal_in_middle_condition = (striped_angle[1] == metal_name.title() and (striped_angle[0] in donors) and (
+                        striped_angle[2] in donors))
+
+            if metal_on_side_condition or metal_in_middle_condition:
+
+                if int(line.split()[3]) < int(line.split()[5]):
+                    angles[int(line.split()[3]) - 1, int(line.split()[4]) - 1, int(line.split()[5]) - 1] = (
+                    float(line.split()[2]), float(line.split()[1]))
+                else:
+                    angles[int(line.split()[5]) - 1, int(line.split()[4]) - 1, int(line.split()[3]) - 1] = (
+                    float(line.split()[2]), float(line.split()[1]))
+
+
+            else:
+                print("nope", striped_angle, (float(line.split()[2]), float(line.split()[1])))
+
+        else:
+            if int(line.split()[3]) < int(line.split()[5]):
+                angles[int(line.split()[3]) - 1, int(line.split()[4]) - 1, int(line.split()[5]) - 1] = (
+                float(line.split()[2]), float(line.split()[1]))
+            else:
+                angles[int(line.split()[5]) - 1, int(line.split()[4]) - 1, int(line.split()[4]) - 1] = (
+                float(line.split()[2]), float(line.split()[1]))
+
+
+    for unique_ligand in list(set(unique_ligands_pattern)):
+        unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
+        print(unique_ligand_indecies)
+        index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
+        index_distance = index_select - index_select[0]
+        print(index_distance)
+        for atom_indeces in (indecies[unique_ligand + 1]):
+            # print(atom_indeces)
+            for angle in angles:
+                if atom_indeces in angle:
+                    metal0 = 1
+                    metal2 = 1
+
+                    if metal_index == angle[0]:
+                        metal0 = 0
+                    elif metal_index == angle[1]:
+                        metal2 = 0
+
+                    if not metal_index == angle[1]:
+
+                        length = 0
+                        k = 0
+                        for distance in index_distance:
+                            temp = angles[angle[0] + distance * metal0, angle[1] + distance, angle[2] + distance * metal2]
+                            length += temp[0]
+                            k += temp[1]
+
+                        length /= len(index_distance)
+                        k /= len(index_distance)
+
+                        for distance in index_distance:
+                            angles[angle[0] + distance * metal0, angle[1] + distance, angle[2] + distance * metal2] = (
+                            np.round(length, 3), np.round(k, 3))
+
+                    elif angle[1] == metal_index:
+                        # There is no simple way of symmetrizing this interaction, e.g. PdL4, some are orineted 90 deg some 180 deg
+                        None
+    return angles
+
+def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+    site = ade.Molecule(filename, charge=charge, mult=mult)
+    site.optimise(method=method, keywords=keywords)
+    return site.name
+
+def extend_angle_to_dihedral(angle, bonds):
+    dihedrals = []
+    last_atom = angle[-1]
+    temp = list(set(np.concatenate([[bond[0], bond[1]] for bond in bonds if last_atom in bond])))
+    temp.remove(last_atom)
+    for a in temp:
+        if a not in angle:
+            dihedrals.append(angle + [a])
+
+    last_atom = angle[0]
+    temp = list(set(np.concatenate([[bond[0], bond[1]] for bond in bonds if last_atom in bond])))
+    temp.remove(last_atom)
+    for a in temp:
+        if a not in angle:
+            dihedrals.append([a] + angle)
+    return dihedrals
+
+def generate_all_dihedrals(angles, bonds, metal_index=0):
+    dihedrals = []
+    for angle_indexes in angles:
+        if metal_index in angle_indexes:
+            extended_dihedrals = extend_angle_to_dihedral(list(angle_indexes), bonds)
+            dihedrals += extended_dihedrals
+
+    # remove double counted dihedrals:
+    new_dihedrals = []
+    for a, dihedral in enumerate(dihedrals):
+        if dihedral not in new_dihedrals and dihedral[::-1] not in new_dihedrals:
+            new_dihedrals.append(dihedral)
+    return new_dihedrals
+
+def create_dummy_dihedrals(angles, bonds, filename, metal_index=0):  # TODO check metal index
+    syst_opt = MDAnalysis.Universe(filename)
+    dihedrals_indexes = generate_all_dihedrals(angles, bonds, metal_index)
+    dihedrals = {}
+    for dihedral in dihedrals_indexes:
+        dihedrals[tuple(dihedral)] = (np.rad2deg(calc_dihedrals(*syst_opt.atoms[dihedral].positions)), 0)
+    return dihedrals
+
+def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+
     here = os.getcwd()
-    frequencies(filename, metal_charge)
-    orca_to_fchk("site_opt_orca.hess")
-    orca_to_log("site_opt_orca.out")
+    os.system("mkdir bonded")
+    os.chdir("bonded")
 
-    os.chdir(path_to_mod_seminario)
-    # command = f'python modified_Seminario_method.py {here:s}/ {here:s}/ 0.957'
-    command = f'python modified_Seminario_method.py {here:s}/ {here:s}/ 1.000'
+
+    print("Optimising, parameters:", filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern)
+
+    name = frequencies("../"+filename, metal_charge, keywords=keywords, mult=mult)
+    orca_to_fchk(f"{name:s}_opt_orca.hess")
+    orca_to_log(f"{name:s}_opt_orca.out")
+
+    os.chdir(path_to_mod_seminario) #TODO this can be done form just python scrpit
+    command = f'python modified_Seminario_method.py {here:s}/bonded/ {here:s}/bonded/ 1.000'
     process = Popen(command.split(), stdout=DEVNULL, stderr=DEVNULL)
     process.wait()
+    os.chdir(here+"/bonded")
+
+    bonds = read_and_symmetrize_bonds(metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O"])
+    angles = read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O"])
+    dummy_dihedrals = create_dummy_dihedrals(angles, bonds, filename=f"{name:s}_opt_orca.xyz")
+
+
     os.chdir(here)
+
+    return bonds, angles, dummy_dihedrals
+
+def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+
+    File = open("INFO.dat")
+    text = File.read()
+    File.close()
+
+    n_sites = text.count("ligand_pattern")
+    print("Number of sites", n_sites)
+
+    n_site = 0
+    bondss = []
+    angless = []
+    dihedralss = []
+
+    for line in text.splitlines():
+        if "ligand_pattern:" in line:
+            unique_ligands_pattern = list(map(int, line[15:].split(',')))
+
+        if "starting_index:" in line:
+            starting_index = list(map(int, line[15:].split(',')))
+            indecies = [list(range(starting_index[a - 1], starting_index[a])) for a in range(1, len(starting_index))]
+
+            bonds, angles, dihedrals = single_seminario(f"site{n_site:d}.xyz", metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=keywords, mult=mult)
+
+            File = open(f"bonds_{n_site:d}.dat", "w")
+            for bond in bonds:
+                File.write(f'{"-".join(list(map(str, bond))):}:{",".join(list(map(str, bonds[bond]))):}')
+            File.close()
+            bondss.append(bonds)
+
+            File = open(f"angles_{n_site:d}.dat", "w")
+            for angle in angles:
+                File.write(f'{"-".join(list(map(str, angle))):}:{",".join(list(map(str, angles[angle]))):}')
+            File.close()
+            angless.append(angles)
+
+
+            File = open(f"dihedrals_{n_site:d}.dat", "w")
+            for dihedral in dihedrals:
+                File.write(f'{"-".join(list(map(str, dihedral))):}:{",".join(list(map(str, dihedrals[dihedral]))):}')
+            File.close()
+            dihedralss.append(dihedrals)
+
+    return (bondss, angless, dihedralss)
+
+import argparse
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-metal_charge", help="Clean structure")
+    parser.add_argument("-metal_name", help="Clean structure")
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = get_args()
+    multi_seminario(args.metal_charge, args.metal_name)
+
+
+
 
 
 

@@ -4,7 +4,13 @@ from tempfile import mkdtemp
 import os
 import shutil
 from subprocess import Popen, DEVNULL
-from cgbind2pmd.log import logger
+import MDAnalysis
+
+try:
+    from cgbind2pmd.log import logger
+except:
+    from log import logger
+
 
 import numpy as np
 
@@ -26,12 +32,20 @@ def antechamber(pdbfile, charge, output, verbose=False):
 
     pwd = os.getcwd()
     tmpdir_path = mkdtemp()
-    logger.info(f"[ ] Current path: {pwd:s}") if verbose else None
-    logger.info(f"[ ] Going to temporary path {tmpdir_path:s}") if verbose else None
-    os.chdir(tmpdir_path)
-    shutil.copyfile(f'{pwd:s}/{pdbfile:s}', 'temp.pdb')
+    logger.info(f"[ ] Current path: {pwd:s}")
+    logger.info(f"[ ] Going to temporary path {tmpdir_path:s}")
 
-    logger.info("[ ] Interfacing antechamber") if verbose else None
+    syst = MDAnalysis.Universe(pdbfile)
+    os.chdir(tmpdir_path)
+
+    if len(syst.atoms.names)!=len(set(syst.atoms.names)):
+        for a, atom in enumerate(syst.atoms):
+            atom.name = atom.name +str(a)
+
+    syst.atoms.write('temp.pdb')
+
+
+    logger.info("[ ] Interfacing antechamber")
     File = open("tleap.in", "w")
     File.write('''
     source leaprc.gaff\n
@@ -43,8 +57,8 @@ def antechamber(pdbfile, charge, output, verbose=False):
     quit\n''')
     File.close()
 
-    logger.info("    - Charge of the molecule is", charge)  if verbose else None
-    run_external("antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -s 2 -nc "+str(charge), assertion="Errors = 0")
+    logger.info(f"    - Charge of the molecule is {charge:}")
+    run_external(f"antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -s 2 -nc {charge:}", assertion="Errors = 0")
     run_external("parmchk2 -i temp.mol2 -f mol2 -o temp.frcmod")
     run_external("tleap -f tleap.in")
 
@@ -55,10 +69,13 @@ def antechamber(pdbfile, charge, output, verbose=False):
     neutralize_charge('topol.top', 'topol2.top', charge=charge)
 
     shutil.copyfile('topol2.top', f'{pwd:s}/{output:s}')
-    logger.info("[ ] Molecule parametrized")  if verbose else None
+    logger.info("[ ] Molecule parametrized")
 
     os.chdir(pwd)
     shutil.rmtree(tmpdir_path)
+
+    syst.atoms.write(f'{pwd:s}/{output[:-4]:s}.pdb')
+
 
 import argparse
 

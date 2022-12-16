@@ -1,0 +1,28 @@
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+HETATM    2  H   UNL X   1       8.484  28.571   4.055  1.00  0.00      X    H  
+HETATM    3  H   UNL X   1       8.648  27.257   1.624  1.00  0.00      X    H  
+HETATM    4  H   UNL X   1       5.638  26.860   2.919  1.00  0.00      X    H  
+HETATM    5  H   UNL X   1       6.951  24.429   2.755  1.00  0.00      X    H  
+HETATM    6  H   UNL X   1       7.348  25.725   5.765  1.00  0.00      X    H  
+HETATM    7  H   UNL X   1       9.779  25.560   4.452  1.00  0.00      X    H  
+HETATM    8  H   UNL X   1       8.484  26.860   5.765  1.00  0.00      X    H  
+HETATM    9  H   UNL X   1       8.648  24.429   4.452  1.00  0.00      X    H  
+HETATM   10  H   UNL X   1       5.638  25.725   4.055  1.00  0.00      X    H  
+HETATM   11  H   UNL X   1       6.951  25.560   1.624  1.00  0.00      X    H  
+HETATM   12  H   UNL X   1       7.348  28.571   2.919  1.00  0.00      X    H  
+HETATM   13  H   UNL X   1       9.779  27.257   2.755  1.00  0.00      X    H  
+HETATM   14  N   UNL X   1       7.061  27.148   4.342  1.00  0.00      X    N  
+HETATM   15  N   UNL X   1       8.552  25.656   2.851  1.00  0.00      X    N  
+HETATM   16  C   UNL X   1       7.914  27.991   3.489  1.00  0.00      X    C  
+HETATM   17  C   UNL X   1       8.826  27.066   2.577  1.00  0.00      X    C  
+HETATM   18  C   UNL X   1       7.914  26.295   5.186  1.00  0.00      X    C  
+HETATM   19  C   UNL X   1       8.826  25.383   4.260  1.00  0.00      X    C  
+HETATM   20  C   UNL X   1       6.217  26.295   3.489  1.00  0.00      X    C  
+HETATM   21  C   UNL X   1       7.143  25.383   2.577  1.00  0.00      X    C  

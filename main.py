@@ -7,55 +7,42 @@ import os
 import MDAnalysis
 import numpy as np
 import networkx as nx
+import re
 
 from networkx.algorithms import isomorphism
-from MDAnalysis.analysis import align
 from MDAnalysis.lib.distances import distance_array
 
 import argparse
-from itertools import permutations
 import parmed as pmd
 import shutil
 from tempfile import mkdtemp
+
+
 
 try:
     from cgbind2pmd.log import logger
 except:
     from log import logger
 
+try:
+    from cgbind2pmd.mapping import map_two_structures
+    from cgbind2pmd.load_fingerprint import load_fingerprint_from_file
+except:
+    from mapping import map_two_structures
+    from load_fingerprint import load_fingerprint_from_file
+
 from copy import deepcopy
 
 # Taken form: https://gist.github.com/lukasrichters14/
 # Dictionary of all elements matched with their atomic masses.
-name2mass = {'H' : 1.008,'HE' : 4.003, 'LI' : 6.941, 'BE' : 9.012,\
-                 'B' : 10.811, 'C' : 12.011, 'N' : 14.007, 'O' : 15.999,\
-                 'F' : 18.998, 'NE' : 20.180, 'NA' : 22.990, 'MG' : 24.305,\
-                 'AL' : 26.982, 'SI' : 28.086, 'P' : 30.974, 'S' : 32.066,\
-                 'CL' : 35.453, 'AR' : 39.948, 'K' : 39.098, 'CA' : 40.078,\
-                 'SC' : 44.956, 'TI' : 47.867, 'V' : 50.942, 'CR' : 51.996,\
-                 'MN' : 54.938, 'FE' : 55.845, 'CO' : 58.933, 'NI' : 58.693,\
-                 'CU' : 63.546, 'ZN' : 65.38, 'GA' : 69.723, 'GE' : 72.631,\
-                 'AS' : 74.922, 'SE' : 78.971, 'BR' : 79.904, 'KR' : 84.798,\
-                 'RB' : 84.468, 'SR' : 87.62, 'Y' : 88.906, 'ZR' : 91.224,\
-                 'NB' : 92.906, 'MO' : 95.95, 'TC' : 98.907, 'RU' : 101.07,\
-                 'RH' : 102.906, 'PD' : 106.42, 'AG' : 107.868, 'CD' : 112.414,\
-                 'IN' : 114.818, 'SN' : 118.711, 'SB' : 121.760, 'TE' : 126.7,\
-                 'I' : 126.904, 'XE' : 131.294, 'CS' : 132.905, 'BA' : 137.328,\
-                 'LA' : 138.905, 'CE' : 140.116, 'PR' : 140.908, 'ND' : 144.243,\
-                 'PM' : 144.913, 'SM' : 150.36, 'EU' : 151.964, 'GD' : 157.25,\
-                 'TB' : 158.925, 'DY': 162.500, 'HO' : 164.930, 'ER' : 167.259,\
-                 'TM' : 168.934, 'YB' : 173.055, 'LU' : 174.967, 'HF' : 178.49,\
-                 'TA' : 180.948, 'W' : 183.84, 'RE' : 186.207, 'OS' : 190.23,\
-                 'IR' : 192.217, 'PT' : 195.085, 'AU' : 196.967, 'HG' : 200.592,\
-                 'TL' : 204.383, 'PB' : 207.2, 'BI' : 208.980, 'PO' : 208.982,\
-                 'AT' : 209.987, 'RN' : 222.081, 'FR' : 223.020, 'RA' : 226.025,\
-                 'AC' : 227.028, 'TH' : 232.038, 'PA' : 231.036, 'U' : 238.029,\
-                 'NP' : 237, 'PU' : 244, 'AM' : 243, 'CM' : 247, 'BK' : 247,\
-                 'CT' : 251, 'ES' : 252, 'FM' : 257, 'MD' : 258, 'NO' : 259,\
-                 'LR' : 262, 'RF' : 261, 'DB' : 262, 'SG' : 266, 'BH' : 264,\
-                 'HS' : 269, 'MT' : 268, 'DS' : 271, 'RG' : 272, 'CN' : 285,\
-                 'NH' : 284, 'FL' : 289, 'MC' : 288, 'LV' : 292, 'TS' : 294,\
-                 'OG' : 294}
+
+
+try:
+    from cgbind2pmd.data import name2mass
+    from cgbind2pmd.data import name_to_atomic_number
+except:
+    from data import name2mass
+    from data import name_to_atomic_number
 
 
 class cgbind2pmd():
@@ -72,6 +59,7 @@ class cgbind2pmd():
     n_metals = None
     n_ligands = None
     name_of_binding_side=None
+    fingerprint_style='full'
 
     output_topol = "cage.top"
     output_coords = "cage.gro"
@@ -137,7 +125,7 @@ class cgbind2pmd():
         shutil.rmtree(self.tmpdir_path)
 
 
-    def construct_cage(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None, name_of_binding_side=None,):
+    def construct_cage(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None, name_of_binding_side=None):
         '''
         The main function, which copies all the bonded paramters to the cage
         Sepearated for stages;
@@ -157,7 +145,7 @@ class cgbind2pmd():
         self.metal_charge = metal_charge
 
         self.load_cage(cage_file, ligand_file)
-        self.load_fingerprint(name_of_binding_side)
+        self.load_fingerprint()
 
         self.prepare_new_topology()
 
@@ -222,6 +210,7 @@ class cgbind2pmd():
         self.cage = MDAnalysis.Universe("cage.gro")
         self.ligand = pmd.load_file(ligand_file)
 
+        # Find metal indeces:
         self.metal_indices = [a for a, name in enumerate(self.cage.atoms.names) if
                          name[:len(self.metal_name)].upper() == self.metal_name]
         self.n_metals = len(self.metal_indices)
@@ -259,7 +248,9 @@ class cgbind2pmd():
         :return:
         '''
         cut_sphere = self.cage.select_atoms(f'around {cutoff:f} index {metal_index:d}')
-        G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
+        #metal_type = cut_sphere.select_atoms(f'index {metal_index:}').atoms[0].type
+
+        G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions, box=self.cage.dimensions))#, vdwradii={metal_type:cutoff_covalent}))
         nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
         G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
 
@@ -271,38 +262,51 @@ class cgbind2pmd():
             clusters_of_atoms = self.cage.atoms[G_sub_cage]
             metal = self.cage.atoms[metal_index]
 
-            all_metal_cluster_distances = distance_array(clusters_of_atoms.positions, metal.position)
+            all_metal_cluster_distances = distance_array(clusters_of_atoms.positions, metal.position, box=self.cage.dimensions)
             if np.min(all_metal_cluster_distances) < cutoff_covalent:
                 G_sub_cages_bound.append(G_sub_cage)
 
                 temp_atom = clusters_of_atoms.atoms[np.argmin(all_metal_cluster_distances)]
                 closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {np.min(all_metal_cluster_distances):f} A"
                 closest_atoms.append(temp_atom.index)
+
         logger.info(closest_atoms_string)
+
+        #ourput is list with n_ligands graphs representing diffrent ligands, and closest atoms (donors of electrons)
         return G_sub_cages_bound, closest_atoms
 
-    def load_fingerprint(self, name_of_binding_side):
+    def load_fingerprint(self):
         '''
         Loads files from the library into the class, if the name is not known, it will try to guess the fingerprint
 
         :param name_of_binding_side:
         :return:
         '''
+
+
         if self.name_of_binding_side is None:
             self.name_of_binding_side = self.guess_fingerprint()
         #else:
         #    self.name_of_binding_side = name_of_binding_side  # TODO check if it exists
 
+
         # Input
-        self.topol_fp = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.top')
-        self.syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.pdb")
+        self.topol_fp, self.syst_fingerprint= load_fingerprint_from_file(self.name_of_binding_side, self.fingerprint_style)
+
+        metal_position = self.syst_fingerprint.atoms[0].position
+        nometal_position = self.syst_fingerprint.atoms[1:].positions
+        self.ligand_cutoff = np.min([np.max(distance_array(metal_position, nometal_position)) + 2.0, self.m_m_cutoff])
+
+
+        #self.topol_fp = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.top')
+        #self.syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.pdb")
         return True
 
 
     def crystal2pdb(self, crystal_pdb, topology_itp, output, metal_name=""):
         '''
         Function which renumbers crystal_pdb that it maches topology of ligand, it adds metals at the begining, creates
-        the file output with renumbered atoms
+          the file output with renumbered atoms
 
         :param crystal_pdb:
         :param topology_itp:
@@ -332,20 +336,37 @@ class cgbind2pmd():
             metal_ions = crystal.select_atoms("name {:s}*".format(metal_name))
             ligands = crystal.select_atoms("not name {:s}*".format(metal_name))
             G1 = nx.Graph(
-                MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table))
+                MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table,  box=crystal.dimensions))
             nx.set_node_attributes(G1, {atom.index: atom.name[0] for atom in ligands.atoms}, "name")
             new_ligands = [metal_ions]
         else:
             ligands = crystal.atoms
             G1 = nx.Graph(
-                MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table))
+                MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table,  box=crystal.dimensions))
             nx.set_node_attributes(G1, {atom.index: atom.name[0] for atom in ligands.atoms}, "name")
             new_ligands = []
 
-        for nodes in nx.connected_components(G1):
+        for z, nodes in enumerate(nx.connected_components(G1)):
             new_ligand = topology.copy()
+            #print(nodes)
+            print(ligands)
+            print(list(nodes))
+            print(list(map(str,list(nodes))))
+            ligands.select_atoms(f" index {' '.join(list(map(str,list(nodes)))):}").write(f"temp.pdb")
+
             # logger.info(len(nodes))
             Gsub = G1.subgraph(nodes)
+
+            #Sometimes guesser will not guess right the bonds, decreasing fudge factor might help...
+            if len(Gsub)==len(Gtop) and len(Gsub.edges())!=len(Gtop.edges()):
+                fudge_factor = 0.55
+                while fudge_factor>0 and len(Gsub.edges())!=len(Gtop.edges()):
+                    Gsub = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(crystal.atoms[Gsub.nodes()], crystal.atoms[Gsub.nodes()].positions, vdwradii=table,
+                                                                             box=crystal.dimensions, fudge_factor=fudge_factor))
+                    nx.set_node_attributes(Gsub, {atom.index: atom.name[0] for atom in crystal.atoms[Gsub.nodes()]}, "name")
+                    fudge_factor-=0.01
+                if fudge_factor<0.1:
+                    print("error, cannot find the guess for bonds")
 
             iso = isomorphism.GraphMatcher(Gsub, Gtop, node_match=lambda n1, n2: n1['name'] == n2['name'])
             if iso.is_isomorphic():
@@ -357,12 +378,26 @@ class cgbind2pmd():
 
                 new_ligands.append(new_ligand.atoms)
                 # print(len(new_ligands),new_ligands )
+
             else:
                 logger.info("The subgraphs are not isomorphic, are you sure these are the same molecules?")
-                logger.info(f"Number of atoms: {len(Gsub):d}, {len(G1):d}")
+                logger.info(f"Number of atoms: from coordinates: {len(Gsub):d}, from_topology: {len(Gtop):d}")
+                logger.info(f"Number of edges: from coordinates: {len(Gsub.edges()):d}, from_topology: {len(Gtop.edges()):d}")
+
+                print(os.getcwd())
+                print(list(nodes))
+                #crystal.atoms[list(nodes)].write("temp.pdb")
+                #new_ligand.atoms[list(Gsub.nodes())].write("temp.pdb")
+
+                print("The subgraphs are not isomorphic, are you sure these are the same molecules?")
+                print(f"Number of atoms: from coordinates: {len(Gsub):d}, from_topology: {len(Gtop):d}")
+                print(f"Number of edges: from coordinates: {len(Gsub.edges()):d}, from_topology: {len(Gtop.edges()):d}")
+
+                print(os.getcwd())
                 raise Error
 
-        new_cage = MDAnalysis.Merge(*new_ligands)  # , dimensions=crystal.dimensions)
+        new_cage = MDAnalysis.Merge(*new_ligands)
+        new_cage.dimensions=crystal.dimensions
         new_cage.atoms.write(output)
 
     def guess_fingerprint(self):
@@ -396,7 +431,7 @@ class cgbind2pmd():
             if rmsd < rmsd_best:
                 rmsd_best = rmsd
                 name_of_binding_side = finerprint_name
-                self.ligand_cutoff = cutoff
+                #self.ligand_cutoff = cutoff
             logger.info(f"    [ ] RMSD {rmsd:f}")
 
         logger.info(f"[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
@@ -406,10 +441,22 @@ class cgbind2pmd():
 
     #TODO assert rediculsy small ligands
 
-    def find_mapping(self, metal_index, syst_fingerprint, cutoff=9, guessing=False):
+    def reduce_site_to_fingerprint(self, metal_index, syst_fingerprint, cutoff=9, guessing=False):
+
+        #def strip_numbers_from_atom_name(atom_name):
+        #    return re.match("([a-zA-Z]+)", atom_name).group(0)
+
+        #metal_name=strip_numbers_from_atom_name(syst_fingerprint.atoms[metal_index].name)
+
+
+
+        #metal_type = syst_fingerprint.select_atoms(f'index {metal_index:}').atoms[0].type
+
+        syst_fingerprint_no_metal = syst_fingerprint.atoms[1:]
         G_fingerprint = nx.Graph(
-            MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint.atoms, syst_fingerprint.atoms.positions))
-        nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint.atoms}, "name")
+            MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint_no_metal.atoms, syst_fingerprint_no_metal.atoms.positions))
+
+        nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint_no_metal.atoms}, "name")
         G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
 
         logger.info(f"     [ ] Mapping fingerprint to metal center: {metal_index:d}")
@@ -421,44 +468,54 @@ class cgbind2pmd():
         G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
         '''
 
-        print("CUTOFF", cutoff)
-        #sleep(1)
         G_sub_cages, closest_atoms = self.find_bound_ligands_nx(metal_index, cutoff=cutoff)
         number_ligands_bound = len(G_sub_cages)
         logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
 
         if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
             logger.info(f"[!] Not the same number of sites {guessing:}")
-            return None, 1e10
+            return False
 
         elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
-            logger.info(f"[!] Not the same number of sites {guessing:}")
+
+
+            logger.info(f"[!] Not the same number of sites { len(G_sub_cages):}!={ len(G_fingerprint_subs):} guessing={guessing:}")
             raise
 
         selected_atoms = [metal_index]
-
         end_atoms = []
-        for G_sub_cage in G_sub_cages:
 
+        for G_sub_cage in G_sub_cages:
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
-                if not len(G_fingerprint_subs[0]) < len(G_sub_cage):
+                if not len(G_fingerprint_subs[0]) < len(G_sub_cage): #TODO with 0 we assume that ligands are the same right?
                     logger.info(f"Not subgroup, becasue dismatch of size {len(G_fingerprint_subs[0]):d} < {len(G_sub_cage):d}")
-                    return None, 1e10
+                    return False
             else:
                 # Check if cutted ligands from cage are larger then the ligands in finerprint (they should be if cutoff is 10!)
-                assert len(G_fingerprint_subs[0]) < len(G_sub_cage)
+                assert len(G_fingerprint_subs[0]) <= len(G_sub_cage)
 
             ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_subs[0],
                                            node_match=lambda n1, n2: n1['name'] == n2['name'])
 
 
+            #largest_common_subgraph_nx = ismags.largest_common_subgraph()
+
             # There can be many possibilities of isomorphism, not only due to the symmetry, but sometimes becasue
             # ligand has more sites. In such case we need to make sure that closest to the metal atoms ("donors")
             # are included
+
             largest_common_subgraph = []
+            #logger.info(f'{ismags.largest_common_subgraph():}')
+
+            # This takes forever:
             logger.info(f"There are {len(list(ismags.largest_common_subgraph())):} matching patterns")
+
             for largest_common_subgraph_iter in ismags.largest_common_subgraph():
+                logger.info(f'Iterating {largest_common_subgraph_iter:}')
+
                 is_donor_included = [closest_atom in largest_common_subgraph_iter for closest_atom in closest_atoms]
+                print(is_donor_included)
+
                 if any(is_donor_included):
                     largest_common_subgraph = largest_common_subgraph_iter
                     logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
@@ -466,17 +523,23 @@ class cgbind2pmd():
 
             if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
                 if len(largest_common_subgraph) == 0:
-                    return None, 1e10
+                    return False
                 elif not len(G_fingerprint_subs[0]) == len(largest_common_subgraph):
-                    return None, 1e10
+                    return False
             else:
                 # Check if the subgraph is the same size as fingerprint,
-                assert len(largest_common_subgraph)>0
-                assert len(G_fingerprint_subs[0]) == len(largest_common_subgraph)
+                print(largest_common_subgraph)
+                if len(largest_common_subgraph)>0:
+                    print("aaa")
+                if len(G_fingerprint_subs[0]) == len(largest_common_subgraph):
+                    print("bbb")
+
+                #assert len(largest_common_subgraph)>0
+                #assert len(G_fingerprint_subs[0]) == len(largest_common_subgraph)
 
 
             selected_atoms += largest_common_subgraph.keys()
-
+            connected_cut_system = self.cage.select_atoms("index " + " ".join(map(str, selected_atoms)))
 
             # Let's find the end atoms, they have diffrent degree: in cage they are connected, in the template not
             G_sub_cage_degree = G_sub_cage.degree
@@ -486,123 +549,30 @@ class cgbind2pmd():
                 if G_sub_cage_degree[key] != G_fingerprint_subs_degree[largest_common_subgraph[key]]:
                     end_atoms.append(key)
 
-        # do we need this (?)
-        #cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
-        #connected_cut_system = cut_sphere.select_atoms("index " + " ".join(map(str, selected_atoms)))
-        # I think this should work just fine, no? TODO:
-        connected_cut_system =  self.cage.select_atoms("index " + " ".join(map(str, selected_atoms)))
-        print("selected", len(selected_atoms))
-
-        no_metal = connected_cut_system.select_atoms(f"not index {metal_index:d}")
-        G_site = nx.Graph(
-            MDAnalysis.topology.guessers.guess_bonds(no_metal.atoms, no_metal.atoms.positions))
-        nx.set_node_attributes(G_site, {atom.index: atom.name[0] for atom in no_metal.atoms}, "name")
-        G_site_subs = [G_site.subgraph(a) for a in nx.connected_components(G_site)]
-
-        best_rmsd = 1e10
-        best_mapping = None
-
-        indecies2number = {}
-        for a, b in enumerate(connected_cut_system.indices):
-            indecies2number[b] = a
-
-        permutations_list = permutations(range(number_ligands_bound))
-
-        print('adfdsafads')
-        print('adfdsafads')
-        print('adfdsafads')
-        print('qwewqeqw')
-
-        for perm in list(permutations_list):
-            print('fdsafdasfasd',perm, len(perm))
-            mappings = []
-
-            for a, b in enumerate(perm):
-                print("comp", len(G_fingerprint_subs[a].nodes), len(G_site_subs[b].nodes))
-                print("a", [G_fingerprint_subs[a].nodes[node] for node in G_fingerprint_subs[a].nodes])
-                print("b", [G_site_subs[b].nodes[node] for node in G_site_subs[b].nodes])
-
-                iso = isomorphism.GraphMatcher(G_fingerprint_subs[a], G_site_subs[b],
-                                               node_match=lambda n1, n2: n1['name'] == n2['name'])
-                mappings.append([subgraph_mapping for subgraph_mapping in iso.subgraph_isomorphisms_iter()])
-
-            all_possible_mappings = []
-            print("mappings", mappings)
-
-            def recursive(mapping, index, new_mapping):
-                print(len(mapping), index)
-                if index == len(mapping):
-                    all_possible_mappings.append(new_mapping)
-                else:
-                    for map_1 in mapping[index]:
-                        copy = new_mapping.copy()
-                        copy.append(map_1)
-                        recursive(mapping, index + 1, copy)
-
-            recursive(mappings, 0, [])
-
-            print("dasfasdfasdf",all_possible_mappings)
-
-            for c in range(len(all_possible_mappings)):
-                new_dict = {}
-                for ligand in all_possible_mappings[c]:
-                    new_dict.update(ligand)
-
-                # Reorder, left hand side
-                new_new_dict = {}
-                for d in sorted(new_dict.keys()):
-                    new_new_dict[d] = new_dict[d]
-
-                # TODO We assume that metal is first
+        return connected_cut_system, end_atoms
 
 
-                reordered_system = connected_cut_system.atoms[
-                    [0] + [indecies2number[value] for value in new_new_dict.values()]]  # Find where metal is
-                _, rmsd = align.alignto(syst_fingerprint, reordered_system)
-                print(rmsd)
 
-                # print(rmsd)
-                if rmsd < best_rmsd:
-                    best_rmsd = rmsd
-                    best_mapping = new_new_dict
+    def find_mapping(self, metal_index, syst_fingerprint, cutoff=9, guessing=False):
+        result = self.reduce_site_to_fingerprint(metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing)
 
-        print(self.metal_name)
-        print(syst_fingerprint.atoms.names)
-        print(best_mapping)
-        temp = np.where([syst_fingerprint.atoms.names == self.metal_name])[0]
-        if len(temp) == 1:
-            best_mapping[temp[0]] = metal_index
-        else:
-            logger.info("ERROR, more than one metal in the site")
-            raise
+        if result: # the results are legit, we take them as input
+            connected_cut_system, end_atoms = result
+            best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name=self.metal_name, end_atoms=end_atoms)
+
+            #def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, cutoff=9, guessing=False):
+            #def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, end_atoms=[]):
 
 
-        # Remove the end atoms from the mapping:
-
-
-        logger.info(f"Best mapping:")
-        logger.info(f"    Mapping: {best_mapping}")
-
-        mapping_end_atoms=[]
-        for index1 in best_mapping:
-            logger.info(f"      Map: {index1} -> {best_mapping[index1]} ({syst_fingerprint.atoms[index1]} -> {self.cage.atoms[best_mapping[index1]]})")
-            if best_mapping[index1] in end_atoms:
-                mapping_end_atoms.append(index1)
-                logger.info("          End atom! Will be removed")
-
-        logger.info(f"    RMSD: {best_rmsd:}")
-        logger.info(f"    Removing end atoms: {end_atoms:} in fingerprint nonation: {mapping_end_atoms:}")
-        for end_atom in mapping_end_atoms:
-            best_mapping.pop(end_atom)
-
-
+        else: #we are guessing, and we missed
+            return None, 1e10
         return best_mapping, best_rmsd
 
     def prepare_new_topology(self):
         metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')
         metal.atoms[0].name = self.metal_name
         metal.atoms[0].charge = self.metal_charge
-        metal.atoms[0].mass = name2mass[self.metal_name]
+        metal.atoms[0].mass = name2mass[self.metal_name.title()]
 
         cage_topol = metal * self.n_metals + self.ligand * self.n_ligands
         cage_topol.write('test_cage.top', [list(range(self.n_ligands + self.n_metals))])
@@ -818,6 +788,7 @@ def get_args():
     parser.add_argument("-linker_topol", help="Topology of the linker ") # TODO
     parser.add_argument("-linker_coords", help="Structure of the linker ")  # TODO
     parser.add_argument("-fingerprint", default=None, help="Structure of the linker ")  # TODO
+    parser.add_argument("-fingerprint_style", default=None, help="Structure of the linker ")  # TODO
 
     parser.add_argument("-name", default='UNK', help="trajectory (traj_comp.xtc)")
     parser.add_argument("-smiles", default=None, help="Smiles of the linker")
@@ -839,6 +810,10 @@ if __name__ == '__main__':
 
     if args.fingerprint is not None:
         cgbind2gmx.name_of_binding_side = args.fingerprint
+
+
+    if args.fingerprint_style is not None:
+        cgbind2gmx.fingerprint_style = args.fingerprint_style
 
     if args.smiles is not None and args.arch_name is not None and args.metal is not None and args.metal_charge is not None:
         cgbind2gmx.from_smiles(args.smiles, args.arch_name, args.metal, int(args.metal_charge))

@@ -1,0 +1,98 @@
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+HETATM    1 ZN   UNL X   1       2.453   8.672   3.004  1.00  0.00      SYSTZN  
+HETATM    2  H   UNL X   1       4.759   9.561   5.047  1.00  0.00      SYST H  
+HETATM    3  C   UNL X   1       4.104  10.218   4.985  1.00  0.00      SYST C  
+HETATM    4  N   UNL X   1       2.995  10.151   4.201  1.00  0.00      SYST N  
+ATOM      5  H   UNK X   4       0.982  11.251   2.771  1.00  0.00      SYST H  
+ATOM      6  H   UNK X   5       0.193  11.207   4.456  1.00  0.00      SYST H  
+HETATM    7  H   UNL X   1       0.916  12.795   3.808  1.00  0.00      SYST H  
+HETATM    8  H   UNL X   1       4.760  11.660   6.259  1.00  0.00      SYST H  
+HETATM    9  C   UNL X   1       4.104  11.385   5.659  1.00  0.00      SYST C  
+HETATM   10  N   UNL X   1       2.996  12.098   5.325  1.00  0.00      SYST N  
+HETATM   11  C   UNL X   1       2.355  11.309   4.443  1.00  0.00      SYST C  
+HETATM   12  C   UNL X   1       1.033  11.661   3.833  1.00  0.00      SYST C  
+HETATM   13  H   UNL X   1       2.932  11.287  -1.213  1.00  0.00      SYST H  
+HETATM   14  C   UNL X   1       2.791  10.542  -0.674  1.00  0.00      SYST C  
+HETATM   15  N   UNL X   1       2.551   9.282  -1.125  1.00  0.00      SYST N  
+ATOM     16  H   UNK X   4       1.636   6.773  -0.948  1.00  0.00      SYST H  
+ATOM     17  H   UNK X   5       1.575   6.782   0.912  1.00  0.00      SYST H  
+HETATM   18  H   UNL X   1       3.199   6.537   0.036  1.00  0.00      SYST H  
+HETATM   19  H   UNL X   1       2.932  11.288   1.212  1.00  0.00      SYST H  
+HETATM   20  C   UNL X   1       2.791  10.543   0.674  1.00  0.00      SYST C  
+HETATM   21  N   UNL X   1       2.552   9.282   1.125  1.00  0.00      SYST N  
+HETATM   22  C   UNL X   1       2.417   8.555   0.000  1.00  0.00      SYST C  
+HETATM   23  C   UNL X   1       2.194   7.073   0.000  1.00  0.00      SYST C  
+HETATM   24  H   UNL X   1      -0.403   8.171   1.634  1.00  0.00      SYST H  
+HETATM   25  C   UNL X   1      -0.444   8.006   2.549  1.00  0.00      SYST C  
+HETATM   26  N   UNL X   1       0.597   8.121   3.415  1.00  0.00      SYST N  
+ATOM     27  H   UNK X   4       0.838   6.790   6.364  1.00  0.00      SYST H  
+ATOM     28  H   UNK X   5       0.356   8.572   6.605  1.00  0.00      SYST H  
+HETATM   29  H   UNL X   1       1.913   8.146   5.678  1.00  0.00      SYST H  
+HETATM   30  H   UNL X   1      -2.383   7.471   2.847  1.00  0.00      SYST H  
+HETATM   31  C   UNL X   1      -1.545   7.617   3.223  1.00  0.00      SYST C  
+HETATM   32  N   UNL X   1      -1.239   7.472   4.540  1.00  0.00      SYST N  
+HETATM   33  C   UNL X   1       0.067   7.791   4.607  1.00  0.00      SYST C  
+HETATM   34  C   UNL X   1       0.840   7.827   5.890  1.00  0.00      SYST C  
+HETATM   35  H   UNL X   1       4.502   4.267   4.123  1.00  0.00      SYST H  
+HETATM   36  C   UNL X   1       4.461   5.141   3.808  1.00  0.00      SYST C  
+HETATM   37  N   UNL X   1       5.503   5.834   3.276  1.00  0.00      SYST N  
+ATOM     38  H   UNK X   4       5.402   9.135   2.694  1.00  0.00      SYST H  
+ATOM     39  H   UNK X   5       5.565   8.081   1.168  1.00  0.00      SYST H  
+HETATM   40  H   UNL X   1       6.857   7.990   2.504  1.00  0.00      SYST H  
+HETATM   41  H   UNL X   1       2.522   5.667   4.123  1.00  0.00      SYST H  
+HETATM   42  C   UNL X   1       3.360   5.920   3.808  1.00  0.00      SYST C  
+HETATM   43  N   UNL X   1       3.666   7.133   3.276  1.00  0.00      SYST N  
+HETATM   44  C   UNL X   1       4.972   7.032   2.966  1.00  0.00      SYST C  
+HETATM   45  C   UNL X   1       5.745   8.125   2.293  1.00  0.00      SYST C  
+CONECT    2    3
+CONECT    3    2    4    9
+CONECT    4    3   11
+CONECT    5   12
+CONECT    6   12
+CONECT    7   12
+CONECT    8    9
+CONECT    9    3    8   10
+CONECT   10    9   11
+CONECT   11    4   10   12
+CONECT   12    5    6    7   11
+CONECT   13   14
+CONECT   14   13   15   20
+CONECT   15   14   22
+CONECT   16   23
+CONECT   17   23
+CONECT   18   23
+CONECT   19   20
+CONECT   20   14   19   21
+CONECT   21   20   22
+CONECT   22   15   21   23
+CONECT   23   16   17   18   22
+CONECT   24   25
+CONECT   25   24   26   31
+CONECT   26   25   33
+CONECT   27   34
+CONECT   28   34
+CONECT   29   34
+CONECT   30   31
+CONECT   31   25   30   32
+CONECT   32   31   33
+CONECT   33   26   32   34
+CONECT   34   27   28   29   33
+CONECT   35   36
+CONECT   36   35   37   42
+CONECT   37   36   44
+CONECT   38   45
+CONECT   39   45
+CONECT   40   45
+CONECT   41   42
+CONECT   42   36   41   43
+CONECT   43   42   44
+CONECT   44   37   43   45
+CONECT   45   38   39   40   44
+END
