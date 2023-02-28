@@ -21,6 +21,7 @@ def find_metal_indices(cage, metal_name):
     n_metals = len(metal_indices)
     return metal_indices, n_metals
 
+#TODO there is some problems with reading the *gro file !!!
 
 def find_bound_whole_ligands(metal, cage, G_sub_ligands, cutoff_covalent=3):
     '''
@@ -228,17 +229,23 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
 
     # create the Universe
     n_atoms = len(positions)
-    print(n_atoms)
+    print("After adding the hydrogens", n_atoms)
     if n_atoms > 0:
         hydrogens = MDAnalysis.Universe.empty(n_atoms, trajectory=True)
         hydrogens.add_TopologyAttr('name', ['H'] * n_atoms)
         hydrogens.add_TopologyAttr('type', ['H'] * n_atoms)
         hydrogens.atoms.positions = positions
         new_syst = MDAnalysis.Merge(selection_site.atoms, hydrogens.atoms)
+        #print("AAA")
+        #print("BBB", [idx for idx, a in enumerate(np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)]))])
+
     else:
         new_syst = MDAnalysis.Merge(selection_site.atoms) #this makes sub-universe
 
-    return new_syst
+    print("Renumered atoms ")
+    renumered_add_atoms_to_this_atom = [idx for idx, name in enumerate(selection_site.atoms.indices) if name in add_atoms_to_this_atom]
+
+    return new_syst, renumered_add_atoms_to_this_atom
 
 def find_atom_to_ligand_membership(new_syst, metal_name):
     new_site_no_metal = new_syst.select_atoms(f"not name {metal_name.title():s} {metal_name.upper():s} {metal_name.lower():s}")
@@ -254,7 +261,11 @@ def find_atom_to_ligand_membership(new_syst, metal_name):
     nx.set_node_attributes(G_all_short_ligands, {atom.index: atom.name[0] for atom in new_site_no_metal.atoms},
                            "name")
     G_sub_short_ligands = [G_all_short_ligands.subgraph(a) for a in nx.connected_components(G_all_short_ligands)]
-    ligands_atoms_membership = [list(G_sub_short_ligands[a].nodes) for a in range(len(G_sub_short_ligands))]
+
+    # Here we just take the subgraphs, so selected atoms, but nx makes the order random, this is not a problem general
+    # unless you want to take the extra hydrogens out
+    ligands_atoms_membership = [list(G_sub_short_ligands[a].nodes) for a in range(len(G_sub_short_ligands))] # TODO I made it sorted, check if this helped! well. it helps in the ordering... it breakes others
+    #ligands_atoms_membership = [sorted(list(G_sub_short_ligands[a].nodes)) for a in range(len(G_sub_short_ligands))] # TODO I made it sorted, check if this helped! well. it helps in the ordering... it breakes others
     return ligands_atoms_membership
 
 def find_ligand_pattern(new_syst, ligands_nodes):
@@ -298,7 +309,7 @@ def find_ligand_pattern(new_syst, ligands_nodes):
 
     return unique_ligands_pattern, unique_ligands
 
-def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern):
+def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern, extra_atoms, link_atoms):
     '''
     We renumber the atoms that there are togheter. Also, identical ligands also have to have the same numbering
 
@@ -307,12 +318,21 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
     :return:
     '''
 
+    new_link_atoms = []
+    new_extra_atoms = []
+
     metals = new_syst.select_atoms(f"name {metal_name.title():s} {metal_name.upper():s} {metal_name.lower():s}")
     for metal in metals:
         metal.element = metal_name.title()
     new_ligands = [metals]
+    
+    n_total_atoms = len(metals)
 
     for idx, ligands_node in enumerate(ligands_atoms_membership):
+
+        sorted_extra_atoms = [idx for idx, a in enumerate(ligands_node) if a in extra_atoms]
+        sorted_link_atoms = [idx for idx, a in enumerate(ligands_node) if a in link_atoms]
+
         new_syst.atoms[ligands_node].write("temp1.pdb")
         selected_ligand_1 = MDAnalysis.Universe("temp1.pdb")
         mol1 = Chem.MolFromPDBFile("temp1.pdb")
@@ -337,11 +357,17 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
         if iso.is_isomorphic():
             for node in iso.mapping:
                 new_ligand.atoms[iso.mapping[node]].position = selected_ligand_1.atoms[node].position
+            for link_atom in sorted_link_atoms:
+                new_link_atoms.append(n_total_atoms + iso.mapping[link_atom])
+            for extra_atom in sorted_extra_atoms:
+                new_extra_atoms.append(n_total_atoms + iso.mapping[extra_atom])
+
             new_ligands.append(new_ligand.atoms)
+            n_total_atoms += len(new_ligand.atoms)
         else:
             print(idx, "The graphs are not isomorphic")
 
-    return new_ligands
+    return new_ligands, new_extra_atoms, new_link_atoms
 
 
 def extract_metal_structure(filename,metal_name, output=None):
@@ -398,7 +424,7 @@ def extract_metal_structure(filename,metal_name, output=None):
             # solved
 
 
-        new_syst = add_hydrogens(selection_site, metal_name, site_link_atoms)
+        new_syst, new_link_atoms = add_hydrogens(selection_site, metal_name, site_link_atoms)
 
 
         #Hydrogens are added at the end of the file
@@ -416,13 +442,22 @@ def extract_metal_structure(filename,metal_name, output=None):
             new_syst.atoms[unique_ligand].write(f"ligand{idx_site:d}_{idx:}.pdb")
             new_syst.atoms[unique_ligand].write(f"ligand{idx_site:d}_{idx:}.xyz")
 
-        renumbered_ligands = renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern)
+        renumbered_ligands, sorted_extra_atoms, sorted_link_atoms  = renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern, extra_atoms, new_link_atoms)
 
         # Parmed needs that the same residues are grouped togheter:
         sorted_renumbered_ligands = [renumbered_ligands[a] for a in np.append(0, np.argsort(unique_ligands_pattern) + 1)]
-        sorted_extra_atoms = [idx for idx, a in enumerate(
-            np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in extra_atoms]
+        #sorted_extra_atoms = [idx for idx, a in enumerate(
+        #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in extra_atoms]
+        #sorted_link_atoms = [idx for idx, a in enumerate(
+        #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in new_link_atoms]
 
+        print("AAA", site_link_atoms)
+        print("BBB", [idx for idx, a in enumerate(np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)]))])
+        print("CCC", [a for idx, a in enumerate(np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)]))])
+
+        #sorted_link_atoms = [idx for idx, a in enumerate(
+        #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if
+        #                      a in site_link_atoms]
 
         # Saving the files ------------------------
         new_cage = MDAnalysis.Merge(*sorted_renumbered_ligands)  # , dimensions=crystal.dimensions)
@@ -442,7 +477,7 @@ def extract_metal_structure(filename,metal_name, output=None):
 
         with open("INFO.dat", "a") as File:
             File.write(f"ligand_pattern:{','.join(list(map(str,np.sort(unique_ligands_pattern)))):}\n")
-            File.write(f"link_atoms:{','.join(list(map(str, sorted_extra_atoms))):}\n")
+            File.write(f"link_atoms:{','.join(list(map(str, sorted_link_atoms))):}\n")
             File.write(f"extra_atoms:{','.join(list(map(str, sorted_extra_atoms))):}\n")
             File.write(f"starting_index:{','.join(list(map(str, starting_index))):}\n")
 
