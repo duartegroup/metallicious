@@ -145,7 +145,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
                         recursive(mapping, index + 1, copy)
 
             recursive(mappings, 0, [])
-            print("All permutations:", len(all_possible_mappings))
+            logger.info("Permutations to check:", len(all_possible_mappings))
 
             for mapping_idx in range(len(all_possible_mappings)): # TODO change range(len to enumerate
                 # concatenate the mapping into one dictionary
@@ -211,11 +211,11 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
                 '''
 
                 if rmsd < best_rmsd:
-                    print(rmsd, "<", best_rmsd)
+                    logger.info("Found better permutation: {rmsd:} < {best_rmsd:}")
                     best_rmsd = rmsd
                     best_mapping = reversed_concatenated_mapping
 
-                if best_rmsd < 0.01:  # if rmsd is really small there is no point of searching further
+                if best_rmsd < 0.01:  # if rmsd is small there is no point of searching further
                     break
 
     upper_names = np.array([name.upper() for name in syst_fingerprint_heavy_atoms.atoms.names])

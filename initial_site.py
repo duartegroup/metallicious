@@ -1,4 +1,3 @@
-from antechamber_interface import antechamber
 import parmed as pmd
 
 
@@ -6,13 +5,15 @@ try:
     from cgbind2pmd.data import name2mass
     from cgbind2pmd.data import name_to_atomic_number
     from cgbind2pmd.data import vdw_data
+    from cgbind2pmd.antechamber_interface import antechamber
 except:
     from data import name2mass
     from data import name_to_atomic_number
     from data import vdw_data
+    from antechamber_interface import antechamber
+
 
 def create_metal_topol(metal_name, metal_charge, vdw_data_name):
-    print(vdw_data)
     data = vdw_data[vdw_data_name]
 
     if metal_name.title() in data:
@@ -36,7 +37,8 @@ def create_metal_topol(metal_name, metal_charge, vdw_data_name):
         metal_topol = pmd.gromacs.GromacsTopologyFile()
         metal_topol.add_atom(new_atom, metal_name, metal_name)
 
-        residue = pmd.topologyobjects.Residue(metal_name)
+        residue = pmd.topologyobjects.Residue(metal_name, number=0)
+        residue.add_atom(new_atom)
         residue_list = pmd.topologyobjects.ResidueList()
         residue_list.append(residue)
         metal_topol.residues = residue_list

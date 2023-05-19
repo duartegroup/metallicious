@@ -29,8 +29,9 @@ def find_metal_indices(cage, metal_name):
     n_metals = len(metal_indices)
     return metal_indices, n_metals
 
-#TODO there is some problems with reading the *gro file !!!
-
+# TODO find_bound_whole_ligands and find_bound_ligands_nx are the same, aren't they?
+# TODO THey are the same, and remove this after sevela weeks, if nothing breaks (19/05/2023)
+'''
 def find_bound_whole_ligands(metal, cage, G_sub_ligands, cutoff_covalent=3):
     '''
     Find ligands which are bound to the metal
@@ -61,11 +62,12 @@ def find_bound_whole_ligands(metal, cage, G_sub_ligands, cutoff_covalent=3):
     n_ligands = len(bound_ligands)
     return bound_ligands, closest_atoms
 
-# TODO find_bound_whole_ligands and find_bound_ligands_nx are the same, aren't they?
+'''
+
 def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, closest_neighbhors = 3):
     '''
-    Finds bound ligands to metal, assuems that atoms within cutoff_covalent (default 3) are bound to metal.
-    Returns list of subgraphs of bound ligands  it does not cutoff ligands (so they can be uneven)
+    Finds bound ligands to metal, assumes that atoms within cutoff_covalent (default 3) are bound to metal.
+    Returns list of sub-graphs of bound ligands; it does not cut ligands (so they can be uneven)
 
     :param metal_index:
     :param cutoff:
@@ -86,10 +88,11 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
     G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
 
     closest_atoms_string = f"Closest atoms around {metal_index:d}:"
-    closest_atoms = [] # closest atoms, we assume that they are donors of electrons
+    closest_atoms_ligands = []
 
     G_sub_cages_bound = []
     for G_sub_cage in G_sub_cages:
+        closest_atoms = []  # closest atoms, we assume that they are donors of electrons
         clusters_of_atoms = cage.atoms[list(G_sub_cage)]
         metal = cage.atoms[metal_index]
 
@@ -120,12 +123,14 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
                 temp_atom = clusters_of_atoms.atoms[atom]
                 closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {np.min(all_metal_cluster_distances):f} A"
                 closest_atoms.append(temp_atom.index)
+                
+        
+            closest_atoms_ligands.append(closest_atoms)
 
     logger.info(closest_atoms_string)
-    print(closest_atoms_string)
 
     #ourput is list with n_ligands graphs representing diffrent ligands, and closest atoms (donors of electrons)
-    return G_sub_cages_bound, closest_atoms
+    return G_sub_cages_bound, closest_atoms_ligands
 
 
 
@@ -153,6 +158,13 @@ def find_closest_and_add_rings(metal_indices, cage, G_sub_ligands):
     # Use MDAnalysis (interface to RDKIT) to get aromaticity
     for metal_index in metal_indices:
         cage.atoms[metal_index].type = 'H' # we change type of metal for hydrogen, becasue vdwradii is required for aromaticity
+
+    if not hasattr(cage.atoms[0], 'element'):
+        guessed_elements = MDAnalysis.topology.guessers.guess_types(cage.names)
+        for metal_index in metal_indices:
+            guessed_elements[metal_index] = 'H'
+        cage.universe.add_TopologyAttr('elements', guessed_elements)
+
     aromaticity = MDAnalysis.topology.guessers.guess_aromaticities(cage)
 
 
@@ -163,13 +175,13 @@ def find_closest_and_add_rings(metal_indices, cage, G_sub_ligands):
         site_link_atoms = []
 
         metal = cage.atoms[metal_index]
-        bound_ligands, selected_closest_atoms = find_bound_whole_ligands(metal, cage, G_sub_ligands)
-        bound_ligands2, selected_closest_atoms2 = find_bound_ligands_nx(cage, metal_index)#, cutoff=7, cutoff_covalent=3.0, closest_neighbhors=3)
+        bound_ligands2, selected_closest_atoms2 = find_bound_whole_ligands(metal, cage, G_sub_ligands)
+        bound_ligands, selected_closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=None)#, cutoff=7, cutoff_covalent=3.0, closest_neighbhors=3)
         # TODO THIS NEEDs to be checked for the knots/cages
 
-        for a in range(len(bound_ligands)):
+        for idx_bound_ligand in range(len(bound_ligands)):
             close_atoms_and_in_rings = []
-            selected_bound_ligand = nx.Graph(bound_ligands[a])
+            selected_bound_ligand = nx.Graph(bound_ligands[idx_bound_ligand])
             ##selected_closest_atom = selected_closest_atoms[a]
 
 
@@ -177,10 +189,9 @@ def find_closest_and_add_rings(metal_indices, cage, G_sub_ligands):
             #cut_sphere = cage[[metal_index] + list(selected_bound_ligand.nodes)].select_atoms(
             #    f'around {cutoff:f} index {metal_index:d}')
 
-
             # we select neighbours of 3
-            neighbour_indices  = []
-            for closest_atom in selected_closest_atoms2:
+            neighbour_indices = []
+            for closest_atom in selected_closest_atoms[idx_bound_ligand]:
                 if closest_atom in selected_bound_ligand.nodes:
                     neighbour_indices += list(nx.generators.ego_graph(selected_bound_ligand, closest_atom, radius=2).nodes)
 
@@ -217,7 +228,7 @@ def find_closest_and_add_rings(metal_indices, cage, G_sub_ligands):
                     aromatic_rings.append(new_ring)
 
             for ring in aromatic_rings:
-                for selected_closest_atom in selected_closest_atoms[a]:
+                for selected_closest_atom in selected_closest_atoms[idx_bound_ligand]:
                     if selected_closest_atom in ring:
                         rings_with_closest_atom += ring
                     else:
@@ -226,9 +237,8 @@ def find_closest_and_add_rings(metal_indices, cage, G_sub_ligands):
                             if atom in atoms_within_cutoff:
                                 atoms_within_cutoff.remove(atom)
 
-            # We merge two crateria
+            # We merge two criteria
             close_atoms_and_in_rings = list(set(atoms_within_cutoff + rings_with_closest_atom))
-
 
             # we remove atoms which are alone, not connected to anything
             # (this might be effect that ring was removed, but its hydrogen left behind, as a result, the fragment of the ring is reconstructured, which we don't want)
@@ -281,13 +291,12 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
     unique_sites = []
     unique_site_link_atoms = []
 
-    print(f"We will check {len(binding_sites_graphs):} binding sites")
+    logger.info(f"Uniqueness check: Number of binding sites to check: {len(binding_sites_graphs):}")
     for site, site_link_atom in zip(binding_sites_graphs, site_link_atoms):
         exist = False
 
         for site_fingerprint in unique_sites:
-            print("Checking", len(site), len(site_fingerprint))
-
+            logger.info("\tChecking uniqueness of site:", len(site), len(site_fingerprint))
 
             # the structures are sorted because MDAnalysis selection atoms sorts them
             #_, rmsd = map_two_structures(site[0], structure[np.sort(site)], structure[np.sort(site_fingerprint)], metal_name)
@@ -295,7 +304,7 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
             _, rmsd = map_two_structures(0, structure[site], structure[site_fingerprint],
                                          metal_name)
 
-            print("RMSD", rmsd)
+            logger.info("RMSD between current structure and already check structures:", rmsd)
             if rmsd < 1.0:
                 exist = True
                 break
@@ -304,7 +313,7 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
             unique_sites.append(site)
             unique_site_link_atoms.append(site_link_atom)
 
-    print("we have this amoutnt of unique sites:", len(unique_sites))
+    logger.info("Number of unique sites:", len(unique_sites))
     return unique_sites, unique_site_link_atoms
 
 
@@ -325,8 +334,16 @@ def rotation_matrix_from_vectors(vec1, vec2):
     rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
     return rotation_matrix
 
-import os # TODO remove
 def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
+    '''
+    Adds hydrogen to unsaturated carbon
+
+    :param selection_site:
+    :param metal_name:
+    :param add_atoms_to_this_atom:
+    :return:
+    '''
+    logger.info("Adding hydrogens")
     # we just align the methane and add the 3 hydrogens from it, optimises with PBE0/def2-SVP
     methane = np.array([[-0.00000935761277, -0.00000001492783, 0.00002482854051],
                         [-0.00004478038360, 0.00000000997987, 1.09805688107415],
@@ -347,9 +364,6 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
                                                                                  selection_site.atoms.positions,
                                                                                  vdwradii={metal_name: 3}))
 
-        print("link", link_atom, add_atoms_to_this_atom, os.getcwd())
-        selection_site.atoms.write("temp.pdb")
-        
         vector = list(G_selection_site.edges(link_atom))
         
         if len(vector) > 1:
@@ -373,20 +387,17 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
 
     # create the Universe
     n_atoms = len(positions)
-    print("After adding the hydrogens", n_atoms)
+    logger.info("Number of atoms after adding the hydrogens", n_atoms)
+
     if n_atoms > 0:
         hydrogens = MDAnalysis.Universe.empty(n_atoms, trajectory=True)
         hydrogens.add_TopologyAttr('name', ['H'] * n_atoms)
         hydrogens.add_TopologyAttr('type', ['H'] * n_atoms)
         hydrogens.atoms.positions = positions
         new_syst = MDAnalysis.Merge(selection_site.atoms, hydrogens.atoms)
-        #print("AAA")
-        #print("BBB", [idx for idx, a in enumerate(np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)]))])
-
     else:
         new_syst = MDAnalysis.Merge(selection_site.atoms) #this makes sub-universe
 
-    print("Renumered atoms ")
     renumered_add_atoms_to_this_atom = [idx for idx, name in enumerate(selection_site.atoms.indices) if name in add_atoms_to_this_atom]
 
     return new_syst, renumered_add_atoms_to_this_atom
@@ -394,11 +405,9 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
 def find_atom_to_ligand_membership(new_syst, metal_name):
     new_site_no_metal = new_syst.select_atoms(f"not name {metal_name.title():s} {metal_name.upper():s} {metal_name.lower():s}")
     if new_site_no_metal.universe.dimensions is not None:
-        print("A")
         G_all_short_ligands = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(new_site_no_metal.atoms, new_site_no_metal.atoms.positions, box=new_site_no_metal.universe.dimensions))
     else:
-        print("B")
         G_all_short_ligands = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(new_site_no_metal.atoms, new_site_no_metal.atoms.positions))
 
@@ -513,7 +522,7 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
             new_ligands.append(new_ligand.atoms)
             n_total_atoms += len(new_ligand.atoms)
         else:
-            print(idx, "The graphs are not isomorphic")
+            logger.info(f"The graphs are not isomorphic, index: {idx:}")
 
     return new_ligands, new_extra_atoms, new_link_atoms
 
@@ -534,7 +543,7 @@ def extract_metal_structure(filename, metal_name, output=None, check_uniquness=T
 
     metal_indices, n_metals = find_metal_indices(syst, metal_name)
 
-    print(metal_indices, metal_name)
+    logger.info("Metal indices to check {metal_indices:} metal name:{metal_name:}")
 
     all_ligands_atoms = cage.select_atoms("not index " + " ".join(map(str,metal_indices)))
 
@@ -550,19 +559,17 @@ def extract_metal_structure(filename, metal_name, output=None, check_uniquness=T
     else:
         unique_sites = binding_sites_graphs
         unique_site_link_atoms = site_link_atoms
-        print("Site link", site_link_atoms)
 
 
     for n_site, unique_site in enumerate(unique_sites):
 
         selection_site = cage[unique_site]
-        print("unique_site", unique_site)
         cage.atoms.write("cage.pdb")
         selection_site.atoms.write(f"temp_temp{n_site:}.pdb")
 
         # wrapping around pbc #TODO separate function (?)
         if selection_site.universe.dimensions is not None:
-            print("dim=",selection_site.universe.dimensions)
+            logger.info(f"Dimensionality {selection_site.universe.dimensions:}")
 
             G_selection_site = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(selection_site.atoms,
                                                                                  selection_site.atoms.positions,
@@ -602,10 +609,6 @@ def extract_metal_structure(filename, metal_name, output=None, check_uniquness=T
         #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in extra_atoms]
         #sorted_link_atoms = [idx for idx, a in enumerate(
         #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in new_link_atoms]
-
-        print("AAA", unique_site_link_atoms)
-        print("BBB", [idx for idx, a in enumerate(np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)]))])
-        print("CCC", [a for idx, a in enumerate(np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)]))])
 
         #sorted_link_atoms = [idx for idx, a in enumerate(
         #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if

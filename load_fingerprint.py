@@ -181,6 +181,8 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     '''
 
     G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff)
+    closest_atoms = np.concatenate(closest_atoms)
+
     number_ligands_bound = len(G_sub_cages)
     logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
 

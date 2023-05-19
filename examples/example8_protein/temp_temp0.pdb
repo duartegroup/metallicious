@@ -142,41 +142,44 @@ REMARK     285 WAS MISSING.
 REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
 REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
 REMARK     285 THIS RECORD ARE MEANINGLESS.
-ATOM      1  CB  HIS A  25      -5.665   4.157   0.549  1.00  1.48      A    C  
-ATOM      2  CG  HIS A  25      -4.675   4.689   1.550  1.00  1.30      A    C  
-ATOM      3  ND1 HIS A  25      -4.949   5.786   2.353  1.00  1.33      A    N  
-ATOM      4  CD2 HIS A  25      -3.402   4.293   1.878  1.00  1.11      A    C  
-ATOM      5  CE1 HIS A  25      -3.862   6.011   3.116  1.00  1.19      A    C  
-ATOM      6  NE2 HIS A  25      -2.890   5.131   2.866  1.00  1.04      A    N  
-ATOM      7  HD1 HIS A  25      -5.781   6.302   2.364  1.00  1.46      A    H  
-ATOM      8  HD2 HIS A  25      -2.882   3.450   1.442  1.00  1.05      A    H  
-ATOM      9  HE1 HIS A  25      -3.785   6.809   3.841  1.00  1.21      A    H  
-ATOM     10  CA  CYS A   5       1.643   3.178  -0.728  1.00  0.69      A    C  
-ATOM     11  CB  CYS A   5       0.941   3.364   0.616  1.00  0.66      A    C  
-ATOM     12  SG  CYS A   5      -0.717   4.025   0.340  1.00  0.89      A    S  
-ATOM     13  HB2 CYS A   5       0.873   2.423   1.118  1.00  0.64      A    H  
-ATOM     14  HB3 CYS A   5       1.502   4.050   1.227  1.00  0.63      A    H  
-ATOM     15  CB  HIS A  21      -1.282  -1.257   3.633  1.00  0.81      A    C  
-ATOM     16  CG  HIS A  21      -1.186   0.240   3.788  1.00  0.79      A    C  
-ATOM     17  ND1 HIS A  21      -1.499   0.883   4.975  1.00  0.88      A    N  
-ATOM     18  CD2 HIS A  21      -0.849   1.232   2.900  1.00  0.77      A    C  
-ATOM     19  CE1 HIS A  21      -1.350   2.204   4.770  1.00  0.88      A    C  
-ATOM     20  NE2 HIS A  21      -0.958   2.471   3.521  1.00  0.82      A    N  
-ATOM     21  CB  CYS A   8       0.244   7.407   3.305  1.00  0.83      A    C  
-ATOM     22  HD1 HIS A  21      -1.777   0.453   5.811  1.00  0.97      A    H  
-ATOM     23  HD2 HIS A  21      -0.538   1.076   1.878  1.00  0.76      A    H  
-ATOM     24  HE1 HIS A  21      -1.527   2.957   5.523  1.00  0.97      A    H  
-ATOM     25  C   GLU A   7      -0.202   8.218  -0.046  1.00  1.09      A    C  
-ATOM     26  N   CYS A   8       0.331   7.416   0.835  1.00  0.93      A    N  
-ATOM     27  CA  CYS A   8       0.936   7.993   2.072  1.00  0.86      A    C  
-HETATM   28 ZN   ZN  A  30      -0.998   4.266   2.578  1.00  0.81      A   ZN  
-ATOM     29  SG  CYS A   8       0.580   5.634   3.405  1.00  0.71      A    S  
-ATOM     30  H   CYS A   8       0.333   6.442   0.686  1.00  0.87      A    H  
-ATOM     31  HB2 CYS A   8       0.618   7.895   4.193  1.00  0.84      A    H  
-ATOM     32  HB3 CYS A   8      -0.822   7.568   3.230  1.00  0.93      A    H  
-CONECT   12   28
-CONECT   29   28
-CONECT   20   28
-CONECT    6   28
-CONECT   28    6   12   20   29
+HETATM    1 ZN   ZN  A  30      -0.998   4.266   2.578  1.00  0.81      A   ZN  
+ATOM      2  N   CYS A   5       2.875   2.361  -0.536  1.00  0.59      A    N  
+ATOM      3  CA  CYS A   5       1.643   3.178  -0.728  1.00  0.69      A    C  
+ATOM      4  C   CYS A   5       1.994   4.559  -1.283  1.00  0.82      A    C  
+ATOM      5  CB  CYS A   5       0.941   3.364   0.616  1.00  0.66      A    C  
+ATOM      6  SG  CYS A   5      -0.717   4.025   0.340  1.00  0.89      A    S  
+ATOM      7  HA  CYS A   5       0.976   2.671  -1.408  1.00  0.77      A    H  
+ATOM      8  HB2 CYS A   5       0.873   2.423   1.118  1.00  0.64      A    H  
+ATOM      9  HB3 CYS A   5       1.502   4.050   1.227  1.00  0.63      A    H  
+ATOM     10  N   CYS A   8       0.331   7.416   0.835  1.00  0.93      A    N  
+ATOM     11  CA  CYS A   8       0.936   7.993   2.072  1.00  0.86      A    C  
+ATOM     12  C   CYS A   8       2.437   7.674   2.116  1.00  0.78      A    C  
+ATOM     13  CB  CYS A   8       0.244   7.407   3.305  1.00  0.83      A    C  
+ATOM     14  SG  CYS A   8       0.580   5.634   3.405  1.00  0.71      A    S  
+ATOM     15  HA  CYS A   8       0.797   9.063   2.062  1.00  0.95      A    H  
+ATOM     16  HB2 CYS A   8       0.618   7.895   4.193  1.00  0.84      A    H  
+ATOM     17  HB3 CYS A   8      -0.822   7.568   3.230  1.00  0.93      A    H  
+ATOM     18  CB  HIS A  21      -1.282  -1.257   3.633  1.00  0.81      A    C  
+ATOM     19  CG  HIS A  21      -1.186   0.240   3.788  1.00  0.79      A    C  
+ATOM     20  ND1 HIS A  21      -1.499   0.883   4.975  1.00  0.88      A    N  
+ATOM     21  CD2 HIS A  21      -0.849   1.232   2.900  1.00  0.77      A    C  
+ATOM     22  CE1 HIS A  21      -1.350   2.204   4.770  1.00  0.88      A    C  
+ATOM     23  NE2 HIS A  21      -0.958   2.471   3.521  1.00  0.82      A    N  
+ATOM     24  HD1 HIS A  21      -1.777   0.453   5.811  1.00  0.97      A    H  
+ATOM     25  HD2 HIS A  21      -0.538   1.076   1.878  1.00  0.76      A    H  
+ATOM     26  HE1 HIS A  21      -1.527   2.957   5.523  1.00  0.97      A    H  
+ATOM     27  CB  HIS A  25      -5.665   4.157   0.549  1.00  1.48      A    C  
+ATOM     28  CG  HIS A  25      -4.675   4.689   1.550  1.00  1.30      A    C  
+ATOM     29  ND1 HIS A  25      -4.949   5.786   2.353  1.00  1.33      A    N  
+ATOM     30  CD2 HIS A  25      -3.402   4.293   1.878  1.00  1.11      A    C  
+ATOM     31  CE1 HIS A  25      -3.862   6.011   3.116  1.00  1.19      A    C  
+ATOM     32  NE2 HIS A  25      -2.890   5.131   2.866  1.00  1.04      A    N  
+ATOM     33  HD1 HIS A  25      -5.781   6.302   2.364  1.00  1.46      A    H  
+ATOM     34  HD2 HIS A  25      -2.882   3.450   1.442  1.00  1.05      A    H  
+ATOM     35  HE1 HIS A  25      -3.785   6.809   3.841  1.00  1.21      A    H  
+CONECT    6    1
+CONECT   14    1
+CONECT   23    1
+CONECT   32    1
+CONECT    1    6   14   23   32
 END

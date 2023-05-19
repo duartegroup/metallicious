@@ -6,7 +6,7 @@ from mapping import map_two_structures
 
 
 def extract_structure(filename, output=None):  # TODO this will be delated
-    metals = ['pd', 'co', 'fe']
+    metals = ['pd', 'co', 'fe', 'zn']
     syst = MDAnalysis.Universe(filename)
 
     # Remove numbers from name

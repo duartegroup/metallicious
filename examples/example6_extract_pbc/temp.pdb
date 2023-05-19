@@ -1,55 +1,31 @@
-HEADER    
 TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
-COMPND    FAWCEN02_clean
-CRYST1   14.716   14.716   14.716 109.47 109.47 109.47 P 1           1
-HETATM    1 ZN   UNL X   1       2.453  -1.734   9.012  1.00  0.00      SYSTZN  
-HETATM    2  C   UNL X   1       3.360   0.338   7.031  1.00  0.00      SYST C  
-HETATM    3  N   UNL X   1       3.666  -0.730   7.815  1.00  0.00      SYST N  
-HETATM    4  N   UNL X   1       2.552  -3.667   8.601  1.00  0.00      SYST N  
-HETATM    5  C   UNL X   1       2.791  -4.688   9.467  1.00  0.00      SYST C  
-HETATM    6  C   UNL X   1       4.104  -0.791  12.690  1.00  0.00      SYST C  
-HETATM    7  N   UNL X   1       2.996  -1.437  13.141  1.00  0.00      SYST N  
-HETATM    8  C   UNL X   1      -1.545  -1.018   8.208  1.00  0.00      SYST C  
-HETATM    9  N   UNL X   1      -1.239   0.196   8.740  1.00  0.00      SYST N  
-HETATM   10  C   UNL X   1       4.104  -0.792  11.342  1.00  0.00      SYST C  
-HETATM   11  N   UNL X   1       2.995  -1.437  10.891  1.00  0.00      SYST N  
-HETATM   12  C   UNL X   1      -0.444  -1.796   8.208  1.00  0.00      SYST C  
-HETATM   13  N   UNL X   1       0.597  -1.103   8.740  1.00  0.00      SYST N  
-HETATM   14  C   UNL X   1       2.791  -5.854   8.793  1.00  0.00      SYST C  
-HETATM   15  N   UNL X   1       2.551  -5.614   7.476  1.00  0.00      SYST N  
-HETATM   16  C   UNL X   1       4.461   0.727   6.356  1.00  0.00      SYST C  
-HETATM   17  N   UNL X   1       5.503  -0.080   6.690  1.00  0.00      SYST N  
-HETATM   18  C   UNL X   1       4.972  -0.948   7.572  1.00  0.00      SYST C  
-HETATM   19  C   UNL X   1       5.745  -2.077   8.183  1.00  0.00      SYST C  
-HETATM   20  C   UNL X   1       2.417  -4.278   7.409  1.00  0.00      SYST C  
-HETATM   21  C   UNL X   1       2.194  -3.537   6.126  1.00  0.00      SYST C  
-HETATM   22  C   UNL X   1       2.355  -1.806  12.016  1.00  0.00      SYST C  
-HETATM   23  C   UNL X   1       1.033  -2.511  12.016  1.00  0.00      SYST C  
-HETATM   24  C   UNL X   1       0.067   0.094   9.050  1.00  0.00      SYST C  
-HETATM   25  C   UNL X   1       0.840   1.188   9.723  1.00  0.00      SYST C  
-CONECT    2    3   16
-CONECT    3    1    2   18
-CONECT    5    4   14
-CONECT    4    1    5   20
-CONECT    6    7   10
-CONECT    7    6   22
-CONECT    8    9   12
-CONECT    9    8   24
-CONECT   10    6   11
-CONECT   11    1   10   22
-CONECT   12    8   13
-CONECT   13    1   12   24
-CONECT   14    5   15
-CONECT   15   14   20
-CONECT   16    2   17
-CONECT   17   16   18
-CONECT    1    3    4   11   13
-CONECT   18    3   17   19
-CONECT   19   18
-CONECT   20    4   15   21
-CONECT   21   20
-CONECT   22    7   11   23
-CONECT   23   22
-CONECT   24    9   13   25
-CONECT   25   24
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+HETATM    1  H   UNL X   1       4.759   9.561   5.047  1.00  0.00      SYST H  
+HETATM    2  C   UNL X   1       4.104  10.218   4.985  1.00  0.00      SYST C  
+HETATM    3  N   UNL X   1       2.995  10.151   4.201  1.00  0.00      SYST N  
+HETATM    4  H   UNL X   1       0.916  12.795   3.808  1.00  0.00      SYST H  
+ATOM      5  H   UNK X   4       0.982  11.251   2.771  1.00  0.00      SYST H  
+ATOM      6  H   UNK X   5       0.193  11.207   4.456  1.00  0.00      SYST H  
+HETATM    7  H   UNL X   1       4.760  11.660   6.259  1.00  0.00      SYST H  
+HETATM    8  C   UNL X   1       4.104  11.385   5.659  1.00  0.00      SYST C  
+HETATM    9  N   UNL X   1       2.996  12.098   5.325  1.00  0.00      SYST N  
+HETATM   10  C   UNL X   1       2.355  11.309   4.443  1.00  0.00      SYST C  
+HETATM   11  C   UNL X   1       1.033  11.661   3.833  1.00  0.00      SYST C  
+CONECT    1    2
+CONECT    2    1    3    8
+CONECT    3    2   10
+CONECT    7    8
+CONECT    8    2    7    9
+CONECT    9    8   10
+CONECT   10    3    9   11
+CONECT   11    4    5    6   10
+CONECT    4   11
+CONECT    5   11
+CONECT    6   11
 END

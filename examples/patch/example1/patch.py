@@ -19,6 +19,5 @@ cgbind2gmx.name_of_binding_side = fingerprint
 #cgbind2gmx.fingerprint_style = fingerprint_style
 
 cgbind2gmx.from_coords(f, linker_topol, metal, int(metal_charge))
-
 cgbind2gmx.save(output_coords="cage.gro", output_topol="cage.top")
 
