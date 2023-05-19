@@ -12,8 +12,10 @@ import MDAnalysis
 
 method = ade.methods.ORCA()
 
-
-from data import name_to_atomic_number
+try:
+    from data import name_to_atomic_number
+except:
+    from cgbind2pmd.data import name_to_atomic_number
 
 def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
     File = open(filename)
@@ -135,31 +137,38 @@ def orca_to_log(filename="site_opt_orca.out", log_output="lig.log"):
 def strip_numbers_from_atom_name(atom_name):
     return re.match("([a-zA-Z]+)", atom_name).group(0)
 
-def read_bonds(metal_name, donors):
+def read_bonds():
     File = open("Modified_Seminario_Bonds")
     text = File.read()
     File.close()
-
     bonds = {}
     for line in text.splitlines():
-        striped_bond = [strip_numbers_from_atom_name(name) for name in line.split()[0].split('-')]
+        striped_bond = [strip_numbers_from_atom_name(name).title() for name in line.split()[0].split('-')]
+        unsorted_bond = (int(line.split()[3]) - 1, int(line.split()[4]) - 1)
+        argsorted = np.argsort(unsorted_bond)
 
-        if metal_name.title() in line.split()[0]:
-            if (striped_bond[0] == metal_name.title() and striped_bond[1] in donors) or (
-                    striped_bond[1] == metal_name.title() and striped_bond[0] in donors):
-                bonds[tuple(sorted((int(line.split()[3]) - 1, int(line.split()[4]) - 1)))] = (
-                float(line.split()[2]), float(line.split()[1]))
-            else:
-                print("nope", striped_bond)
-        else:
-            bonds[tuple(sorted((int(line.split()[3]) - 1, int(line.split()[4]) - 1)))] = (
+        bonds[tuple(np.sort(unsorted_bond)), (striped_bond[argsorted[0]], striped_bond[argsorted[1]])] = (
             float(line.split()[2]), float(line.split()[1]))
     return bonds
 
-def read_and_symmetrize_bonds(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O", "S"]):
-    bonds = read_bonds(metal_name, donors)
-    metal_index = 0
+def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
+    metal_name = metal_name.title()
+    new_bonds = {}
+    for bond in bonds:
+        if metal_name.title() in bond[1]:
+            if (bond[1][0] == metal_name and bond[1][1] in donors) or (
+                    bond[1][1] == metal_name and bond[1][0] in donors):
+                new_bonds[bond[0]] = bonds[bond]
+            else:
+                print("Not coping, metal connected not to the donor")
+                print(bond[1])
+        else:
+            new_bonds[bond[0]] = bonds[bond]
+    return new_bonds
 
+def read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+
+    metal_index = 0  # TODO metal again first
     for unique_ligand in list(set(unique_ligands_pattern)):
         unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
         print(unique_ligand_indecies)
@@ -170,7 +179,6 @@ def read_and_symmetrize_bonds(metal_name, starting_index, indecies, unique_ligan
         for atom_indeces in (indecies[unique_ligand + 1]):
             for bond in bonds:
                 if atom_indeces in bond:
-
                     if metal_index not in bond:
                         length = 0
                         k = 0
@@ -199,48 +207,53 @@ def read_and_symmetrize_bonds(metal_name, starting_index, indecies, unique_ligan
                             bonds[bond[0], bond[1] + distance] = (np.round(length, 3), np.round(k, 3))
     return bonds
 
-def read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O"]):
-    metal_index = 0
+def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+    bonds = remove_non_metal_donor_bonds(bonds_with_names, metal_name, donors=['N', 'O', 'S'])
+    bonds = read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, unique_ligands_pattern,
+                              donors=["N", "O", "S"])
+    return bonds
 
+
+
+def read_angles():
     File = open("Modified_Seminario_Angle")
     text = File.read()
     File.close()
 
     angles = {}
     for line in text.splitlines():
+        names = [strip_numbers_from_atom_name(name).title() for name in line.split()[0].split('-')]
+        indecies = [int(line.split()[3]) - 1, int(line.split()[4]) - 1, int(line.split()[5]) - 1]
 
-        striped_angle = [strip_numbers_from_atom_name(name) for name in line.split()[0].split('-')]
-        print(striped_angle, line)
+        if indecies[0] < indecies[2]:  # we have indecies from smaler to larger in the angles
+            angles[tuple(indecies), tuple(names)] = (float(line.split()[2]), float(line.split()[1]))
+        else:
+            angles[tuple(indecies[::-1]), tuple(names[::-1])] = (float(line.split()[2]), float(line.split()[1]))
+    return angles
 
-        if metal_name.title() in line.split()[0]:
 
+def remove_non_metal_donor_bonds(angles, metal_name, donors=['N', 'S', 'O']):
+    metal_name = metal_name.title()
+    new_angles = {}
+    for angle in angles:
+        if metal_name in angle[1]:
             metal_on_side_condition = (
-                        (striped_angle[0] == metal_name.title() or striped_angle[2] == metal_name.title()) and (
-                            striped_angle[1] in donors))
-            metal_in_middle_condition = (striped_angle[1] == metal_name.title() and (striped_angle[0] in donors) and (
-                        striped_angle[2] in donors))
+                        (angle[1][0] == metal_name or angle[1][2] == metal_name) and (angle[1][1] in donors))
+            metal_in_middle_condition = (
+                        angle[1][1] == metal_name and (angle[1][0] in donors) and (angle[1][2] in donors))
 
             if metal_on_side_condition or metal_in_middle_condition:
-
-                if int(line.split()[3]) < int(line.split()[5]):
-                    angles[int(line.split()[3]) - 1, int(line.split()[4]) - 1, int(line.split()[5]) - 1] = (
-                    float(line.split()[2]), float(line.split()[1]))
-                else:
-                    angles[int(line.split()[5]) - 1, int(line.split()[4]) - 1, int(line.split()[3]) - 1] = (
-                    float(line.split()[2]), float(line.split()[1]))
-
-
+                new_angles[angle[0]] = angles[angle]
             else:
-                print("nope", striped_angle, (float(line.split()[2]), float(line.split()[1])))
-
+                print("Not valid bond, metal-metal not included (yet)")
         else:
-            if int(line.split()[3]) < int(line.split()[5]):
-                angles[int(line.split()[3]) - 1, int(line.split()[4]) - 1, int(line.split()[5]) - 1] = (
-                float(line.split()[2]), float(line.split()[1]))
-            else:
-                angles[int(line.split()[5]) - 1, int(line.split()[4]) - 1, int(line.split()[4]) - 1] = (
-                float(line.split()[2]), float(line.split()[1]))
+            new_angles[angle[0]] = angles[angle]
+    return new_angles
 
+
+#(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O"])
+def symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern):
+    metal_index = 0
 
     for unique_ligand in list(set(unique_ligands_pattern)):
         unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
@@ -281,10 +294,19 @@ def read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_liga
                         None
     return angles
 
-def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
-    site = ade.Molecule(filename, charge=charge, mult=mult)
-    site.optimise(method=method, keywords=keywords)
-    return site.name
+def read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", 'S']):
+    angles = read_angles()
+    angles = remove_non_metal_donor_bonds(angles, metal_name, donors=donors)
+    angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
+    return angles
+
+
+def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
+                                       donors=["N", "O", "S"]):
+    angles = remove_non_metal_donor_bonds(angles_with_names, metal_name, donors=['N', 'O', 'S'])
+    angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
+    return angles
+
 
 def extend_angle_to_dihedral(angle, bonds):
     dihedrals = []
@@ -325,31 +347,62 @@ def create_dummy_dihedrals(angles, bonds, filename, metal_index=0):  # TODO chec
         dihedrals[tuple(dihedral)] = (np.rad2deg(calc_dihedrals(*syst_opt.atoms[dihedral].positions)), 0)
     return dihedrals
 
-def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+# TODO there is something wierd about the angles, they do not much with Merz, I might solve this by accident
+
+def strip_names_from_covalent(covalent_paramters):
+    new_covalent = {}
+    for covalent in covalent_paramters:
+        new_covalent[covalent[0]] = covalent_paramters[covalent]
+    return new_covalent
+
+
+def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+    print("AAA")
+    print(method)
+    site = ade.Molecule(filename, charge=charge, mult=mult)
+    site.optimise(method=method, keywords=keywords)
+    return site.name
+
+def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1):
 
     here = os.getcwd()
     os.system("mkdir bonded")
     os.chdir("bonded")
 
+    print("Optimising, parameters:", filename)
 
-    print("Optimising, parameters:", filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern)
-
-    name = frequencies("../"+filename, metal_charge, keywords=keywords, mult=mult)
+    name = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
     orca_to_fchk(f"{name:s}_opt_orca.hess")
     orca_to_log(f"{name:s}_opt_orca.out")
 
     os.chdir(path_to_mod_seminario) #TODO this can be done form just python scrpit
-    command = f'python modified_Seminario_method.py {here:s}/bonded/ {here:s}/bonded/ 1.000'
+    command = f'python modified_Seminario_method.py {here:s}/bonded/ {here:s}/bonded/ 1.000' #TODO modify the 1.000 modifier
     process = Popen(command.split(), stdout=DEVNULL, stderr=DEVNULL)
     process.wait()
     os.chdir(here+"/bonded")
 
-    bonds = read_and_symmetrize_bonds(metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O"])
-    angles = read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O"])
-    dummy_dihedrals = create_dummy_dihedrals(angles, bonds, filename=f"{name:s}_opt_orca.xyz")
+    bonds_with_names = read_bonds()
+    angles_with_names = read_angles()
+
+    dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=f"{name:s}_opt_orca.xyz")
+
 
 
     os.chdir(here)
+
+    return bonds_with_names, angles_with_names, dummy_dihedrals
+
+
+def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False):
+
+    bonds_with_names, angles_with_names, dummy_dihedrals = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult) # what about ligand charge!!!! # TODO
+
+    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
+                                       donors=["N", "O", "S"])
+    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
+                                       donors=["N", "O", "S"])
+    if improper_metal:
+        None
 
     return bonds, angles, dummy_dihedrals
 

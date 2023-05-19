@@ -1,0 +1,421 @@
+import parmed as pmd
+import re
+
+try:
+    from cgbind2pmd.log import logger
+except:
+    from log import logger
+
+
+def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
+    logger.info("   [ ] Adding new bonds to topology")
+    for bond_fp in topol_fp.bonds:
+        found = False
+        for bond_new in topol_new.bonds:
+
+            # Check if atoms in mapping (that they are not the additional atoms)
+            if bond_fp.atom1.idx in mapping_fp_to_new and bond_fp.atom2.idx in mapping_fp_to_new:
+                if ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom1.idx] and bond_new.atom2.idx ==
+                     mapping_fp_to_new[bond_fp.atom2.idx]) or
+                        ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
+                          mapping_fp_to_new[bond_fp.atom1.idx]))):
+                    if (bond_fp.type != bond_new.type):
+                        logger.info(f"      [o] Diffrent bond type  {bond_new.type:} -> {bond_fp.type:}")
+                        logger.info(
+                            f"          Mapping ({bond_fp.atom1.idx},{bond_fp.atom2.idx}) to ({bond_new.atom1.idx:},{bond_new.atom2.idx:})")
+                        logger.info(
+                            f"          Mapping ({bond_fp.atom1.name},{bond_fp.atom2.name}) to ({bond_new.atom1.name:},{bond_new.atom2.name:})")
+                        type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
+                                                                      list=topol_new.bond_types)
+                        # if type_to_assign not in topol_new.bond_types:
+                        topol_new.bond_types.append(type_to_assign)
+
+                        # bond_new.type = deepcopy(bond_fp.type)
+                        bond_new.type = type_to_assign  # bond_fp.type
+
+    logger.info("   [ ] Adding new bonds to topology")
+
+    for bond_fp in topol_fp.bonds:
+        found = False
+
+        for bond_new in topol_new.bonds:
+            # if bond_fp.atom1.name=="ZN":
+            #    print(bond_fp.atom1.idx , bond_new)
+
+            # print(bond_new, bond_new.atom1.name)
+            # Check if atoms in mapping (that they are not the additional atoms)
+            if bond_fp.atom1.idx in mapping_fp_to_new and bond_fp.atom2.idx in mapping_fp_to_new:
+                # print("It is in the mapping")
+
+                if ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom1.idx] and bond_new.atom2.idx ==
+                     mapping_fp_to_new[bond_fp.atom2.idx]) or
+                        ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
+                          mapping_fp_to_new[bond_fp.atom1.idx]))):
+                    if (bond_fp.type != bond_new.type):
+                        logger.info(f"      [o] Diffrent bond type {bond_new.type:} {bond_fp.type:}")
+                    found = True
+            else:
+
+                found = True  # TODO not sure why this is here
+
+        if not found:
+            # type_to_assign= bond_fp.type
+            # type_to_assign = pmd.topologyobjects.AngleType(angle_fp.type.k, angle_fp.type.theteq)
+            # print("AAA", bond_fp.type.k, bond_fp.type.req, len(topol_new.bond_types))
+
+            type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
+                                                          list=topol_new.bond_types)
+
+            logger.info(f"      [o] New bond: {mapping_fp_to_new[bond_fp.atom1.idx]:} "
+                        f"{mapping_fp_to_new[bond_fp.atom2.idx]:}, {type_to_assign:}")
+            # if type_to_assign not in topol_new.bond_types:
+            topol_new.bond_types.append(type_to_assign)
+
+            atom1 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom1.idx]]
+            atom2 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom2.idx]]
+            topol_new.bonds.append(pmd.topologyobjects.Bond(atom1, atom2, type=type_to_assign))
+
+    return topol_new
+
+def adjust_angles(topol_new, topol_fp, mapping_fp_to_new):
+    logger.info("   [ ] Adding new angles to topology")
+    for angle_fp in topol_fp.angles:
+        found = False
+        if angle_fp.atom1.idx in mapping_fp_to_new and angle_fp.atom2.idx in mapping_fp_to_new and angle_fp.atom3.idx in mapping_fp_to_new:
+            for angle_new in topol_new.angles:
+                # Check if atoms in mapping (that they are not the additional atoms)
+                if ((angle_new.atom1.idx == mapping_fp_to_new[angle_fp.atom1.idx] and angle_new.atom2.idx ==
+                     mapping_fp_to_new[angle_fp.atom2.idx] and angle_new.atom3.idx == mapping_fp_to_new[
+                         angle_fp.atom3.idx]) or
+                        ((angle_new.atom1.idx == mapping_fp_to_new[angle_fp.atom3.idx] and angle_new.atom2.idx ==
+                          mapping_fp_to_new[angle_fp.atom2.idx] and angle_new.atom3.idx == mapping_fp_to_new[
+                              angle_fp.atom1.idx]))):
+                    if (angle_fp.type != angle_new.type):
+                        logger.info("      [o] Diffrent angle type {angle_new.type:} -> {angle_fp.type:}")
+                        # angle_new.funct = angle_fp.funct
+                        # angle_new.type.k = angle_fp.type.k
+                        # angle_new.type.theteq = angle_fp.type.theteq
+
+                        type_to_assign = pmd.topologyobjects.AngleType(angle_fp.type.k, angle_fp.type.theteq,
+                                                                       list=topol_new.angle_types)
+
+                        # if type_to_assign not in topol_new.angle_types:
+                        topol_new.angle_types.append(type_to_assign)
+                        angle_new.type = type_to_assign
+
+                    found = True
+        else:
+            logger.info(
+                f"[-] Not found in fingerprint: {angle_fp.atom1.idx + 1:d} {angle_fp.atom2.idx + 1:d} {angle_fp.atom3.idx + 1:d}")
+            logger.info(f"              {topol_fp.atoms[angle_fp.atom1.idx]:}")
+            logger.info(f"              {topol_fp.atoms[angle_fp.atom2.idx]:}")
+            logger.info(f"              {topol_fp.atoms[angle_fp.atom3.idx]:}")
+            logger.info(f"But it is standard bond so it should be there")
+            logger.info(f"And you should be worry if it is not the end of fingerprint")
+            found = True
+            # raise
+
+        if not found:
+            # type_to_assign= angle_fp.type
+            type_to_assign = pmd.topologyobjects.AngleType(angle_fp.type.k, angle_fp.type.theteq,
+                                                           list=topol_new.angle_types)
+            # if type_to_assign not in topol_new.angle_types:
+            topol_new.angle_types.append(type_to_assign)
+            logger.info(f"new type {len(topol_new.angle_types):}")
+
+            logger.info(f"      [x] New angle:{angle_fp.atom1.name:}-{angle_fp.atom2.name:}-{angle_fp.atom3.name:} "
+                        f"{mapping_fp_to_new[angle_fp.atom1.idx]:} {mapping_fp_to_new[angle_fp.atom2.idx]:} "
+                        f"{mapping_fp_to_new[angle_fp.atom3.idx]:} {type_to_assign:}")
+            # print("              ", topol_fp.atoms[angle_fp.atom1.idx])
+            # print("              ", topol_fp.atoms[angle_fp.atom2.idx])
+            # print("              ", topol_fp.atoms[angle_fp.atom3.idx])
+            atom1 = topol_new.atoms[mapping_fp_to_new[angle_fp.atom1.idx]]
+            atom2 = topol_new.atoms[mapping_fp_to_new[angle_fp.atom2.idx]]
+            atom3 = topol_new.atoms[mapping_fp_to_new[angle_fp.atom3.idx]]
+
+            topol_new.angles.append(pmd.topologyobjects.Angle(atom1, atom2, atom3, type=type_to_assign))
+
+    return topol_new
+
+def adjust_dihedrals(topol_new, topol_fp, mapping_fp_to_new):
+    logger.info("   [ ] Adding new dihedrals to topology")
+    for dihedral_fp in topol_fp.dihedrals:
+        found = False
+        if dihedral_fp.atom1.idx in mapping_fp_to_new and dihedral_fp.atom2.idx in mapping_fp_to_new and dihedral_fp.atom3.idx in mapping_fp_to_new and dihedral_fp.atom4.idx in mapping_fp_to_new:
+            for dihedral_new in topol_new.dihedrals:
+                # Check if atoms in mapping (that they are not the additional atoms)
+                if (((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom1.idx] and dihedral_new.atom2.idx ==
+                      mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
+                          dihedral_fp.atom3.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
+                          dihedral_fp.atom4.idx]) or
+                     ((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom4.idx] and dihedral_new.atom2.idx ==
+                       mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
+                           dihedral_fp.atom2.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
+                           dihedral_fp.atom1.idx]))) and
+                        (dihedral_new.type.per == dihedral_fp.type.per)):
+                    if (dihedral_fp.type != dihedral_new.type):
+                        logger.info(
+                            f"      [a] Diffrent Dihedral type: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:}")
+                        logger.info(f"           {dihedral_new.type:}")
+                        logger.info(f"        -> {dihedral_fp.type:}")
+
+                        type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k,
+                                                                          per=dihedral_fp.type.per,
+                                                                          phase=dihedral_fp.type.phase,
+                                                                          scee=dihedral_fp.type.scee,
+                                                                          scnb=dihedral_fp.type.scnb,
+                                                                          list=topol_new.dihedral_types)
+                        # if type_to_assign not in topol_new.dihedral_types:
+                        topol_new.dihedral_types.append(type_to_assign)
+                        dihedral_new.type = type_to_assign
+
+                    found = True
+        else:
+            logger.info(
+                f"[-] Not found in finger print: {dihedral_fp.atom1.idx + 1:} {dihedral_fp.atom2.idx + 1:} {dihedral_fp.atom3.idx + 1:} {dihedral_fp.atom4.idx + 1:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom1.idx]:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom2.idx]:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom3.idx]:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom4.idx]:}")
+            logger.info("But it is standard so it should be there")
+            logger.info("And you should be worry if it is not the end of fingerprint")
+            found = True  # TODO I don't remember why this is True
+            # raise
+            '''
+            for dihedral in topol_fp.dihedrals:
+            if dihedral.atom1.idx==0:
+            print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
+            '''
+
+        if not found:
+            type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k, per=dihedral_fp.type.per,
+                                                              phase=dihedral_fp.type.phase, scee=dihedral_fp.type.scee,
+                                                              scnb=dihedral_fp.type.scnb,
+                                                              list=topol_new.dihedral_types)
+            # if type_to_assign not in topol_new.dihedral_types:
+            topol_new.dihedral_types.append(type_to_assign)
+            logger.info(
+                f"      [b] New dihedral: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:} "
+                f"{mapping_fp_to_new[dihedral_fp.atom1.idx]:} {mapping_fp_to_new[dihedral_fp.atom2.idx]:} "
+                f"{mapping_fp_to_new[dihedral_fp.atom3.idx]:} {type_to_assign:}")
+
+            atom1 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom1.idx]]
+            atom2 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom2.idx]]
+            atom3 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom3.idx]]
+            atom4 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
+
+            topol_new.dihedrals.append(
+                pmd.topologyobjects.Dihedral(atom1, atom2, atom3, atom4, type=type_to_assign))
+
+    return topol_new
+
+def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
+    # This is almost the same as above, with the diffrence on being improper dihedrals
+
+    logger.info("   [ ] Adding new improper dihedrals to topology")
+    for dihedral_fp in topol_fp.impropers:
+        found = False
+        if dihedral_fp.atom1.idx in mapping_fp_to_new and dihedral_fp.atom2.idx in mapping_fp_to_new and dihedral_fp.atom3.idx in mapping_fp_to_new and dihedral_fp.atom4.idx in mapping_fp_to_new:
+            for dihedral_new in topol_new.impropers:
+                # Check if atoms in mapping (that they are not the additional atoms)
+                if (((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom1.idx] and dihedral_new.atom2.idx ==
+                      mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
+                          dihedral_fp.atom3.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
+                          dihedral_fp.atom4.idx]) or
+                     ((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom4.idx] and dihedral_new.atom2.idx ==
+                       mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
+                           dihedral_fp.atom2.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
+                           dihedral_fp.atom1.idx]))) and
+                        (dihedral_new.type.per == dihedral_fp.type.per)):
+                    if (dihedral_fp.type != dihedral_new.type):
+                        logger.info(
+                            f"      [a] Diffrent Dihedral type: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:}")
+                        logger.info(f"           {dihedral_new.type:}")
+                        logger.info(f"        -> {dihedral_fp.type:}")
+
+                        type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedral_fp.type.psi_k,
+                                                                          psi_eq=dihedral_fp.type.psi_eq,
+                                                                          list=topol_new.improper_types)
+                        # if type_to_assign not in topol_new.dihedral_types:
+                        topol_new.improper_types.append(type_to_assign)
+                        dihedral_new.type = type_to_assign
+
+                    found = True
+        else:
+            logger.info(
+                f"[-] Not found in finger print: {dihedral_fp.atom1.idx + 1:} {dihedral_fp.atom2.idx + 1:} {dihedral_fp.atom3.idx + 1:} {dihedral_fp.atom4.idx + 1:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom1.idx]:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom2.idx]:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom3.idx]:}")
+            logger.info(f"               {topol_fp.atoms[dihedral_fp.atom4.idx]:}")
+            logger.info("But it is standard so it should be there")
+            logger.info("And you should be worry if it is not the end of fingerprint")
+            found = True  # TODO I don't remember why this is True
+            # raise
+            '''
+            for dihedral in topol_fp.dihedrals:
+            if dihedral.atom1.idx==0:
+            print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
+            '''
+
+        if not found:
+            type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedral_fp.type.psi_k,
+                                                              psi_eq=dihedral_fp.type.psi_eq,
+                                                              list=topol_new.improper_types)
+
+            # if type_to_assign not in topol_new.dihedral_types:
+            topol_new.improper_types.append(type_to_assign)
+            logger.info(
+                f"      [b] New dihedral: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:} "
+                f"{mapping_fp_to_new[dihedral_fp.atom1.idx]:} {mapping_fp_to_new[dihedral_fp.atom2.idx]:} "
+                f"{mapping_fp_to_new[dihedral_fp.atom3.idx]:} {type_to_assign:}")
+
+            atom1 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom1.idx]]
+            atom2 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom2.idx]]
+            atom3 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom3.idx]]
+            atom4 = topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
+
+            topol_new.impropers.append(
+                pmd.topologyobjects.Improper(atom1, atom2, atom3, atom4, type=type_to_assign))
+
+    return topol_new
+
+
+
+def strip_numbers_from_atom_name(atom_name):
+    return re.match("([a-zA-Z]+)", atom_name).group(0)
+
+def copy_bonds(topol_new, bonds, metal_name):
+    '''
+    Copies bonds into topology
+
+    :param topol_new:
+    :param bonds:
+    :return:
+    '''
+    orginal_bonds = []
+
+    for bond in topol_new.bonds:
+        orginal_bonds.append((bond.atom1.idx, bond.atom2.idx))
+
+
+    for bond in bonds:
+        find = [a for a, bond_o in enumerate(orginal_bonds) if (bond_o == bond or bond_o == bond[::-1])]
+        print(bond, find)
+        if len(find) == 1:
+            bond_new = topol_new.bonds[find[0]]
+
+            type_to_assign = pmd.topologyobjects.BondType(bonds[bond][1], bonds[bond][0], list=topol_new.bond_types)
+            # if type_to_assign not in self.topol_new.bond_types:
+            topol_new.bond_types.append(type_to_assign)
+
+            # bond_new.type = deepcopy(bond_fp.type)
+            bond_new.type = type_to_assign  # bond_fp.type
+        else:
+            if strip_numbers_from_atom_name(
+                    topol_new.atoms[bond[0]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                    topol_new.atoms[bond[1]].name).title() == metal_name.title():
+                type_to_assign = pmd.topologyobjects.BondType(bonds[bond][1], bonds[bond][0], list=topol_new.bond_types)
+                topol_new.bond_types.append(type_to_assign)
+                atom1 = topol_new.atoms[bond[0]]
+                atom2 = topol_new.atoms[bond[1]]
+                topol_new.bonds.append(pmd.topologyobjects.Bond(atom1, atom2, type=type_to_assign))
+            else:
+                print("this is wierd bond", topol_new.atoms[bond[0]].name, topol_new.atoms[bond[1]].name, bond,
+                      bonds[bond])
+    return topol_new
+
+def copy_angles(topol_new, angles, metal_name):
+    '''
+    Copy angles into topology
+
+    :param topol_new:
+    :param angles:
+    :return:
+    '''
+    orginal_angles = []
+
+    for angle in topol_new.angles:
+        orginal_angles.append((angle.atom1.idx, angle.atom2.idx, angle.atom3.idx))
+
+    for angle in angles:
+        find = [a for a, angle_o in enumerate(orginal_angles) if (angle_o == angle or angle_o == angle[::-1])]
+        if len(find) == 1:
+            angle_new = topol_new.angles[find[0]]
+            type_to_assign = pmd.topologyobjects.AngleType(angles[angle][1], angles[angle][0],
+                                                           list=topol_new.angle_types)
+
+            topol_new.angle_types.append(type_to_assign)
+            angle_new.type = type_to_assign
+        else:
+            if strip_numbers_from_atom_name(
+                    topol_new.atoms[angle[0]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                    topol_new.atoms[angle[1]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                    topol_new.atoms[angle[2]].name).title() == metal_name.title():
+
+                type_to_assign = pmd.topologyobjects.AngleType(angles[angle][1], angles[angle][0],
+                                                               list=topol_new.angle_types)
+
+                topol_new.angle_types.append(type_to_assign)
+
+                atom1 = topol_new.atoms[angle[0]]
+                atom2 = topol_new.atoms[angle[1]]
+                atom3 = topol_new.atoms[angle[2]]
+
+                topol_new.angles.append(pmd.topologyobjects.Angle(atom1, atom2, atom3, type=type_to_assign))
+            else:
+                print('nope', angle)
+
+    return topol_new
+
+
+def copy_dihedrals(topol_new, dihedrals, metal_name):
+    '''
+    Copy angles into topology
+
+    :param topol_new:
+    :param angles:
+    :return:
+    '''
+    orginal_dihedrals = []
+
+    for dihedral in topol_new.dihedrals:
+        orginal_dihedrals.append((dihedral.atom1.idx, dihedral.atom2.idx, dihedral.atom3.idx, dihedral.atom4.idx))
+
+    for dihedral in dihedrals:
+        find = [a for a, dihedral_o in enumerate(orginal_dihedrals) if
+                (dihedral_o == dihedral or dihedral_o == dihedral[::-1])]
+        if len(find) == 1:
+            print("It found dihedral in the topology, but it should not, as they should be not present, doing noting")
+            print(dihedral)  # TODO
+            raise Error
+            # This procedures are not done in reality
+            # dihedral_new = topol_new.dihedrals[find[0]]
+            # type_to_assign = pmd.topologyobjects.DihedralType(dihedrals[dihedral][1], dihedrals[dihedral][0],list=topol_new.angle_types)
+            # topol_new.angle_types.append(type_to_assign)
+            # dihedral_new.type = type_to_assign
+        else:
+            if strip_numbers_from_atom_name(
+                    topol_new.atoms[dihedral[0]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                topol_new.atoms[dihedral[1]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                topol_new.atoms[dihedral[2]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                topol_new.atoms[dihedral[3]].name).title() == metal_name.title():
+
+                # we do use periodicy=2 and use defualt values for scee=1.2 and scnb=2 (screening of electrostatics and noboned)
+                type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedrals[dihedral][1], per=2,
+                                                                  phase=dihedrals[dihedral][0],
+                                                                  list=topol_new.dihedral_types)
+
+                topol_new.dihedral_types.append(type_to_assign)
+
+                atom1 = topol_new.atoms[dihedral[0]]
+                atom2 = topol_new.atoms[dihedral[1]]
+                atom3 = topol_new.atoms[dihedral[2]]
+                atom4 = topol_new.atoms[dihedral[3]]
+                topol_new.dihedrals.append(
+                    pmd.topologyobjects.Dihedral(atom1, atom2, atom3, atom4, type=type_to_assign))
+            else:
+                print('nope', dihedral)
+
+    return topol_new
+

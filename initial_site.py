@@ -11,34 +11,40 @@ except:
     from data import name_to_atomic_number
     from data import vdw_data
 
-def create_metal_topol(metal_name, metal_charge, vdw_data_name): #TODO
-
+def create_metal_topol(metal_name, metal_charge, vdw_data_name):
     print(vdw_data)
     data = vdw_data[vdw_data_name]
 
     if metal_name.title() in data:
-        eps = data[metal_name][0] # TODO check units
+        eps = data[metal_name][0]
         radius = data[metal_name][1]
 
-        mass = name2mass[metal_name] # TODO refactor names
+        mass = name2mass[metal_name]
         atomic_number = name_to_atomic_number[metal_name]
 
         new_atom = pmd.topologyobjects.Atom(atomic_number=atomic_number, type=metal_name, name=metal_name,
                                             rmin=radius, epsilon=eps, mass=mass, charge=metal_charge)
-        struct = pmd.structure.Structure()
-        struct.add_atom(new_atom, metal_name, metal_name)
+        # old -- to be removed when tested
+        #struct = pmd.structure.Structure()
+        #struct.add_atom(new_atom, metal_name, metal_name)
 
         # I don't know how to convert struct to GromacsTopol, easiest is to save and load it ...
-        struct.save(f"{metal_name:s}.top", overwrite=True)
-        metal_topol = pmd.load_file(f"{metal_name:s}.top")
+        #struct.save(f"{metal_name:s}.top", overwrite=True)
+        #metal_topol = pmd.load_file(f"{metal_name:s}.top")
+        # end of old - above to be removed
+
+        metal_topol = pmd.gromacs.GromacsTopologyFile()
+        metal_topol.add_atom(new_atom, metal_name, metal_name)
+
+        residue = pmd.topologyobjects.Residue(metal_name)
+        residue_list = pmd.topologyobjects.ResidueList()
+        residue_list.append(residue)
+        metal_topol.residues = residue_list
+
         return metal_topol
     else:
         print("Metal ", metal_name.title(), "not in the library")
         raise
-
-
-
-
 
 def create_initial_topol(metal_name, metal_charge, vdw_data_name):
     '''
@@ -66,7 +72,7 @@ def create_initial_topol(metal_name, metal_charge, vdw_data_name):
             unique_ligands_topologies = []
 
             for idx, unique_ligand in enumerate(unique_ligands):
-                antechamber(f"ligand{n_site:d}_{idx:}.pdb", 0, f"ligand{n_site:d}_{idx:}.itp") #TODO n_site sometimes called idx_site
+                antechamber(f"ligand{n_site:d}_{idx:}.pdb", 0, f"ligand{n_site:d}_{idx:}.itp")
                 unique_ligands_topologies.append(pmd.load_file(f"ligand{n_site:d}_{idx:}.itp"))
 
             metal_topol = create_metal_topol(metal_name, metal_charge, vdw_data_name)
@@ -74,7 +80,6 @@ def create_initial_topol(metal_name, metal_charge, vdw_data_name):
             n_metals = 1
 
             topol = metal_topol
-
 
 
             for pattern in unique_ligands_pattern:

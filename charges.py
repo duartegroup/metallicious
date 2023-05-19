@@ -118,7 +118,7 @@ def new_execute(self, calc):
     execute_orca()
     return None
 
-def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff', n_reorientations = 1, mult=1):
+def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff', n_reorientations = 1, mult=1, extra_atoms=None):
     '''
 
     import sys
@@ -132,6 +132,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
     metal_name='Fe'
 
     '''
+    # TODO you cannot restart resp! you need to delete folder
 
     method = ade.methods.ORCA()
     site = ade.Molecule(filename, charge=charge, mult=mult)
@@ -159,7 +160,9 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
 
     # Add metal to the vdw_radii
     GridOptions = psiresp.grid.GridOptions()
-    GridOptions.vdw_radii[metal_name] = data[metal_name][1] # psiresp uses R distance rather then R/2 TODO check for sure
+
+    if metal_name is not None:
+        GridOptions.vdw_radii[metal_name] = data[metal_name][1] # psiresp uses R distance rather then R/2 TODO check for sure
 
     # create reorientations of the single conformer
     molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
@@ -174,7 +177,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
 
         #orient_idx=0
         orient = conf.orientations[orient_idx]
-        orient.compute_grid(GridOptions)
+        orient.compute_grid(GridOptions) # this does not work if already ortognaized... it will break if at exactly 0,0,0 TODO
         print(orient.grid)
 
         # create frid for ORCA, which uses Bohr as lenght
@@ -196,8 +199,6 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
         site.single_point(method=method, keywords=method_keywords)
 
 
-
-
         # load esp from the file
         esp_name = site.name + '_sp_' + method.name + '.vpot.out'
         esp = np.loadtxt(esp_name, skiprows=1).T[3]
@@ -206,14 +207,46 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
         molecule_psiresp.conformers[0].orientations[orient_idx].grid = orient.grid
         molecule_psiresp.conformers[0].orientations[orient_idx].esp = esp
 
+    constraints = psiresp.ChargeConstraintOptions()
+    if extra_atoms is not None:
+        constrained_atoms = [index for index, _ in enumerate(site.atoms) if index in extra_atoms]
+
+        print("Constraining atoms", constrained_atoms, "Symbols:", [molecule_psiresp.atoms[a].symbol for a in constrained_atoms])
+        print("Constrains:", constraints.charge_sum_constraints)
+
+        constraints.add_charge_sum_constraint_for_molecule(molecule_psiresp, charge=0, indices=constrained_atoms)
+        print("Constrains:", constraints.charge_sum_constraints)
+
     # run psiRESP to find the charges
-    job = psiresp.Job(molecules=[molecule_psiresp])
+    job = psiresp.Job(molecules=[molecule_psiresp],  charge_constraints=constraints)
     normal_charges = job.compute_charges()
 
-    print(normal_charges)
+    print("RESP charges", normal_charges[0])
+    if extra_atoms is not None:
+        print("Constrained charges: ", normal_charges[0][constrained_atoms], "Sum:", np.sum(normal_charges[0][constrained_atoms]))
+
+    resp_charges = normal_charges[0]
+    print("before RESP:", resp_charges, "Sum:", np.sum(resp_charges))
+
+    #for some reason there is small charge left on this residue
+    # we calculatte mean of all, but not constrained atoms (we will set up them to zero)
+    if extra_atoms is not None:
+        mean_left_charge = (charge-np.sum(resp_charges)+np.sum(resp_charges[constrained_atoms]))/float(len(resp_charges)-len(constrained_atoms))
+    else:
+        mean_left_charge = (charge - np.sum(resp_charges))/float(len(resp_charges))
+    print("mean_left_charge", mean_left_charge)
+    resp_charges += mean_left_charge
+
+    if extra_atoms is not None: # TODO maybe I can figure out to make this nicer
+        # we simply make the charges of the constrain 0, as the group is 0 (later on is easier to calculate diffrence)
+        for idx in constrained_atoms:
+            resp_charges[idx] = 0.0
+
+    print("RESP:", resp_charges, "Sum:", np.sum(resp_charges))
+
 
     os.chdir(here)
-    return normal_charges[0]
+    return resp_charges
 
 
 def resp_psi4(filename, charge=0, opt=True, metal_name=None):
@@ -318,15 +351,42 @@ def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
         if "ligand_pattern:" in line:
             unique_ligands_pattern = list(map(int, line[15:].split(',')))
 
-        if "extra_atoms:" in line:
+        if "link_atoms:" in line:
+            if ',' in line:
+                link_atoms = list(map(int, line[11:].split(',')))
+            else:
+                link_atoms = []
 
+        if "extra_atoms:" in line:
+            if ',' in line:
+                additional_atoms = list(map(int, line[12:].split(',')))
+            else:
+                additional_atoms = []
+
+        if "starting_index:" in line:
+            starting_index = list(map(int, line[15:].split(',')))
+
+            extra_atoms = link_atoms + additional_atoms
+
+            unique_ligands_constraints = {}
+            for key in list(set(unique_ligands_pattern)):
+                unique_ligands_constraints[key] = []
+
+            for extra_atom in extra_atoms:
+                for idx, _ in enumerate(starting_index[:-1]):
+                    if starting_index[idx] < extra_atom < starting_index[idx + 1]:
+                        unique_ligands_constraints[unique_ligands_pattern[idx - 1]].append(
+                            extra_atom - starting_index[idx])
+
+            for idx, _ in enumerate(unique_ligands_constraints):
+                unique_ligands_constraints[idx] = list(set(unique_ligands_constraints[idx]))
 
             ligand_charges = []
             for lig_idx in list(set(unique_ligands_pattern)):
-                charges = resp_orca(f"ligand{n_site:d}_{lig_idx:d}.xyz", opt=False, metal_name=metal_name, vdw_data_name=vdw_data_name)
+                charges = resp_orca(f"ligand{n_site:d}_{lig_idx:d}.xyz", opt=False, metal_name=metal_name, vdw_data_name=vdw_data_name, extra_atoms=unique_ligands_constraints[lig_idx])
                 ligand_charges.append(charges)
 
-            site_charges = resp_orca(f"site{n_site:d}.xyz", charge=metal_charge, opt=False, metal_name=metal_name, vdw_data_name=vdw_data_name, mult=mult)
+            site_charges = resp_orca(f"site{n_site:d}.xyz", charge=metal_charge, opt=False, metal_name=metal_name, vdw_data_name=vdw_data_name, mult=mult, extra_atoms=extra_atoms)
 
             print("ligand charges", len(ligand_charges), ligand_charges)
             print("ligand        ", len(site_charges), site_charges)
@@ -334,6 +394,8 @@ def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
             new_site_charges = calcualte_diffrence(metal_charge, unique_ligands_pattern, site_charges, ligand_charges)
             all_sites_charges.append(new_site_charges)
             n_site+=1
+
+    print("all_sites", all_sites_charges)
 
     return all_sites_charges
 

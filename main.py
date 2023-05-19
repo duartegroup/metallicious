@@ -19,17 +19,19 @@ from tempfile import mkdtemp
 
 
 
+
 try:
     from cgbind2pmd.log import logger
 except:
     from log import logger
 
 try:
-    from cgbind2pmd.mapping import map_two_structures
-    from cgbind2pmd.load_fingerprint import load_fingerprint_from_file
+    from cgbind2pmd.load_fingerprint import load_fingerprint_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
+    from cgbind2pmd.prepare_initial_topology import prepare_initial_topology
 except:
-    from mapping import map_two_structures
-    from load_fingerprint import load_fingerprint_from_file
+    from load_fingerprint import load_fingerprint_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
+    from prepare_initial_topology import prepare_initial_topology
+
 
 from copy import deepcopy
 
@@ -92,7 +94,9 @@ class cgbind2pmd():
 
     def from_coords(self, cage_file, ligand_file, metal_name, metal_charge):
         shutil.copy(cage_file, f'{self.tmpdir_path:s}/{cage_file:s}')
-        shutil.copy(ligand_file, f'{self.tmpdir_path:s}/{ligand_file:s}')
+        if ligand_file is not None:
+            shutil.copy(ligand_file, f'{self.tmpdir_path:s}/{ligand_file:s}')
+            
         os.chdir(self.tmpdir_path)
         self.construct_cage(cage_file=cage_file, ligand_file=ligand_file, metal_name=metal_name, metal_charge=metal_charge)
         #self.clean_up()
@@ -141,16 +145,17 @@ class cgbind2pmd():
         :return:
         '''
 
-        self.metal_name = metal_name.upper()
+        self.metal_name = metal_name.title()
         self.metal_charge = metal_charge
 
-        self.load_cage(cage_file, ligand_file)
-        self.load_fingerprint()
 
-        self.prepare_new_topology()
+        #self.load_cage(cage_file, ligand_file)
+        self.prepare_new_topology(cage_file, self.metal_name, metal_charge=metal_charge, ligand_file=ligand_file)
+
+        self.load_fingerprint(cage_file)
 
         for metal_index in self.metal_indices:
-            mapping_fp_to_new, _ = self.find_mapping(metal_index, self.syst_fingerprint, cutoff=self.ligand_cutoff)
+            mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings("cage.gro", metal_index, self.metal_name, self.syst_fingerprint, cutoff=self.ligand_cutoff)
 
             self.adjust_charge(mapping_fp_to_new)
 
@@ -159,6 +164,8 @@ class cgbind2pmd():
             self.adjust_angles(mapping_fp_to_new)
 
             self.adjust_dihedrals(mapping_fp_to_new)
+
+            self.adjust_impropers(mapping_fp_to_new)
 
         logger.info(f'Saving as {self.output_topol:s}')
 
@@ -203,17 +210,19 @@ class cgbind2pmd():
         :param ligand_file:
         :return:
         '''
-        cage = MDAnalysis.Universe(cage_file)
-        cage.atoms.write("temp.gro")
-        self.crystal2pdb("temp.gro", ligand_file, "cage.gro", metal_name=self.metal_name)
+        #cage = MDAnalysis.Universe(cage_file)
+        #cage.atoms.write("temp.gro")
+        #self.crystal2pdb("temp.gro", ligand_file, "cage.gro", metal_name=self.metal_name)
 
-        self.cage = MDAnalysis.Universe("cage.gro")
-        self.ligand = pmd.load_file(ligand_file)
+        #self.cage = MDAnalysis.Universe("cage.gro")
+        #self.ligand = pmd.load_file(ligand_file)
 
         # Find metal indeces:
+        '''
         self.metal_indices = [a for a, name in enumerate(self.cage.atoms.names) if
                          name[:len(self.metal_name)].upper() == self.metal_name]
         self.n_metals = len(self.metal_indices)
+        '''
 
 
         logger.info(self.metal_indices)
@@ -229,6 +238,8 @@ class cgbind2pmd():
             mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
             self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1 #this acctually does not make it better TODO
             #self.m_m_cutoff=9
+        else:
+            self.m_m_cutoff = 1e10
 
 
         logger.info(f"The distance between closest metals: {self.m_m_cutoff:f}")
@@ -237,45 +248,7 @@ class cgbind2pmd():
         # Find how many ligands are bound to single metal:
         metal_index = self.metal_indices[0] # TODO check if all have the same number of ligands bound to single side
 
-    def find_bound_ligands_nx(self,metal_index, cutoff=7, cutoff_covalent=3.0):
-        '''
-        Finds bound ligands to metal, assuems that atoms within cutoff_covalent (default 3) are bound to metal.
-        Returns list of subgraphs of bound ligands  it does not cutoff ligands (so they can be uneven)
-
-        :param metal_index:
-        :param cutoff:
-        :param cutoff_covalent:
-        :return:
-        '''
-        cut_sphere = self.cage.select_atoms(f'around {cutoff:f} index {metal_index:d}')
-        #metal_type = cut_sphere.select_atoms(f'index {metal_index:}').atoms[0].type
-
-        G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions, box=self.cage.dimensions))#, vdwradii={metal_type:cutoff_covalent}))
-        nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
-        G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
-
-        closest_atoms_string = f"Closest atoms around {metal_index:d}:"
-        closest_atoms = [] # closest atoms, we assume that they are donors of electrons
-
-        G_sub_cages_bound = []
-        for G_sub_cage in G_sub_cages:
-            clusters_of_atoms = self.cage.atoms[G_sub_cage]
-            metal = self.cage.atoms[metal_index]
-
-            all_metal_cluster_distances = distance_array(clusters_of_atoms.positions, metal.position, box=self.cage.dimensions)
-            if np.min(all_metal_cluster_distances) < cutoff_covalent:
-                G_sub_cages_bound.append(G_sub_cage)
-
-                temp_atom = clusters_of_atoms.atoms[np.argmin(all_metal_cluster_distances)]
-                closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {np.min(all_metal_cluster_distances):f} A"
-                closest_atoms.append(temp_atom.index)
-
-        logger.info(closest_atoms_string)
-
-        #ourput is list with n_ligands graphs representing diffrent ligands, and closest atoms (donors of electrons)
-        return G_sub_cages_bound, closest_atoms
-
-    def load_fingerprint(self):
+    def load_fingerprint(self, cage_file):
         '''
         Loads files from the library into the class, if the name is not known, it will try to guess the fingerprint
 
@@ -285,7 +258,8 @@ class cgbind2pmd():
 
 
         if self.name_of_binding_side is None:
-            self.name_of_binding_side = self.guess_fingerprint()
+            self.name_of_binding_side = guess_fingerprint(cage_file, self.metal_indices[0], metal_name=self.metal_name, fingerprint_guess_list=None,
+                              m_m_cutoff=10)
         #else:
         #    self.name_of_binding_side = name_of_binding_side  # TODO check if it exists
 
@@ -314,6 +288,7 @@ class cgbind2pmd():
         :param metal_name:
         :return:
         '''
+
         crystal = MDAnalysis.Universe(crystal_pdb)
         ligand = pmd.load_file(topology_itp)
 
@@ -400,175 +375,9 @@ class cgbind2pmd():
         new_cage.dimensions=crystal.dimensions
         new_cage.atoms.write(output)
 
-    def guess_fingerprint(self):
+
+    def prepare_new_topology(self, cage_file, metal_name, metal_charge, ligand_file=None):
         '''
-        Tries to guess the fingerprint but itereting through the library and find lowest rmsd.
-        :return:
-        '''
-        finerprints_names = []
-        for file in os.listdir(f"{os.path.dirname(__file__):s}/library"):
-            if file.endswith('.pdb'):
-                finerprints_names.append(file[:-4])
-
-        metal_index = self.metal_indices[0]
-
-        logger.info(f"Trying to guess which site it is: {finerprints_names:}")
-        rmsd_best = 1e10
-        name_of_binding_side = None
-        for finerprint_name in finerprints_names:
-            logger.info(f"[ ] Guessing fingerprint {finerprint_name:s}")
-            syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{finerprint_name:s}.pdb")
-            # we need to find what is smaller
-
-            metal_position = syst_fingerprint.atoms[0].position
-            nometal_position = syst_fingerprint.atoms[1:].positions
-            cutoff = np.min([np.max(distance_array(metal_position, nometal_position))+2.0, self.m_m_cutoff])
-            #cutoff = 0.5*(cutoff+self.m_m_cutoff) # we make it 75% close to metal
-
-            mapping_fp_to_new, rmsd = self.find_mapping(metal_index, syst_fingerprint, guessing=True, cutoff=cutoff)
-
-
-            if rmsd < rmsd_best:
-                rmsd_best = rmsd
-                name_of_binding_side = finerprint_name
-                #self.ligand_cutoff = cutoff
-            logger.info(f"    [ ] RMSD {rmsd:f}")
-
-        logger.info(f"[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
-        if rmsd_best > 1.0:
-            logger.info("[!] Rmsd is quite large, want to proceed?") #TODO
-        return name_of_binding_side
-
-    #TODO assert rediculsy small ligands
-
-    def reduce_site_to_fingerprint(self, metal_index, syst_fingerprint, cutoff=9, guessing=False):
-
-        #def strip_numbers_from_atom_name(atom_name):
-        #    return re.match("([a-zA-Z]+)", atom_name).group(0)
-
-        #metal_name=strip_numbers_from_atom_name(syst_fingerprint.atoms[metal_index].name)
-
-
-
-        #metal_type = syst_fingerprint.select_atoms(f'index {metal_index:}').atoms[0].type
-
-        syst_fingerprint_no_metal = syst_fingerprint.atoms[1:]
-        G_fingerprint = nx.Graph(
-            MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint_no_metal.atoms, syst_fingerprint_no_metal.atoms.positions))
-
-        nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint_no_metal.atoms}, "name")
-        G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
-
-        logger.info(f"     [ ] Mapping fingerprint to metal center: {metal_index:d}")
-        '''
-        cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
-        G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
-        nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
-        G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
-        G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
-        '''
-
-        G_sub_cages, closest_atoms = self.find_bound_ligands_nx(metal_index, cutoff=cutoff)
-        number_ligands_bound = len(G_sub_cages)
-        logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
-
-        if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
-            logger.info(f"[!] Not the same number of sites {guessing:}")
-            return False
-
-        elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
-
-
-            logger.info(f"[!] Not the same number of sites { len(G_sub_cages):}!={ len(G_fingerprint_subs):} guessing={guessing:}")
-            raise
-
-        selected_atoms = [metal_index]
-        end_atoms = []
-
-        for G_sub_cage in G_sub_cages:
-            if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
-                if not len(G_fingerprint_subs[0]) < len(G_sub_cage): #TODO with 0 we assume that ligands are the same right?
-                    logger.info(f"Not subgroup, becasue dismatch of size {len(G_fingerprint_subs[0]):d} < {len(G_sub_cage):d}")
-                    return False
-            else:
-                # Check if cutted ligands from cage are larger then the ligands in finerprint (they should be if cutoff is 10!)
-                assert len(G_fingerprint_subs[0]) <= len(G_sub_cage)
-
-            ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_subs[0],
-                                           node_match=lambda n1, n2: n1['name'] == n2['name'])
-
-
-            #largest_common_subgraph_nx = ismags.largest_common_subgraph()
-
-            # There can be many possibilities of isomorphism, not only due to the symmetry, but sometimes becasue
-            # ligand has more sites. In such case we need to make sure that closest to the metal atoms ("donors")
-            # are included
-
-            largest_common_subgraph = []
-            #logger.info(f'{ismags.largest_common_subgraph():}')
-
-            # This takes forever:
-            logger.info(f"There are {len(list(ismags.largest_common_subgraph())):} matching patterns")
-
-            for largest_common_subgraph_iter in ismags.largest_common_subgraph():
-                logger.info(f'Iterating {largest_common_subgraph_iter:}')
-
-                is_donor_included = [closest_atom in largest_common_subgraph_iter for closest_atom in closest_atoms]
-                print(is_donor_included)
-
-                if any(is_donor_included):
-                    largest_common_subgraph = largest_common_subgraph_iter
-                    logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
-                    break
-
-            if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
-                if len(largest_common_subgraph) == 0:
-                    return False
-                elif not len(G_fingerprint_subs[0]) == len(largest_common_subgraph):
-                    return False
-            else:
-                # Check if the subgraph is the same size as fingerprint,
-                print(largest_common_subgraph)
-                if len(largest_common_subgraph)>0:
-                    print("aaa")
-                if len(G_fingerprint_subs[0]) == len(largest_common_subgraph):
-                    print("bbb")
-
-                #assert len(largest_common_subgraph)>0
-                #assert len(G_fingerprint_subs[0]) == len(largest_common_subgraph)
-
-
-            selected_atoms += largest_common_subgraph.keys()
-            connected_cut_system = self.cage.select_atoms("index " + " ".join(map(str, selected_atoms)))
-
-            # Let's find the end atoms, they have diffrent degree: in cage they are connected, in the template not
-            G_sub_cage_degree = G_sub_cage.degree
-            G_fingerprint_subs_degree = G_fingerprint_subs[0].degree
-
-            for key in largest_common_subgraph:
-                if G_sub_cage_degree[key] != G_fingerprint_subs_degree[largest_common_subgraph[key]]:
-                    end_atoms.append(key)
-
-        return connected_cut_system, end_atoms
-
-
-
-    def find_mapping(self, metal_index, syst_fingerprint, cutoff=9, guessing=False):
-        result = self.reduce_site_to_fingerprint(metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing)
-
-        if result: # the results are legit, we take them as input
-            connected_cut_system, end_atoms = result
-            best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name=self.metal_name, end_atoms=end_atoms)
-
-            #def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, cutoff=9, guessing=False):
-            #def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, end_atoms=[]):
-
-
-        else: #we are guessing, and we missed
-            return None, 1e10
-        return best_mapping, best_rmsd
-
-    def prepare_new_topology(self):
         metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')
         metal.atoms[0].name = self.metal_name
         metal.atoms[0].charge = self.metal_charge
@@ -576,6 +385,13 @@ class cgbind2pmd():
 
         cage_topol = metal * self.n_metals + self.ligand * self.n_ligands
         cage_topol.write('test_cage.top', [list(range(self.n_ligands + self.n_metals))])
+        '''
+
+
+        self.n_ligands, self.metal_indices, self.n_metals = prepare_initial_topology(cage_file, metal_name, metal_charge, "cage.gro", "test_cage.top", ligand_topol=ligand_file) # TODO can this output be nicer?
+
+        self.cage = MDAnalysis.Universe("cage.gro")
+        logger.info(f"[ ] Created initial topol with {self.n_ligands:} ligands, {self.n_metals} metals (indecies: {self.metal_indices:})")
 
         self.topol_new = pmd.load_file('test_cage.top', parametrize=False)  # , skip_bonds=True)
         # we need to copy paramters back, for some reasons if paramtrize is False
@@ -589,6 +405,15 @@ class cgbind2pmd():
             self.topol_new.atoms[a].rmin = topol_new2.atoms[a].rmin
             self.topol_new.atoms[a].charge = topol_new2.atoms[a].charge
 
+        # Find the lowest distance between metal sites, if there are more than 1
+        if self.n_metals>1:
+            mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
+            self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1 #this acctually does not make it better TODO
+        else:
+            self.m_m_cutoff = 1e10
+            #self.m_m_cutoff=9
+
+
     def adjust_charge(self, mapping_fp_to_new):
         logger.info("   [ ] Changing charges and atomtypes")
         sum_of_charge_diffrences = 0
@@ -597,7 +422,8 @@ class cgbind2pmd():
             logger.info(f"          {self.topol_new.atoms[mapping_fp_to_new[a]].type:s} "
                         f"{self.topol_new.atoms[mapping_fp_to_new[a]].name:s} "
                         f"{self.topol_new.atoms[mapping_fp_to_new[a]].charge:} --> "
-                        f"{self.topol_fp.atoms[a].type, self.topol_fp.atoms[a].name:} {self.topol_fp.atoms[a].charge:}")
+                        f"{self.topol_fp.atoms[a].type, self.topol_fp.atoms[a].name:} {self.topol_new.atoms[mapping_fp_to_new[a]].charge + self.topol_fp.atoms[a].charge:}")
+
 
             atom = self.topol_fp.atoms[a]
 
@@ -660,7 +486,8 @@ class cgbind2pmd():
                             logger.info(f"      [o] Diffrent bond type {bond_new.type:} {bond_fp.type:}")
                         found = True
                 else:
-                    found = True
+
+                    found = True # TODO not sure why this is here
 
             if not found:
                 # type_to_assign= bond_fp.type
@@ -704,10 +531,11 @@ class cgbind2pmd():
 
                         found = True
             else:
-                    logger.info(f"[-] Not found: {angle_fp.atom1.idx+1:d} {angle_fp.atom2.idx+1:d} {angle_fp.atom3.idx+1:d}")
+                    logger.info(f"[-] Not found in fingerprint: {angle_fp.atom1.idx+1:d} {angle_fp.atom2.idx+1:d} {angle_fp.atom3.idx+1:d}")
                     logger.info(f"              {self.topol_fp.atoms[angle_fp.atom1.idx]:}")
                     logger.info(f"              {self.topol_fp.atoms[angle_fp.atom2.idx]:}")
                     logger.info(f"              {self.topol_fp.atoms[angle_fp.atom3.idx]:}")
+                    logger.info(f"But it is standard bond so it should be there")
                     logger.info(f"And you should be worry if it is not the end of fingerprint")
                     found = True
                     #raise
@@ -755,14 +583,20 @@ class cgbind2pmd():
 
                         found = True
             else:
-                    logger.info(f"[-] Not found: {dihedral_fp.atom1.idx+1:} {dihedral_fp.atom2.idx+1:} {dihedral_fp.atom3.idx+1:} {dihedral_fp.atom4.idx+1:}")
+                    logger.info(f"[-] Not found in finger print: {dihedral_fp.atom1.idx+1:} {dihedral_fp.atom2.idx+1:} {dihedral_fp.atom3.idx+1:} {dihedral_fp.atom4.idx+1:}")
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom1.idx]:}")
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom2.idx]:}")
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom3.idx]:}")
                     logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom4.idx]:}")
+                    logger.info("But it is standard so it should be there")
                     logger.info("And you should be worry if it is not the end of fingerprint")
-                    found = True
+                    found = True # TODO I don't remember why this is True
                     #raise
+                    '''
+                    for dihedral in self.topol_fp.dihedrals:
+                    if dihedral.atom1.idx==0:
+                    print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
+                    '''
 
             if not found:
                 type_to_assign= pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k, per=dihedral_fp.type.per,
@@ -770,7 +604,7 @@ class cgbind2pmd():
                                                                 scnb=dihedral_fp.type.scnb, list = self.topol_new.dihedral_types)
                 #if type_to_assign not in topol_new.dihedral_types:
                 self.topol_new.dihedral_types.append(type_to_assign)
-                logger.info(f"      [b] New dihedral: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:} "
+                logger.info(f"      [b] New dihedral: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:} "
                             f"{mapping_fp_to_new[dihedral_fp.atom1.idx]:} {mapping_fp_to_new[dihedral_fp.atom2.idx]:} "
                             f"{mapping_fp_to_new[dihedral_fp.atom3.idx]:} {type_to_assign:}")
 
@@ -780,6 +614,65 @@ class cgbind2pmd():
                 atom4 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
 
                 self.topol_new.dihedrals.append(pmd.topologyobjects.Dihedral(atom1, atom2, atom3, atom4, type=type_to_assign))
+
+
+    def adjust_impropers(self, mapping_fp_to_new):
+        # This is almost the same as above, with the diffrence on being improper dihedrals
+
+        logger.info("   [ ] Adding new improper dihedrals to topology")
+        for dihedral_fp in self.topol_fp.impropers:
+            found = False
+            if dihedral_fp.atom1.idx in mapping_fp_to_new and dihedral_fp.atom2.idx in mapping_fp_to_new and dihedral_fp.atom3.idx in mapping_fp_to_new and dihedral_fp.atom4.idx in mapping_fp_to_new:
+                for dihedral_new in self.topol_new.impropers:
+                    #Check if atoms in mapping (that they are not the additional atoms)
+                    if (((dihedral_new.atom1.idx==mapping_fp_to_new[dihedral_fp.atom1.idx] and dihedral_new.atom2.idx==mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom3.idx==mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom4.idx==mapping_fp_to_new[dihedral_fp.atom4.idx]) or
+                        ((dihedral_new.atom1.idx==mapping_fp_to_new[dihedral_fp.atom4.idx] and dihedral_new.atom2.idx==mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom3.idx==mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom4.idx==mapping_fp_to_new[dihedral_fp.atom1.idx]))) and
+                       (dihedral_new.type.per==dihedral_fp.type.per)):
+                        if (dihedral_fp.type!=dihedral_new.type):
+                            logger.info(f"      [a] Diffrent Dihedral type: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:}")
+                            logger.info(f"           {dihedral_new.type:}")
+                            logger.info(f"        -> {dihedral_fp.type:}")
+
+                            type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedral_fp.type.psi_k, psi_eq=dihedral_fp.type.psi_eq,
+                                                                              list = self.topol_new.improper_types)
+                            #if type_to_assign not in topol_new.dihedral_types:
+                            self.topol_new.improper_types.append(type_to_assign)
+                            dihedral_new.type = type_to_assign
+
+                        found = True
+            else:
+                    logger.info(f"[-] Not found in finger print: {dihedral_fp.atom1.idx+1:} {dihedral_fp.atom2.idx+1:} {dihedral_fp.atom3.idx+1:} {dihedral_fp.atom4.idx+1:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom1.idx]:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom2.idx]:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom3.idx]:}")
+                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom4.idx]:}")
+                    logger.info("But it is standard so it should be there")
+                    logger.info("And you should be worry if it is not the end of fingerprint")
+                    found = True # TODO I don't remember why this is True
+                    #raise
+                    '''
+                    for dihedral in self.topol_fp.dihedrals:
+                    if dihedral.atom1.idx==0:
+                    print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
+                    '''
+
+            if not found:
+                type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedral_fp.type.psi_k,
+                                                                  psi_eq=dihedral_fp.type.psi_eq,
+                                                                  list=self.topol_new.improper_types)
+
+                #if type_to_assign not in topol_new.dihedral_types:
+                self.topol_new.improper_types.append(type_to_assign)
+                logger.info(f"      [b] New dihedral: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:} "
+                            f"{mapping_fp_to_new[dihedral_fp.atom1.idx]:} {mapping_fp_to_new[dihedral_fp.atom2.idx]:} "
+                            f"{mapping_fp_to_new[dihedral_fp.atom3.idx]:} {type_to_assign:}")
+
+                atom1 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom1.idx]]
+                atom2 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom2.idx]]
+                atom3 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom3.idx]]
+                atom4 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
+
+                self.topol_new.impropers.append(pmd.topologyobjects.Improper(atom1, atom2, atom3, atom4, type=type_to_assign))
 
 
 def get_args():

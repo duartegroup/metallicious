@@ -5,8 +5,8 @@ import re
 from mapping import map_two_structures
 
 
-def extract_structure(filename, output=None):
-    metals = ['pd', 'co', 'fe']  # TODO
+def extract_structure(filename, output=None):  # TODO this will be delated
+    metals = ['pd', 'co', 'fe']
     syst = MDAnalysis.Universe(filename)
 
     # Remove numbers from name

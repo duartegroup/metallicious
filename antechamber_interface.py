@@ -12,6 +12,8 @@ except:
     from log import logger
 
 
+
+import rdkit
 import numpy as np
 
 def antechamber(pdbfile, charge, output, verbose=False):
@@ -101,14 +103,14 @@ def neutralize_charge(file_name, output, charge=0):
     in_atoms = False
 
     # Correction for charge, should be inside the parmetrization
-    sum_of_charge = - np.float(charge)  # we start with the formal charge
+    sum_of_charge = - float(charge)  # we start with the formal charge
     number_of_atoms = 0
 
     for line in moleculetype.splitlines():
         if in_atoms and len(line) > 0 and line[0] != ";":
             # print(line)
             if len(line.split()) > 7:
-                sum_of_charge += np.float(line.split()[6])
+                sum_of_charge += float(line.split()[6])
                 number_of_atoms += 1
 
         if "[ atoms ]" in line:
@@ -128,7 +130,7 @@ def neutralize_charge(file_name, output, charge=0):
             # print(np.round(fract + 0.000001*np.random.random(),6)) #
             if in_atoms and len(line) > 0 and line[0] != ";" and len(line.split()) > 6:
                 line = line[:line.find(';')]
-                charge = np.float(line.split()[6]) - np.round(fract + np.sign(fract_rest) * 0.000001 * (
+                charge = float(line.split()[6]) - np.round(fract + np.sign(fract_rest) * 0.000001 * (
                         atom_nr % every_nth == 0 and every_nth * int(
                     (np.abs(fract_rest) / 0.000001)) > atom_nr), 6)
                 qtot += charge  # w
@@ -154,16 +156,10 @@ def neutralize_charge(file_name, output, charge=0):
     File.close()
 
 
-
-
-
-
-
-
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="pdb file")
+    parser.add_argument("-smi", help="smiles")
     parser.add_argument("-charge", default=0, help="Topology of the linker ") # TODO
     parser.add_argument("-o", default='topol.top', help="Output coordination file")
     parser.add_argument("-v", action='store_true', dest='v', help="Be loud")
@@ -171,7 +167,38 @@ def get_args():
     return parser.parse_args()
 
 
+def smiles_to_mol(smiles, outfile='rdkit.pdb'):
+    try:
+        from rdkit import Chem
+        from rdkit.Chem import AllChem
+    except:
+        print("You need rdkit to use smiles")
+        raise
+    mol = Chem.MolFromSmiles(smiles)
+    mol = Chem.AddHs(mol)
+
+    # This might be a way, but maybe someting more general:
+    # if mol.GetNumHeavyAtoms() < 100: # if there is a lot of heavy atoms it does not work. For now I put 100, but it is arbitraty for now
+    #    AllChem.EmbedMolecule(mol)
+    # else:
+    #    AllChem.EmbedMolecule(mol, useRandomCoords=True)
+
+    embeded = AllChem.EmbedMolecule(mol)
+    if embeded == -1:  # if does not work use just random coords
+        AllChem.EmbedMolecule(mol, useRandomCoords=True)
+
+    Chem.rdForceFieldHelpers.MMFFOptimizeMolecule(mol)
+    Chem.MolToPDBFile(mol, outfile)
+
+
 # MAKE it less louder
 if __name__ == '__main__':
     args = get_args()
-    antechamber(args.f, args.charge, args.o, args.v)
+    if args.f is not None:
+        antechamber(args.f, args.charge, args.o, args.v)
+    elif args.smi is not None:
+        smiles_to_mol(args.smi, 'rdkit.pdb')
+        antechamber('rdkit.pdb', args.charge, args.o, args.v)
+
+    else:
+        print("Provide input file")
