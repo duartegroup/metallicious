@@ -14,7 +14,7 @@ linker_topol='linker.top'
 metal='Zn'
 metal_charge=2
 #fingerprint='Zn'
-fingerprint_style='trunc'
+#fingerprint_style='trunc'
 
 
 extract_metal_structure(f, metal, "out")
