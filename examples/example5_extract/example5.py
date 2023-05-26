@@ -9,7 +9,7 @@ except:
     from cgbind2pmd.main import cgbind2pmd
     from cgbind2pmd.extract_metal_site import extract_metal_structure
 
-'''
+
 f='pd2l4_tall.xyz'
 metal='Pd'
 extract_metal_structure(f, metal, "pd2l4_tall_fp1")
@@ -34,9 +34,9 @@ f='Fe4L6.pdb'
 metal='Fe'
 extract_metal_structure(f, metal, "Fe4L6_fp")
 
-#f='Ga4L6.xyz'
-#metal='Ga'
-#extract_metal_structure(f, metal, "Ga4L6_fp")
+f='Ga4L6.xyz'
+metal='Ga'
+extract_metal_structure(f, metal, "Ga4L6_fp")
 
 f='Pd4L6.xyz'
 metal='Pd'
@@ -48,9 +48,7 @@ metal='Fe'
 extract_metal_structure(f, metal, "knot_4n_fp")
 
 
-'''
 f='knot_3n.pdb'
 metal='Zn'
 extract_metal_structure(f, metal, "knot_3n_fp")
-
 

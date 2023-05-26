@@ -55,8 +55,7 @@ def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
                         logger.info(f"      [o] Diffrent bond type {bond_new.type:} {bond_fp.type:}")
                     found = True
             else:
-
-                found = True  # TODO not sure why this is here
+                found = True
 
         if not found:
             # type_to_assign= bond_fp.type
@@ -179,7 +178,7 @@ def adjust_dihedrals(topol_new, topol_fp, mapping_fp_to_new):
             logger.info(f"               {topol_fp.atoms[dihedral_fp.atom4.idx]:}")
             logger.info("But it is standard so it should be there")
             logger.info("And you should be worry if it is not the end of fingerprint")
-            found = True  # TODO I don't remember why this is True
+            found = True
             # raise
             '''
             for dihedral in topol_fp.dihedrals:
@@ -250,7 +249,7 @@ def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
             logger.info(f"               {topol_fp.atoms[dihedral_fp.atom4.idx]:}")
             logger.info("But it is standard so it should be there")
             logger.info("And you should be worry if it is not the end of fingerprint")
-            found = True  # TODO I don't remember why this is True
+            found = True
             # raise
             '''
             for dihedral in topol_fp.dihedrals:

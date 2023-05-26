@@ -14,8 +14,10 @@ method = ade.methods.ORCA()
 
 try:
     from data import name_to_atomic_number
+    from improper_torsion import find_dihedrals_and_values
 except:
     from cgbind2pmd.data import name_to_atomic_number
+    from cgbind2pmd.improper_torsion import find_dihedrals_and_values
 
 def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
     File = open(filename)
@@ -53,7 +55,8 @@ def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
 
     hess_string = ['' for a in range(N)]
 
-    for a in range(int(N / 5) + 1):
+    #for a in range(int(N / 5) + 1):
+    for a in range(int(N / 5)):
         temp2 = temp.splitlines()[3 + (1 + N) * (a):2 + (1 + N) * (a + 1)]
         for b in range(N):
             hess_string[b] += temp2[b][6:]
@@ -208,9 +211,9 @@ def read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, uniqu
     return bonds
 
 def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
-    bonds = remove_non_metal_donor_bonds(bonds_with_names, metal_name, donors=['N', 'O', 'S'])
+    bonds = remove_non_metal_donor_bonds(bonds_with_names, metal_name, donors=donors)
     bonds = read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, unique_ligands_pattern,
-                              donors=["N", "O", "S"])
+                              donors=donors)
     return bonds
 
 
@@ -303,7 +306,7 @@ def read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_liga
 
 def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
                                        donors=["N", "O", "S"]):
-    angles = remove_non_metal_donor_bonds(angles_with_names, metal_name, donors=['N', 'O', 'S'])
+    angles = remove_non_metal_donor_bonds(angles_with_names, metal_name, donors=donors)
     angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
     return angles
 
@@ -393,20 +396,26 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
     return bonds_with_names, angles_with_names, dummy_dihedrals
 
 
-def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False):
-
+def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O']):
     bonds_with_names, angles_with_names, dummy_dihedrals = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult) # what about ligand charge!!!! # TODO
 
+    if improper_metal:
+        improper_dihedrals = find_dihedrals_and_values(bonds_with_names, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge)
+        dihedrals = {**dummy_dihedrals, **improper_dihedrals}
+    else:
+        dihedrals = dummy_dihedrals
+
     bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
-                                       donors=["N", "O", "S"])
+                                       donors=donors)
+
     angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
-                                       donors=["N", "O", "S"])
+                                       donors=donors)
     if improper_metal:
         None
 
-    return bonds, angles, dummy_dihedrals
+    return bonds, angles, dihedrals
 
-def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False, donors=['N', 'S', 'O']):
 
     File = open("INFO.dat")
     text = File.read()
@@ -414,6 +423,8 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
 
     n_sites = text.count("ligand_pattern")
     print("Number of sites", n_sites)
+
+    print("Autode:", ade.__version__)
 
     n_site = 0
     bondss = []
@@ -428,7 +439,9 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
             starting_index = list(map(int, line[15:].split(',')))
             indecies = [list(range(starting_index[a - 1], starting_index[a])) for a in range(1, len(starting_index))]
 
-            bonds, angles, dihedrals = single_seminario(f"site{n_site:d}.xyz", metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=keywords, mult=mult)
+            bonds, angles, dihedrals = single_seminario(f"site{n_site:d}.xyz", metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=keywords, mult=mult, improper_metal=improper_metal, donors=donors)
+
+            print(dihedrals)
 
             File = open(f"bonds_{n_site:d}.dat", "w")
             for bond in bonds:
@@ -441,7 +454,6 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
                 File.write(f'{"-".join(list(map(str, angle))):}:{",".join(list(map(str, angles[angle]))):}')
             File.close()
             angless.append(angles)
-
 
             File = open(f"dihedrals_{n_site:d}.dat", "w")
             for dihedral in dihedrals:

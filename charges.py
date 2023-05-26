@@ -194,7 +194,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
 
         method_keywords = ['B3LYP', '6-31G*', 'keepdens']
         if metal_name is not None:
-            if name_to_atomic_number[metal_name] > 36:
+            if name_to_atomic_number[metal_name] > 30:
                 method_keywords = ['PBE0', 'def2-SVP', 'keepdens']
         site.single_point(method=method, keywords=method_keywords)
 
@@ -237,7 +237,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff'
     print("mean_left_charge", mean_left_charge)
     resp_charges += mean_left_charge
 
-    if extra_atoms is not None: # TODO maybe I can figure out to make this nicer
+    if extra_atoms is not None:
         # we simply make the charges of the constrain 0, as the group is 0 (later on is easier to calculate diffrence)
         for idx in constrained_atoms:
             resp_charges[idx] = 0.0

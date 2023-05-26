@@ -8,7 +8,8 @@ except:
 
 #f='strain_cage.xyz'
 #f='cage_m3l6_uff_3.xyz'
-f='pd2l4_tall.xyz'
+#f='pd2l4_tall.xyz'
+f='megacage.xyz'
 #f='start.pdb'
 #f='template.pdb'
 #f='crystal.pdb'
@@ -20,7 +21,7 @@ linker_topol=None
 metal='Pd'
 metal_charge=2
 fingerprint='Pd2dm'
-fingerprint_style='bond'
+fingerprint_style='dih'
 
 cgbind2gmx = cgbind2pmd()
 cgbind2gmx.name_of_binding_side = fingerprint
