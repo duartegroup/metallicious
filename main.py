@@ -26,12 +26,18 @@ except:
     from log import logger
 
 try:
-    from cgbind2pmd.load_fingerprint import load_fingerprint_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
+    from cgbind2pmd.load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
     from cgbind2pmd.prepare_initial_topology import prepare_initial_topology
-except:
-    from load_fingerprint import load_fingerprint_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
-    from prepare_initial_topology import prepare_initial_topology
+    from cgbind2pmd.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
+    from cgbind2pmd.data import name2mass
+    from cgbind2pmd.data import name_to_atomic_number
 
+except:
+    from load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
+    from prepare_initial_topology import prepare_initial_topology
+    from copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
+    from data import name2mass
+    from data import name_to_atomic_number
 
 from copy import deepcopy
 
@@ -39,23 +45,18 @@ from copy import deepcopy
 # Dictionary of all elements matched with their atomic masses.
 
 
-try:
-    from cgbind2pmd.data import name2mass
-    from cgbind2pmd.data import name_to_atomic_number
-except:
-    from data import name2mass
-    from data import name_to_atomic_number
 
 
-class cgbind2pmd():
+
+class cgbind2pmd(): # TODO refactor this name
     path = None
     tmpdir_path = None
     cage = None
     ligand = None
     metal_name = None
     metal_charge =None
-    topol_fp = None
-    syst_fingerprint = None
+    fp_topol = None
+    fp_syst = None
     metal_indices =None
     topol_new = None # this is our new topology
     n_metals = None
@@ -107,29 +108,27 @@ class cgbind2pmd():
         self.path = os.getcwd()
         self.tmpdir_path = mkdtemp()
 
-
-    def save(self, output_topol,output_coords):
+    def save(self,output_coords, output_topol, tmpdir_path):
         # copy everything TODO
 
         if output_coords.endswith('.gro'):
-            shutil.copy(f'{self.tmpdir_path:s}/cage.gro', f'{self.path:s}/{output_coords:s}')
+            shutil.copy(f'{self.cage_coord:s}', f'{output_coords:s}')
         else:
-            coord = pmd.load_file(f'{self.tmpdir_path:s}/cage.gro')
-            coord.save(f'{self.path:s}/{output_coords:s}', overwrite=True)
+            coord = pmd.load_file(f'{tmpdir_path:s}/{self.cage_coord:s}')
+            coord.save(f'{output_coords:s}', overwrite=True)
 
-        self.topol_new.write(f"{self.tmpdir_path:s}/temp_topol.top")
+        self.topol_new.write(f"temp_topol.top")
 
         if output_topol.endswith('.top'):
-            shutil.copy(f'{self.tmpdir_path:s}/temp_topol.top', f'{self.path:s}/{output_topol:s}')
+            shutil.copy(f'temp_topol.top', f'{output_topol:s}')
         else:
-            topol = pmd.load_file(f'{self.tmpdir_path:s}/temp_topol.top')
-            topol.save(f'{self.path:s}/{output_topol:s}', overwrite=True)
+            topol = pmd.load_file(f'temp_topol.top')
+            topol.save(f'{output_topol:s}', overwrite=True)
 
     def close(self):
         shutil.rmtree(self.tmpdir_path)
 
-
-    def construct_cage(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None, name_of_binding_side=None):
+    def construct_cage(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None): #TODO remove
         '''
         The main function, which copies all the bonded paramters to the cage
         Sepearated for stages;
@@ -152,10 +151,10 @@ class cgbind2pmd():
         #self.load_cage(cage_file, ligand_file)
         self.prepare_new_topology(cage_file, self.metal_name, metal_charge=metal_charge, ligand_file=ligand_file)
 
-        self.load_fingerprint(cage_file)
+        self.load_fingerprint_old(cage_file)
 
         for metal_index in self.metal_indices:
-            mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings("cage.gro", metal_index, self.metal_name, self.syst_fingerprint, cutoff=self.ligand_cutoff)
+            mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings("cage.gro", metal_index, self.metal_name, self.fp_syst, cutoff=self.ligand_cutoff)
 
             self.adjust_charge(mapping_fp_to_new)
 
@@ -168,6 +167,47 @@ class cgbind2pmd():
             self.adjust_impropers(mapping_fp_to_new)
 
         logger.info(f'Saving as {self.output_topol:s}')
+
+        logger.info('Finished')
+
+
+    def copy_site_topology_to_supramolecular(self, sites, cage_coord=None, cage_topol=None):
+        '''
+        The main function, which copies all the bonded paramters to the cage
+        Sepearated for stages;
+        1) Loads the cage
+        2) Loads the fingerprint (it tries to make guess if now sure)
+        3) Copies all the paramters
+
+        :param cage_file:
+        :param ligand_file:
+        :param metal_name:
+        :param metal_charge:
+        :param name_of_binding_side:
+        :return:
+        '''
+
+        #self.prepare_new_topology(cage_file, self.metal_name, metal_charge=metal_charge, ligand_file=ligand_file)
+
+        self.cage_coord = cage_coord
+
+        self.prepare_new_topology(cage_coord, cage_topol)
+
+        for site in sites:
+
+            mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_coord, site.index, site.metal_name, site.fp_syst, cutoff=site.ligand_cutoff)
+
+            #self.topol_new = adjust_bonds(self.topol_new, site.fp_topol, mapping_fp_to_new)
+
+            self.topol_new = adjust_charge(self.topol_new, site.fp_topol,mapping_fp_to_new)
+
+            self.topol_new = adjust_bonds(self.topol_new, site.fp_topol,mapping_fp_to_new)
+
+            self.topol_new = adjust_angles(self.topol_new, site.fp_topol,mapping_fp_to_new)
+
+            self.topol_new = adjust_dihedrals(self.topol_new, site.fp_topol,mapping_fp_to_new)
+
+            self.topol_new = adjust_impropers(self.topol_new, site.fp_topol,mapping_fp_to_new)
 
         logger.info('Finished')
 
@@ -199,7 +239,7 @@ class cgbind2pmd():
         syst = MDAnalysis.Universe('linker.xyz')
         syst.atoms.write('linker.pdb')
         logger.info("[ ] Calling antechamber to parametrize linker") # TODO, that should not be hidden here
-        antechamber('linker.pdb', linker.charge, 'linker.top')
+        antechamber('linker.pdb', 'linker.top')
 
 
     def load_cage(self, cage_file, ligand_file):
@@ -248,7 +288,7 @@ class cgbind2pmd():
         # Find how many ligands are bound to single metal:
         metal_index = self.metal_indices[0] # TODO check if all have the same number of ligands bound to single side
 
-    def load_fingerprint(self, cage_file):
+    def load_fingerprint_old(self, cage_file): #TODO remove
         '''
         Loads files from the library into the class, if the name is not known, it will try to guess the fingerprint
 
@@ -265,16 +305,17 @@ class cgbind2pmd():
 
 
         # Input
-        self.topol_fp, self.syst_fingerprint= load_fingerprint_from_file(self.name_of_binding_side, self.fingerprint_style)
+        self.fp_topol, self.fp_syst= load_fp_from_file(self.name_of_binding_side, self.fingerprint_style)
 
-        metal_position = self.syst_fingerprint.atoms[0].position
-        nometal_position = self.syst_fingerprint.atoms[1:].positions
+        metal_position = self.fp_syst.atoms[0].position
+        nometal_position = self.fp_syst.atoms[1:].positions
         self.ligand_cutoff = np.min([np.max(distance_array(metal_position, nometal_position)) + 2.0, self.m_m_cutoff])
 
 
         #self.topol_fp = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.top')
         #self.syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.pdb")
         return True
+
 
 
     def crystal2pdb(self, crystal_pdb, topology_itp, output, metal_name=""):
@@ -376,7 +417,8 @@ class cgbind2pmd():
         new_cage.atoms.write(output)
 
 
-    def prepare_new_topology(self, cage_file, metal_name, metal_charge, ligand_file=None):
+    #def prepare_new_topology(self, cage_coord, cage_topol, metal_name, metal_charge, ligand_file=None):
+    def prepare_new_topology(self, cage_coord, cage_topol):
         '''
         metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')
         metal.atoms[0].name = self.metal_name
@@ -388,16 +430,16 @@ class cgbind2pmd():
         '''
 
 
-        self.n_ligands, self.metal_indices, self.n_metals = prepare_initial_topology(cage_file, metal_name, metal_charge, "cage.gro", "test_cage.top", ligand_topol=ligand_file) # TODO can this output be nicer?
+        #self.n_ligands, self.metal_indices, self.n_metals = prepare_initial_topology(cage_file, metal_name, metal_charge, "cage.gro", "test_cage.top", ligand_topol=ligand_file) # TODO can this output be nicer?
 
-        self.cage = MDAnalysis.Universe("cage.gro")
-        logger.info(f"[ ] Created initial topol with {self.n_ligands:} ligands, {self.n_metals} metals (indecies: {self.metal_indices:})")
+        self.cage = MDAnalysis.Universe(cage_coord)
+        #logger.info(f"[ ] Created initial topol with {self.n_ligands:} ligands, {self.n_metals} metals (indecies: {self.metal_indices:})")
 
-        self.topol_new = pmd.load_file('test_cage.top', parametrize=False)  # , skip_bonds=True)
+        self.topol_new = pmd.load_file(cage_topol, parametrize=False)  # , skip_bonds=True)
         # we need to copy paramters back, for some reasons if paramtrize is False
         # parmed is sometimes wierd :-(
 
-        topol_new2 = pmd.load_file('test_cage.top')
+        topol_new2 = pmd.load_file(cage_topol)
         for a in range(len(self.topol_new.atoms)):
             self.topol_new.atoms[a].type = topol_new2.atoms[a].type
             self.topol_new.atoms[a].epsilon = topol_new2.atoms[a].epsilon
@@ -406,13 +448,15 @@ class cgbind2pmd():
             self.topol_new.atoms[a].charge = topol_new2.atoms[a].charge
 
         # Find the lowest distance between metal sites, if there are more than 1
-        if self.n_metals>1:
+
+        ''' # TODO this should moe
+        if self.n_metals > 1:
             mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
             self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1 #this acctually does not make it better TODO
         else:
             self.m_m_cutoff = 1e10
             #self.m_m_cutoff=9
-
+        '''
 
     def adjust_charge(self, mapping_fp_to_new):
         logger.info("   [ ] Changing charges and atomtypes")
@@ -422,27 +466,27 @@ class cgbind2pmd():
             logger.info(f"          {self.topol_new.atoms[mapping_fp_to_new[a]].type:s} "
                         f"{self.topol_new.atoms[mapping_fp_to_new[a]].name:s} "
                         f"{self.topol_new.atoms[mapping_fp_to_new[a]].charge:} --> "
-                        f"{self.topol_fp.atoms[a].type, self.topol_fp.atoms[a].name:} {self.topol_new.atoms[mapping_fp_to_new[a]].charge + self.topol_fp.atoms[a].charge:}")
+                        f"{self.fp_topol.atoms[a].type, self.fp_topol.atoms[a].name:} {self.topol_new.atoms[mapping_fp_to_new[a]].charge + self.fp_topol.atoms[a].charge:}")
 
 
-            atom = self.topol_fp.atoms[a]
+            atom = self.fp_topol.atoms[a]
 
             if atom.type not in self.topol_new.parameterset.atom_types.keys():
                 logger.info(f"      [^] Adding new atomtype: {atom.type:s}")
                 atomtype = pmd.topologyobjects.AtomType(name=atom.type, number=atom.number, mass=atom.mass)
                 self.topol_new.parameterset.atom_types[atom.type] = atomtype
 
-            self.topol_new.atoms[mapping_fp_to_new[a]].type = self.topol_fp.atoms[a].type
-            self.topol_new.atoms[mapping_fp_to_new[a]].epsilon = self.topol_fp.atoms[a].epsilon
-            self.topol_new.atoms[mapping_fp_to_new[a]].sigma = self.topol_fp.atoms[a].sigma
-            self.topol_new.atoms[mapping_fp_to_new[a]].rmin = self.topol_fp.atoms[a].rmin
-            self.topol_new.atoms[mapping_fp_to_new[a]].charge += self.topol_fp.atoms[a].charge  # topol_fp.atoms[a].charge
+            self.topol_new.atoms[mapping_fp_to_new[a]].type = self.fp_topol.atoms[a].type
+            self.topol_new.atoms[mapping_fp_to_new[a]].epsilon = self.fp_topol.atoms[a].epsilon
+            self.topol_new.atoms[mapping_fp_to_new[a]].sigma = self.fp_topol.atoms[a].sigma
+            self.topol_new.atoms[mapping_fp_to_new[a]].rmin = self.fp_topol.atoms[a].rmin
+            self.topol_new.atoms[mapping_fp_to_new[a]].charge += self.fp_topol.atoms[a].charge  # topol_fp.atoms[a].charge
 
-            sum_of_charge_diffrences += self.topol_fp.atoms[a].charge
+            sum_of_charge_diffrences += self.fp_topol.atoms[a].charge
 
     def adjust_bonds(self, mapping_fp_to_new):
         logger.info("   [ ] Adding new bonds to topology")
-        for bond_fp in self.topol_fp.bonds:
+        for bond_fp in self.fp_topol.bonds:
             found = False
             for bond_new in self.topol_new.bonds:
 
@@ -466,7 +510,7 @@ class cgbind2pmd():
 
         logger.info("   [ ] Adding new bonds to topology")
 
-        for bond_fp in self.topol_fp.bonds:
+        for bond_fp in self.fp_topol.bonds:
             found = False
 
             for bond_new in self.topol_new.bonds:
@@ -509,7 +553,7 @@ class cgbind2pmd():
 
     def adjust_angles(self, mapping_fp_to_new):
         logger.info("   [ ] Adding new angles to topology")
-        for angle_fp in self.topol_fp.angles:
+        for angle_fp in self.fp_topol.angles:
             found = False
             if angle_fp.atom1.idx in mapping_fp_to_new and angle_fp.atom2.idx in mapping_fp_to_new and angle_fp.atom3.idx in mapping_fp_to_new:
                 for angle_new in self.topol_new.angles:
@@ -532,9 +576,9 @@ class cgbind2pmd():
                         found = True
             else:
                     logger.info(f"[-] Not found in fingerprint: {angle_fp.atom1.idx+1:d} {angle_fp.atom2.idx+1:d} {angle_fp.atom3.idx+1:d}")
-                    logger.info(f"              {self.topol_fp.atoms[angle_fp.atom1.idx]:}")
-                    logger.info(f"              {self.topol_fp.atoms[angle_fp.atom2.idx]:}")
-                    logger.info(f"              {self.topol_fp.atoms[angle_fp.atom3.idx]:}")
+                    logger.info(f"              {self.fp_topol.atoms[angle_fp.atom1.idx]:}")
+                    logger.info(f"              {self.fp_topol.atoms[angle_fp.atom2.idx]:}")
+                    logger.info(f"              {self.fp_topol.atoms[angle_fp.atom3.idx]:}")
                     logger.info(f"But it is standard bond so it should be there")
                     logger.info(f"And you should be worry if it is not the end of fingerprint")
                     found = True
@@ -561,7 +605,7 @@ class cgbind2pmd():
 
     def adjust_dihedrals(self, mapping_fp_to_new):
         logger.info("   [ ] Adding new dihedrals to topology")
-        for dihedral_fp in self.topol_fp.dihedrals:
+        for dihedral_fp in self.fp_topol.dihedrals:
             found = False
             if dihedral_fp.atom1.idx in mapping_fp_to_new and dihedral_fp.atom2.idx in mapping_fp_to_new and dihedral_fp.atom3.idx in mapping_fp_to_new and dihedral_fp.atom4.idx in mapping_fp_to_new:
                 for dihedral_new in self.topol_new.dihedrals:
@@ -584,10 +628,10 @@ class cgbind2pmd():
                         found = True
             else:
                     logger.info(f"[-] Not found in finger print: {dihedral_fp.atom1.idx+1:} {dihedral_fp.atom2.idx+1:} {dihedral_fp.atom3.idx+1:} {dihedral_fp.atom4.idx+1:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom1.idx]:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom2.idx]:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom3.idx]:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom4.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom1.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom2.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom3.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom4.idx]:}")
                     logger.info("But it is standard so it should be there")
                     logger.info("And you should be worry if it is not the end of fingerprint")
                     found = True # TODO I don't remember why this is True
@@ -620,7 +664,7 @@ class cgbind2pmd():
         # This is almost the same as above, with the diffrence on being improper dihedrals
 
         logger.info("   [ ] Adding new improper dihedrals to topology")
-        for dihedral_fp in self.topol_fp.impropers:
+        for dihedral_fp in self.fp_topol.impropers:
             found = False
             if dihedral_fp.atom1.idx in mapping_fp_to_new and dihedral_fp.atom2.idx in mapping_fp_to_new and dihedral_fp.atom3.idx in mapping_fp_to_new and dihedral_fp.atom4.idx in mapping_fp_to_new:
                 for dihedral_new in self.topol_new.impropers:
@@ -642,10 +686,10 @@ class cgbind2pmd():
                         found = True
             else:
                     logger.info(f"[-] Not found in finger print: {dihedral_fp.atom1.idx+1:} {dihedral_fp.atom2.idx+1:} {dihedral_fp.atom3.idx+1:} {dihedral_fp.atom4.idx+1:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom1.idx]:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom2.idx]:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom3.idx]:}")
-                    logger.info(f"               {self.topol_fp.atoms[dihedral_fp.atom4.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom1.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom2.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom3.idx]:}")
+                    logger.info(f"               {self.fp_topol.atoms[dihedral_fp.atom4.idx]:}")
                     logger.info("But it is standard so it should be there")
                     logger.info("And you should be worry if it is not the end of fingerprint")
                     found = True # TODO I don't remember why this is True

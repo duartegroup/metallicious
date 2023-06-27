@@ -7,6 +7,35 @@ except:
     from log import logger
 
 
+def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
+    logger.info("   [ ] Changing charges and atomtypes")
+    sum_of_charge_diffrences = 0
+
+    for a in mapping_fp_to_new:
+        logger.info(f"          {topol_new.atoms[mapping_fp_to_new[a]].type:s} "
+                    f"{topol_new.atoms[mapping_fp_to_new[a]].name:s} "
+                    f"{topol_new.atoms[mapping_fp_to_new[a]].charge:} --> "
+                    f"{fp_topol.atoms[a].type, fp_topol.atoms[a].name:} {topol_new.atoms[mapping_fp_to_new[a]].charge + fp_topol.atoms[a].charge:}")
+
+
+        atom = fp_topol.atoms[a]
+
+        if atom.type not in topol_new.parameterset.atom_types.keys():
+            logger.info(f"      [^] Adding new atomtype: {atom.type:s}")
+            atomtype = pmd.topologyobjects.AtomType(name=atom.type, number=atom.number, mass=atom.mass)
+            topol_new.parameterset.atom_types[atom.type] = atomtype
+
+        topol_new.atoms[mapping_fp_to_new[a]].type = fp_topol.atoms[a].type
+        topol_new.atoms[mapping_fp_to_new[a]].epsilon = fp_topol.atoms[a].epsilon
+        topol_new.atoms[mapping_fp_to_new[a]].sigma = fp_topol.atoms[a].sigma
+        topol_new.atoms[mapping_fp_to_new[a]].rmin = fp_topol.atoms[a].rmin
+        topol_new.atoms[mapping_fp_to_new[a]].charge += fp_topol.atoms[a].charge  # topol_fp.atoms[a].charge
+
+        sum_of_charge_diffrences += fp_topol.atoms[a].charge
+
+    return topol_new
+
+
 def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
     logger.info("   [ ] Adding new bonds to topology")
     for bond_fp in topol_fp.bonds:
@@ -65,14 +94,15 @@ def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
             type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
                                                           list=topol_new.bond_types)
 
-            logger.info(f"      [o] New bond: {mapping_fp_to_new[bond_fp.atom1.idx]:} "
-                        f"{mapping_fp_to_new[bond_fp.atom2.idx]:}, {type_to_assign:}")
+
             # if type_to_assign not in topol_new.bond_types:
             topol_new.bond_types.append(type_to_assign)
 
             atom1 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom1.idx]]
             atom2 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom2.idx]]
             topol_new.bonds.append(pmd.topologyobjects.Bond(atom1, atom2, type=type_to_assign))
+
+            logger.info(f"      [o] New bond: {mapping_fp_to_new[bond_fp.atom1.idx]:}  {type_to_assign:} {atom1.name:}-{atom2.name:} ({mapping_fp_to_new[bond_fp.atom2.idx]:})")
 
     return topol_new
 
@@ -120,7 +150,6 @@ def adjust_angles(topol_new, topol_fp, mapping_fp_to_new):
                                                            list=topol_new.angle_types)
             # if type_to_assign not in topol_new.angle_types:
             topol_new.angle_types.append(type_to_assign)
-            logger.info(f"new type {len(topol_new.angle_types):}")
 
             logger.info(f"      [x] New angle:{angle_fp.atom1.name:}-{angle_fp.atom2.name:}-{angle_fp.atom3.name:} "
                         f"{mapping_fp_to_new[angle_fp.atom1.idx]:} {mapping_fp_to_new[angle_fp.atom2.idx]:} "
@@ -297,10 +326,8 @@ def copy_bonds(topol_new, bonds, metal_name):
     for bond in topol_new.bonds:
         orginal_bonds.append((bond.atom1.idx, bond.atom2.idx))
 
-
     for bond in bonds:
         find = [a for a, bond_o in enumerate(orginal_bonds) if (bond_o == bond or bond_o == bond[::-1])]
-        print(bond, find)
         if len(find) == 1:
             bond_new = topol_new.bonds[find[0]]
 
@@ -401,7 +428,7 @@ def copy_dihedrals(topol_new, dihedrals, metal_name):
                 topol_new.atoms[dihedral[3]].name).title() == metal_name.title():
 
                 # we do use periodicy=2 and use defualt values for scee=1.2 and scnb=2 (screening of electrostatics and noboned)
-                type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedrals[dihedral][1], per=2,
+                type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedrals[dihedral][1], per=1,
                                                                   phase=dihedrals[dihedral][0],
                                                                   list=topol_new.dihedral_types)
 

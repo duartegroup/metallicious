@@ -11,9 +11,12 @@ from copy import deepcopy
 try:
     from antechamber_interface import antechamber
     from data import name2mass
+
+    from extract_metal_site import find_metal_indices
 except:
     from cgbind2pmd.antechamber_interface import antechamber # TODO it should also allow to use created topology files
     from cgbind2pmd.data import name2mass
+    from cgbind2pmd.extract_metal_site import find_metal_indices
 
 import os
 
@@ -39,18 +42,28 @@ def mapping_itp_coords(syst, ligand_file):
 
         return True, topol, ordered, G_top
 
-def prepare_initial_topology(filename, metal_name, metal_charge, output_coord, output_top, ligand_topol=None):
+def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, output_top, ligand_topol=None):
     crystal = MDAnalysis.Universe(filename)
     crystal.residues.resids = 0 # Antechamber requires one residue
-
     table = MDAnalysis.topology.tables.vdwradii
     table['Cl'] = table['CL']
-
     metal_ions = None
 
-    if len(metal_name) > 0:
-        metal_ions = crystal.select_atoms(f"name {metal_name.title():s}* {metal_name.upper():s}* {metal_name.lower():s}* ")
-        ligands = crystal.select_atoms(f"not name {metal_name.title():s}* {metal_name.upper():s}* {metal_name.lower():s}* ")
+    #metal_names = [metal_name.title() for metal_name in metal_names] # TODO
+
+
+
+    if len(metal_names) > 0:
+        #metal_ions = crystal.select_atoms(f"name {metal_name.title():s}* {metal_name.upper():s}* {metal_name.lower():s}* ")
+        metal_indecies = []
+        for metal_name in metal_names:
+            indecies, _ = find_metal_indices(crystal, metal_name)
+            metal_indecies.append(indecies)
+
+        metal_ions = crystal.atoms[np.concatenate(metal_indecies)]
+        ligands = crystal.atoms - metal_ions
+
+        #ligands = crystal.select_atoms(f"not name {metal_name.title():s}* {metal_name.upper():s}* {metal_name.lower():s}* ")
         G1 = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table,
                                                      box=crystal.dimensions))
@@ -88,10 +101,16 @@ def prepare_initial_topology(filename, metal_name, metal_charge, output_coord, o
 
     for idx, nodes in enumerate(ligand_library):
         ligand_coords_mda = crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}")
+
+        ligand_coords_mda.write(f"temp.pdb")
+        #os.system("obabel -ipdb temp2.pdb -opdb -O temp.pdb --minimize --ff uff --steps 50 --log")  # TODO remove
+        ligand_coords_mda = MDAnalysis.Universe("temp.pdb").atoms
+
         is_iso, ligand, topology, Gtop = mapping_itp_coords(ligand_coords_mda, ligand_topol) # what if there are more then one topologies (?)
         if not is_iso: # if not isomorphic we paramterize with antechamber:
-            ligand_coords_mda.write(f"temp.pdb")
-            antechamber('temp.pdb', 0, f'linker{idx:}.top') # TODO I assume linkers to have charge 0....
+
+
+            antechamber('temp.pdb', f'linker{idx:}.top')
             # TODO there should be here option to use seminario if the seminario is btter
             ligand = pmd.load_file(f'linker{idx:}.top')
 
@@ -108,10 +127,7 @@ def prepare_initial_topology(filename, metal_name, metal_charge, output_coord, o
         topologies.append(topology)
         Gtops.append(Gtop)
 
-    metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp') # TODO I thought I eliminated that ?
-    metal.atoms[0].name = metal_name
-    metal.atoms[0].charge =metal_charge
-    metal.atoms[0].mass = name2mass[metal_name.title()]
+
 
     new_ligands = []
 
@@ -177,18 +193,29 @@ def prepare_initial_topology(filename, metal_name, metal_charge, output_coord, o
                 print(f"Number of edges: from coordinates: {len(Gsub.edges()):d}, from_topology: {len(Gtop.edges()):d}")
 
                 '''
-
-
-    n_metals = 0
+    cage_topol = None
     if metal_ions is not None:
-        n_metals = len(metal_ions)
+        for metal_name, indecies in zip(metal_names, metal_indecies):
+
+            metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')  # TODO I thought I eliminated that ?
+            metal.atoms[0].name = metal_name
+            metal.atoms[0].charge = metal_charge # someting wierd with atomic number #TODO what about charges of Ru (?)
+            metal.atoms[0].mass = name2mass[metal_name.title()]
+
+            n_metals = len(indecies)
+            if cage_topol is None:
+                cage_topol = metal * n_metals
+            else:
+                cage_topol += metal * n_metals
 
 
     # we group the ligands togheter
     order = np.argsort(list(ligand_group.values()))
 
     #firstly the topology file
-    cage_topol = metal * n_metals
+
+    
+    
     for idx in order:
         top_idx = ligand_group[idx]
         cage_topol += deepcopy(ligand_tops[top_idx])
@@ -202,14 +229,17 @@ def prepare_initial_topology(filename, metal_name, metal_charge, output_coord, o
     new_cage.dimensions = crystal.dimensions
     new_cage.atoms.write(output_coord)
 
+    n_metals = len(np.concatenate(metal_indecies))
     cage_topol.write(output_top, [list(range(n_ligands + n_metals))])
 
-    metal_indices = [a for a, name in enumerate(new_cage.atoms.names) if
-                          name[:len(metal_name)].title() == metal_name]
+    #metal_indices = [a for a, name in enumerate(new_cage.atoms.names) if
+    #                      name[:len(metal_name)].title() == metal_name]
 
-    n_metals = len(metal_indices)
+    #n_metals = len(metal_indices)
 
-    return n_ligands, metal_indices, n_metals
+    new_metal_indices = list(range(n_metals))
+
+    return new_metal_indices
 
 import argparse
 

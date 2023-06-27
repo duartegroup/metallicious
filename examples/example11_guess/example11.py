@@ -10,7 +10,7 @@ try:
     from cgbind2pmd.load_fingerprint import load_fingerprint_from_file, guess_fingerprint, reduce_site_to_fingerprint
     from cgbind2pmd.prepare_initial_topology import prepare_initial_topology
 except:
-    from load_fingerprint import load_fingerprint_from_file, guess_fingerprint, reduce_site_to_fingerprint
+    from load_fingerprint import load_fp_from_file, guess_fingerprint, reduce_site_to_fingerprint
 #f='start.pdb'
 
 f='cage2.xyz'

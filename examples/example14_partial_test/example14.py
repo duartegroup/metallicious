@@ -12,8 +12,8 @@ except:
     from cgbind2pmd.initial_site import create_initial_topol
 
 
-metal_name = 'Pd'
-metal_charge = 2
-vdw_type ='merz-tip3p'
+#metal_name = 'Pd'
+#metal_charge = 2
+#vdw_type ='merz-tip3p'
 
-topols = create_initial_topol(metal_name, metal_charge, vdw_data_name=vdw_type)
+#topols = create_initial_topol(metal_name, metal_charge, vdw_data_name=vdw_type)

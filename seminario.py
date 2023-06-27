@@ -10,14 +10,16 @@ import numpy as np
 from MDAnalysis.lib.distances import calc_dihedrals
 import MDAnalysis
 
-method = ade.methods.ORCA()
+
+
 
 try:
     from data import name_to_atomic_number
-    from improper_torsion import find_dihedrals_and_values
+    from mapping import map_two_structures
+    from improper_torsion import find_impropers_and_values
 except:
     from cgbind2pmd.data import name_to_atomic_number
-    from cgbind2pmd.improper_torsion import find_dihedrals_and_values
+    from cgbind2pmd.mapping import map_two_structures
 
 def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
     File = open(filename)
@@ -33,8 +35,6 @@ def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
     c = 0
     d = 0
     for line in temp.splitlines()[2:]:
-        print(line)
-
         if len(line.split()) > 0:
             for a in [2, 3, 4]:
 
@@ -55,8 +55,7 @@ def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
 
     hess_string = ['' for a in range(N)]
 
-    #for a in range(int(N / 5) + 1):
-    for a in range(int(N / 5)):
+    for a in range(np.ceil(N / 5).astype(int)):
         temp2 = temp.splitlines()[3 + (1 + N) * (a):2 + (1 + N) * (a + 1)]
         for b in range(N):
             hess_string[b] += temp2[b][6:]
@@ -159,27 +158,94 @@ def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
     new_bonds = {}
     for bond in bonds:
         if metal_name.title() in bond[1]:
+            print(bond[1], metal_name.title())
+            print(bond[1][0], bond[1][1] )
+            print(donors)
             if (bond[1][0] == metal_name and bond[1][1] in donors) or (
                     bond[1][1] == metal_name and bond[1][0] in donors):
                 new_bonds[bond[0]] = bonds[bond]
             else:
-                print("Not coping, metal connected not to the donor")
-                print(bond[1])
+                print(f"Not valid bond: Seminario method detect bond {bond[1]}, but metal not connected to donor ({donors:}), so removing it")
+
         else:
             new_bonds[bond[0]] = bonds[bond]
     return new_bonds
 
-def read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+    '''
+    This is simetrization of bond and angles (the name bonds stays for the first one)
 
+    :param bonds:
+    :param metal_name:
+    :param filename_opt:
+    :param starting_index:
+    :param indecies:
+    :param unique_ligands_pattern:
+    :param donors:
+    :return:
+    '''
+
+    site = MDAnalysis.Universe(filename_opt)
+    ligand_indecies = indecies[1:]
+    
     metal_index = 0  # TODO metal again first
     for unique_ligand in list(set(unique_ligands_pattern)):
         unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
-        print(unique_ligand_indecies)
-        index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
-        index_distance = index_select - index_select[0]
-        print(index_distance)
 
-        for atom_indeces in (indecies[unique_ligand + 1]):
+        #index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
+        #index_distance = index_select - index_select[0] # TODO this will not work if the ligand is symmetric and can be more than one iteractions.
+
+        mappings = []
+        for unique_ligand_idx in unique_ligand_indecies:
+            mapping, _ = map_two_structures(0, site.atoms[[0] + ligand_indecies[unique_ligand_idx]], site.atoms[[0] + ligand_indecies[unique_ligand_indecies[0]]], metal_name)
+            mappings.append(mapping)
+
+        bonds_reference = {}
+        for bond in bonds:
+            if len([1 for atom in bond if atom in [0] + ligand_indecies[unique_ligand_indecies[0]]]) == len(bond):
+                #if bond[0] in [0] + ligand_indecies[0] and bond[1] in [0] + ligand_indecies[0]:
+                bonds_reference[bond] = bonds[bond]
+
+        for bond in bonds_reference:
+            length = 0
+            k = 0
+            for mapping in mappings:
+                mapping_idx = tuple([mapping[atom] for atom in bond])
+                if mapping_idx in bonds:
+                    mapped_bond = bonds[mapping_idx]
+                elif mapping_idx[::-1] in bonds:
+                    mapped_bond = bonds[mapping_idx[::-1]]
+
+                length += mapped_bond[0]
+                k += mapped_bond[1]
+
+            length /= len(mappings)
+            k /= len(mappings)
+
+            for mapping in mappings:
+                mapping_idx = tuple([mapping[atom] for atom in bond])
+
+                if mapping_idx in bonds:
+                    bonds[mapping_idx] = (np.round(length, 3), np.round(k, 3))
+                elif mapping_idx[::-1] in bonds:
+                    bonds[mapping_idx[::-1]] = (np.round(length, 3), np.round(k, 3))
+
+
+
+         
+        #for atom_indeces in (indecies[unique_ligand + 1]):
+        # select first ligand from the unique ligands, and merge with other unique ligands iwthin group
+
+        '''
+        syst = MDAnalysis.Universe(filename)
+        ligand1 = syst.atoms[[0] + indecies[1:][same_ligands[0]]]  # ligand + metal (metal is necessery for symmetry)
+        ligand2 = syst.atoms[[0] + indecies[1:][same_ligand]]
+
+        mapping, _ = map_two_structures(0, ligand2, ligand1, metal_name)  # we map one of the ligands+metal on second
+        '''
+
+        '''
+        for atom_indeces in (indecies[unique_ligand_indecies[0] + 1]):
             for bond in bonds:
                 if atom_indeces in bond:
                     if metal_index not in bond:
@@ -208,12 +274,14 @@ def read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, uniqu
 
                         for distance in index_distance:
                             bonds[bond[0], bond[1] + distance] = (np.round(length, 3), np.round(k, 3))
+                            
+        '''
     return bonds
 
-def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
     bonds = remove_non_metal_donor_bonds(bonds_with_names, metal_name, donors=donors)
-    bonds = read_and_symmetrize_bonds(bonds, metal_name, starting_index, indecies, unique_ligands_pattern,
-                              donors=donors)
+    bonds = symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
+                                    donors=donors)
     return bonds
 
 
@@ -235,7 +303,7 @@ def read_angles():
     return angles
 
 
-def remove_non_metal_donor_bonds(angles, metal_name, donors=['N', 'S', 'O']):
+def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
     metal_name = metal_name.title()
     new_angles = {}
     for angle in angles:
@@ -248,23 +316,25 @@ def remove_non_metal_donor_bonds(angles, metal_name, donors=['N', 'S', 'O']):
             if metal_on_side_condition or metal_in_middle_condition:
                 new_angles[angle[0]] = angles[angle]
             else:
-                print("Not valid bond, metal-metal not included (yet)")
+                print(f"Not valid angle: Seminario method detected angle, but the atoms do not belong to donor list ({donors:}); angle:{angle:}")
         else:
             new_angles[angle[0]] = angles[angle]
     return new_angles
 
 
 #(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O"])
-def symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern):
+def symmetrize_angles(angles, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern): # TODO this is to remove (8/6/2023)
+    # TODO this is to remove
     metal_index = 0
 
     for unique_ligand in list(set(unique_ligands_pattern)):
         unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
-        print(unique_ligand_indecies)
+
         index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
         index_distance = index_select - index_select[0]
-        print(index_distance)
-        for atom_indeces in (indecies[unique_ligand + 1]):
+
+        #for atom_indeces in (indecies[unique_ligand + 1]): # TODO remove, left for clarity 31/05/2023
+        for atom_indeces in (indecies[unique_ligand_indecies[0] + 1]):
             # print(atom_indeces)
             for angle in angles:
                 if atom_indeces in angle:
@@ -297,17 +367,23 @@ def symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligan
                         None
     return angles
 
-def read_and_symmetrize_angles(metal_name, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", 'S']):
+def read_and_symmetrize_angles(metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", 'S']): # TODO this is not used (?)
     angles = read_angles()
-    angles = remove_non_metal_donor_bonds(angles, metal_name, donors=donors)
-    angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
+    angles = remove_non_metal_donor_angles(angles, metal_name, donors=donors)
+    #angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
+    angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, starting_index, indecies,
+                                     unique_ligands_pattern,
+                                     donors=donors)
     return angles
 
 
-def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
+def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
                                        donors=["N", "O", "S"]):
-    angles = remove_non_metal_donor_bonds(angles_with_names, metal_name, donors=donors)
-    angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
+    angles = remove_non_metal_donor_angles(angles_with_names, metal_name, donors=donors)
+    #angles = symmetrize_angles(angles, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern)
+    angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, starting_index, indecies,
+                                     unique_ligands_pattern,
+                                     donors=donors)
     return angles
 
 
@@ -358,10 +434,8 @@ def strip_names_from_covalent(covalent_paramters):
         new_covalent[covalent[0]] = covalent_paramters[covalent]
     return new_covalent
 
-
 def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
-    print("AAA")
-    print(method)
+    method = ade.methods.ORCA()
     site = ade.Molecule(filename, charge=charge, mult=mult)
     site.optimise(method=method, keywords=keywords)
     return site.name
@@ -372,7 +446,7 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
     os.system("mkdir bonded")
     os.chdir("bonded")
 
-    print("Optimising, parameters:", filename)
+    print("Optimising, parameters:", filename, charge)
 
     name = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
     orca_to_fchk(f"{name:s}_opt_orca.hess")
@@ -393,27 +467,62 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
 
     os.chdir(here)
 
-    return bonds_with_names, angles_with_names, dummy_dihedrals
+    return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{name:s}_opt_orca.xyz"
+
+def remove_atoms_from_bonded(bonds, angles, dihedrals, atoms_to_remove):
+    new_params = []
+    for bonded in [bonds, angles, dihedrals]:
+        new_bonded = {}
+        for param in bonded:
+            remove = False
+            for atom_id in param:
+                if atom_id in atoms_to_remove:
+                    remove = True
+
+            if not remove:
+                new_bonded[param] = bonded[param]
+
+        new_params.append(new_bonded)
+
+    new_bonds, new_angles, new_dihedrals = new_params
+    return new_bonds, new_angles, new_dihedrals
 
 
-def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O']):
-    bonds_with_names, angles_with_names, dummy_dihedrals = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult) # what about ligand charge!!!! # TODO
+def remove_indices_of_removed_atoms(bonds, angles, dihedrals, atoms_to_remove):
+    atoms_to_remove = sorted(atoms_to_remove)
+    new_params = []
+    for bonded in [bonds, angles, dihedrals]:
+        new_bonded = {}
+        for param in bonded:
+            indices = tuple([idx-sum(np.array(atoms_to_remove)<idx) for idx in param])
+            new_bonded[indices] = bonded[param]
+        new_params.append(new_bonded)
+    new_bonds, new_angles, new_dihedrals = new_params
 
-    if improper_metal:
-        improper_dihedrals = find_dihedrals_and_values(bonds_with_names, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge)
+    return new_bonds, new_angles, new_dihedrals
+
+
+def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O'], atoms_to_remove=None):
+    bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult)
+
+
+    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
+                                       donors=donors)
+
+    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt,  starting_index, indecies, unique_ligands_pattern,
+                                       donors=donors)
+
+    if improper_metal: 
+        improper_dihedrals = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult)
         dihedrals = {**dummy_dihedrals, **improper_dihedrals}
     else:
         dihedrals = dummy_dihedrals
+        
+    if len(atoms_to_remove) is not None:
+        bonds, angles, dihedrals = remove_atoms_from_bonded(bonds, angles, dihedrals, atoms_to_remove)
+        bonds, angles, dihedrals = remove_indices_of_removed_atoms(bonds, angles, dihedrals, atoms_to_remove)
 
-    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
-                                       donors=donors)
-
-    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, starting_index, indecies, unique_ligands_pattern,
-                                       donors=donors)
-    if improper_metal:
-        None
-
-    return bonds, angles, dihedrals
+    return bonds, angles, dihedrals, filename_opt
 
 def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False, donors=['N', 'S', 'O']):
 
@@ -423,8 +532,6 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
 
     n_sites = text.count("ligand_pattern")
     print("Number of sites", n_sites)
-
-    print("Autode:", ade.__version__)
 
     n_site = 0
     bondss = []
@@ -438,6 +545,7 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
         if "starting_index:" in line:
             starting_index = list(map(int, line[15:].split(',')))
             indecies = [list(range(starting_index[a - 1], starting_index[a])) for a in range(1, len(starting_index))]
+
 
             bonds, angles, dihedrals = single_seminario(f"site{n_site:d}.xyz", metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=keywords, mult=mult, improper_metal=improper_metal, donors=donors)
 
@@ -462,6 +570,24 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
             dihedralss.append(dihedrals)
 
     return (bondss, angless, dihedralss)
+
+
+
+def save_bonded_paramters_to_file(self, n_site=0):
+    File = open(f"bonds_{n_site:d}.dat", "w")
+    for bond in self.bonds:
+        File.write(f'{"-".join(list(map(str, bond))):}:{",".join(list(map(str, self.bonds[bond]))):}')
+    File.close()
+
+    File = open(f"angles_{n_site:d}.dat", "w")
+    for angle in self.angles:
+        File.write(f'{"-".join(list(map(str, angle))):}:{",".join(list(map(str, self.angles[angle]))):}')
+    File.close()
+
+    File = open(f"dihedrals_{n_site:d}.dat", "w")
+    for dihedral in self.dihedrals:
+        File.write(f'{"-".join(list(map(str, dihedral))):}:{",".join(list(map(str, self.dihedrals[dihedral]))):}')
+    File.close()
 
 import argparse
 

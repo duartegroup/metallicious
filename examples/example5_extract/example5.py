@@ -24,15 +24,13 @@ f='pd2l4_tall.gro'
 metal='Pd'
 extract_metal_structure(f, metal, "pd2l4_tall_fp3")
 
-
-f='Co8L16.xyz'
-metal='Co'
-extract_metal_structure(f, metal, "Co8L16_fp")
-
-
 f='Fe4L6.pdb'
 metal='Fe'
 extract_metal_structure(f, metal, "Fe4L6_fp")
+
+f='Fe4L6_2.pdb'
+metal='Fe'
+extract_metal_structure(f, metal, "Fe4L6_2_fp")
 
 f='Ga4L6.xyz'
 metal='Ga'
@@ -42,13 +40,27 @@ f='Pd4L6.xyz'
 metal='Pd'
 extract_metal_structure(f, metal, "Pd4L6_fp")
 
-
 f='knot_4n.pdb'
 metal='Fe'
 extract_metal_structure(f, metal, "knot_4n_fp")
-
 
 f='knot_3n.pdb'
 metal='Zn'
 extract_metal_structure(f, metal, "knot_3n_fp")
 
+f='Co8L16.xyz'
+metal='Co'
+extract_metal_structure(f, metal, "Co8L16_fp")
+
+f='ru_pd.xyz'
+metal='Ru'
+extract_metal_structure(f, metal, "ru_fp")
+
+'''
+try:
+    from initial_site import create_initial_topol
+except:
+    from cgbind2pmd.initial_site import create_initial_topol
+
+topols = create_initial_topol(metal, 2, vdw_data_name='uff')
+'''

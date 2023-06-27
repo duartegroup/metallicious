@@ -8,15 +8,17 @@ import MDAnalysis
 
 try:
     from cgbind2pmd.log import logger
+    from cgbind2pmd.utils import mdanalysis_to_rdkit
 except:
     from log import logger
+    from utils import mdanalysis_to_rdkit
 
 
 
 import rdkit
 import numpy as np
 
-def antechamber(pdbfile, charge, output, verbose=False):
+def antechamber(pdbfile,output, charge=None, verbose=False):
 
     def run_external(command, assertion=None):
         with open("output.txt", 'w') as output_file:
@@ -43,9 +45,13 @@ def antechamber(pdbfile, charge, output, verbose=False):
     if len(syst.atoms.names)!=len(set(syst.atoms.names)):
         for a, atom in enumerate(syst.atoms):
             atom.name = atom.name +str(a)
-
     syst.atoms.write('temp.pdb')
 
+    if charge is None:
+        #mol = mdanalysis_to_rdkit(syst.atoms)
+        mol = syst.atoms.convert_to("RDKIT")
+        charge = rdkit.Chem.GetFormalCharge(mol)
+        logger.info(f"    Guessing charge: {charge:}")
 
     logger.info("[ ] Interfacing antechamber")
     File = open("tleap.in", "w")
@@ -195,10 +201,10 @@ def smiles_to_mol(smiles, outfile='rdkit.pdb'):
 if __name__ == '__main__':
     args = get_args()
     if args.f is not None:
-        antechamber(args.f, args.charge, args.o, args.v)
+        antechamber(args.f,  args.o,args.charge, args.v)
     elif args.smi is not None:
         smiles_to_mol(args.smi, 'rdkit.pdb')
-        antechamber('rdkit.pdb', args.charge, args.o, args.v)
+        antechamber('rdkit.pdb', args.o, args.charge, args.v)
 
     else:
         print("Provide input file")

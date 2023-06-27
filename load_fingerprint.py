@@ -5,18 +5,24 @@ import numpy as np
 import networkx as nx
 
 from MDAnalysis.lib.distances import distance_array
+from rdkit import Chem
 
 try:
     from cgbind2pmd.extract_metal_site import find_bound_ligands_nx
     from cgbind2pmd.log import logger
     from cgbind2pmd.mapping import map_two_structures
+    from cgbind2pmd.utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
 
 except:
     from extract_metal_site import find_bound_ligands_nx
     from log import logger
     from mapping import map_two_structures
+    from utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
 
-def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
+
+#def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
+def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style='full'):
+
     '''
     Loads topology and coordinates of the fingerprint. If fingerprint not "full", then it will be trunked to the specified fingerprint style:
     - dihdral (or dih) - truncated to atoms within 3 bond length from metal
@@ -24,29 +30,29 @@ def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
     - bond - truncated to atoms within 1 bond length from metal
 
     :param name_of_binding_side:
-    :param fingerprint_style:
+    :param fp_style:
     :return:
     '''
 
-    topol = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{name_of_binding_side:s}.top')
-    syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{name_of_binding_side:s}.pdb")
+    topol = pmd.load_file(filename_fp_topol)
+    syst_fingerprint = MDAnalysis.Universe(filename_fp_coord)
 
-    if fingerprint_style=='full':
+    if fp_style == 'full':
         # do not truncate
         return topol, syst_fingerprint
 
-    elif fingerprint_style in ['dihedral', 'dih', 'angle', 'ang', 'bond']:
+    elif fp_style in ['dihedral', 'dih', 'angle', 'ang', 'bond']:
         metal_topology = topol.atoms[0]  # As it is now, the topologies are save with first atom as metal
 
-        if fingerprint_style == 'dihedral' or fingerprint_style == 'dih':
+        if fp_style == 'dihedral' or fp_style == 'dih':
             atoms_bound_to_metal_by_bonded = list(set(
                 np.concatenate([[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx, angle.atom4.idx] for angle in
                                 metal_topology.dihedrals])))
-        elif fingerprint_style == 'angle' or fingerprint_style == 'ang':
+        elif fp_style == 'angle' or fp_style == 'ang':
             atoms_bound_to_metal_by_bonded = list(set(
                 np.concatenate(
                     [[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx] for angle in metal_topology.angles])))
-        elif fingerprint_style == 'bond':
+        elif fp_style == 'bond':
             atoms_bound_to_metal_by_bonded = list(
                 set(np.concatenate([[bond.atom1.idx, bond.atom2.idx] for bond in metal_topology.bonds])))
 
@@ -61,7 +67,6 @@ def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
 
         for idx in atoms_bound_to_metal_by_bonded:
             topol.atoms[idx].charge += residual_charge
-
 
         topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
         new_syst_fingerprint = syst_fingerprint.select_atoms(
@@ -144,10 +149,15 @@ def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
     else:
         raise
 
-from rdkit import Chem
-def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False):
 
+
+#TODO find everywehere wehere are hardcoded values and make them somehow softcoaded
+#TODO I should check if I copy LJ sites for cCN H S, I should not! what if I use diffrent force field, this should not matter much! 
+
+def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False):
     cage = MDAnalysis.Universe(cage_filename)
+
+
     # def strip_numbers_from_atom_name(atom_name):
     #    return re.match("([a-zA-Z]+)", atom_name).group(0)
 
@@ -155,14 +165,21 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
 
     # metal_type = syst_fingerprint.select_atoms(f'index {metal_index:}').atoms[0].type
 
-    syst_fingerprint_no_metal = syst_fingerprint.atoms[1:]
+    metal_type = syst_fingerprint.atoms[0].type
+    bonds_with_metal = MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint.atoms,
+                                                                syst_fingerprint.atoms.positions,
+                                                                vdwradii={metal_type: 3})
+    G_fingerprint_with_metal = nx.Graph(bonds_with_metal)
+    neighbhor_cutoff = nx.eccentricity(G_fingerprint_with_metal, v=0)
 
+
+    syst_fingerprint_no_metal = syst_fingerprint.atoms[1:]
 
     bonds = MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint_no_metal.atoms,
                                                      syst_fingerprint_no_metal.atoms.positions)
     G_fingerprint = nx.Graph()
 
-    if len(bonds) > 0:  # fingerprint with ligands larger then one atom
+    if len(bonds) > 0:  # fingerprint with ligands larger than one atom
         G_fingerprint = nx.Graph(bonds)
     elif len(bonds) == 0:  # not bonds, this has to be minimal fingerprint, only donor atoms
         G_fingerprint.add_nodes_from(syst_fingerprint_no_metal.atoms.indices)
@@ -180,14 +197,16 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
     '''
 
-    G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff)
-    closest_atoms = np.concatenate(closest_atoms)
+    #TODO this does not work for some of the cages
 
+    G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff, neighbhor_cutoff=neighbhor_cutoff)
+
+
+    closest_atoms = np.concatenate(closest_atoms)
     number_ligands_bound = len(G_sub_cages)
-    logger.info(f"         Number of ligands bound to metal: {number_ligands_bound:d}")
 
     if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
-        logger.info(f"[!] Not the same number of sites {guessing:}")
+        logger.info(f"[!] Not the same number of sites {guessing:}, structure: {number_ligands_bound:d} vs. fingerprint {len(G_fingerprint_subs):d}")
         return False
     elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
         logger.info(
@@ -206,15 +225,40 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
             # ISMAGS is a slow algorithm, so we want to makes sure that we match correct substructure, we make simple assesments:
             # Let's try to use rdkit:
 
-            cage.select_atoms(
-                f'index {" ".join(list(map(str, list(G_sub_cage)))):s}').write('mol1.pdb')
 
-            syst_fingerprint_no_metal.select_atoms(
-                f'index {" ".join(list(map(str, list(G_fingerprint_sub)))):s}').write('mol2.pdb')
-            cage_sub_rdkit = Chem.MolFromPDBFile("mol1.pdb")
-            fp_sub_rdkit = Chem.MolFromPDBFile("mol2.pdb")
+            mol1 = MDAnalysis.Merge(cage.select_atoms(f'index {" ".join(list(map(str, list(G_sub_cage)))):s}'))
+            #mol1 = cage.select_atoms(f'index {" ".join(list(map(str, list(G_sub_cage)))):s}')
+            if not hasattr(mol1.atoms[0], 'element'):
+                guessed_elements = MDAnalysis.topology.guessers.guess_types(strip_numbers_from_atom_names(mol1.atoms.names))
+                mol1.add_TopologyAttr('elements', guessed_elements)
 
+            mol2 = MDAnalysis.Merge(syst_fingerprint_no_metal.select_atoms(f'index {" ".join(list(map(str, list(G_fingerprint_sub)))):s}'))
+            #mol2 = syst_fingerprint_no_metal.select_atoms(f'index {" ".join(list(map(str, list(G_fingerprint_sub)))):s}')
+
+            cage_sub_rdkit = mol1.atoms.convert_to("RDKIT", NoImplicit=False) # NoImplicit is use to allow implicit hydrogens (but if they are there it does not remove them!). Important side effect is that it does not bond orders etc. allowing for comparison of structures
+            #Chem.MolToSmiles(cage_sub_rdkit)
+            fp_sub_rdkit = mol2.atoms.convert_to("RDKIT", NoImplicit=False) # TODO, chec that everywhere is NoImplicit
+            #passed_conditions = cage_sub_rdkit.HasSubstructMatch(fp_sub_rdkit)
+
+            #cage.select_atoms(f'index {" ".join(list(map(str, list(G_sub_cage)))):s}').write("mol1.pdb")
+            #cage_sub_rdkit = Chem.MolFromPDBFile("mol1.pdb", removeHs=False)
+            #syst_fingerprint_no_metal.select_atoms(f'index {" ".join(list(map(str, list(G_fingerprint_sub)))):s}').write('mol2.pdb')
+            #fp_sub_rdkit = Chem.MolFromPDBFile("mol2.pdb", removeHs=False)
+
+            #passed_conditions2 = cage_sub_rdkit.HasSubstructMatch(fp_sub_rdkit)
+
+            #if passed_conditions2 != passed_conditions:
+            #    raise
+
+            #cage_sub_rdkit = mdanalysis_to_rdkit(mol1)
+            #fp_sub_rdkit = mdanalysis_to_rdkit(mol2)
             passed_conditions = cage_sub_rdkit.HasSubstructMatch(fp_sub_rdkit)
+
+
+
+
+            
+            #print(passed_conditions)
 
             '''
             # ISMAGS is a slow algorithm, so we want to makes sure that we match correct substructure, we make simple assesments:
@@ -254,41 +298,41 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                 #    print("Mismatch by rings")
             '''
             if passed_conditions:
-                            ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_sub,
-                                                           node_match=lambda n1, n2: n1['name'] == n2['name'])
+                ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_sub,
+                                               node_match=lambda n1, n2: n1['name'] == n2['name'])
 
-                            # largest_common_subgraph_nx = ismags.largest_common_subgraph()
+                # largest_common_subgraph_nx = ismags.largest_common_subgraph()
 
-                            # There can be many possibilities of isomorphism, not only due to the symmetry, but sometimes becasue
-                            # ligand has more sites. In such case we need to make sure that closest to the metal atoms ("donors")
-                            # are included
+                # There can be many possibilities of isomorphism, not only due to the symmetry, but sometimes becasue
+                # ligand has more sites. In such case we need to make sure that closest to the metal atoms ("donors")
+                # are included
 
-                            # logger.info(f'{ismags.largest_common_subgraph():}')
-                            # This takes forever: # and should be removed in future generations:
-                            #logger.info(
-                            #    f"There are {len(list(ismags.largest_common_subgraph(symmetry=False))):} matching patterns")  # remove this
+                # logger.info(f'{ismags.largest_common_subgraph():}')
+                # This takes forever: # and should be removed in future generations:
+                # logger.info(
+                #    f"There are {len(list(ismags.largest_common_subgraph(symmetry=False))):} matching patterns")  # remove this
 
-                            for largest_common_subgraph_iter in ismags.largest_common_subgraph(symmetry=False):
-                                if len(largest_common_subgraph_iter) < len(G_fingerprint_sub):
-                                    # we iterating through largest subgraph (so they have the same size). If one is smaller then the fingerprint
-                                    # none will be larger and we should stop the loop
-                                    break
+                for largest_common_subgraph_iter in ismags.largest_common_subgraph(symmetry=False):
+                    if len(largest_common_subgraph_iter) < len(G_fingerprint_sub):
+                        # we iterating through largest subgraph (so they have the same size). If one is smaller then the fingerprint
+                        # none will be larger and we should stop the loop
+                        break
 
-                                #logger.info(
-                                #    f'Iterating {largest_common_subgraph_iter:}, the size: {len(largest_common_subgraph_iter):}')
-                                is_donor_included = [closest_atom in largest_common_subgraph_iter for closest_atom in
-                                                     closest_atoms]
+                    # logger.info(
+                    #    f'Iterating {largest_common_subgraph_iter:}, the size: {len(largest_common_subgraph_iter):}')
+                    is_donor_included = [closest_atom in largest_common_subgraph_iter for closest_atom in
+                                         closest_atoms]
 
-                                if any(is_donor_included):
-                                    if len(largest_common_subgraph_iter) > len(largest_common_subgraph):
-                                        largest_common_subgraph = largest_common_subgraph_iter
-                                        finerprint_idx = G_idx
-                                        #logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
-                                        break
+                    if any(is_donor_included):
+                        if len(largest_common_subgraph_iter) > len(largest_common_subgraph):
+                            largest_common_subgraph = largest_common_subgraph_iter
+                            finerprint_idx = G_idx
+                            # logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
+                            break
 
-            #else:
+            # else:
             #    print("Mismatch by size")
-            #else:
+            # else:
             if finerprint_idx is None:
                 trial += 1
                 # we make sure that we find the maching ligannd
@@ -306,64 +350,121 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                 return False
         else:
             # Check if the subgraph is the same size as fingerprint,
-            #print(largest_common_subgraph)
-            #if len(largest_common_subgraph) > 0:
+            # print(largest_common_subgraph)
+            # if len(largest_common_subgraph) > 0:
             #    print("aaa")
-            #if len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph):
+            # if len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph):
             #    print("bbb")
 
-            assert len(largest_common_subgraph)>0
-            assert len(G_fingerprint_subs[0]) == len(largest_common_subgraph)
+            assert len(largest_common_subgraph) > 0
+            assert len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph)
 
         selected_atoms += largest_common_subgraph.keys()
 
-        # Let's find the end atoms, they have diffrent degree: in cage they are connected, in the template not
+        # Let's find the end atoms, they have different degree: in cage they are connected, in the template not
         G_sub_cage_degree = G_sub_cage.degree
         G_fingerprint_subs_degree = G_fingerprint_subs[finerprint_idx].degree
 
         # We cut the last atom
         for key in largest_common_subgraph:
             if G_sub_cage_degree[key] != G_fingerprint_subs_degree[largest_common_subgraph[key]]:
-                end_atoms.append(key)
+                end_atoms.append(key) #
+
+    connected_cut_system = cage.select_atoms(f"index {metal_index:}") + cage.select_atoms(
+        f"index {' '.join(map(str, selected_atoms)):}")
+
+    return connected_cut_system #, end_atoms
 
 
-    connected_cut_system = cage.select_atoms(f"index {metal_index:}") + cage.select_atoms(f"index {' '.join(map(str, selected_atoms)):}")
+def find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index, metal_name, syst_fingerprint,
+                                                              cutoff=9, guessing=False):
 
-    return connected_cut_system, end_atoms
+    connected_cut_system = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing)
 
-
-def find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index,metal_name, syst_fingerprint, cutoff=9, guessing=False):
-    result = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing)
-
-    if result: # the results are legit, we take them as input
-        connected_cut_system, end_atoms = result
-        print("Mapping: end atoms", end_atoms)
+    if connected_cut_system:  # the results are legit, we take them as input
+        #connected_cut_system, end_atoms = result
+        #print("Mapping: end atoms", end_atoms)
         # TODO I THINK that I used "end atoms" becasue of the charge , and that I did not want to coppy the aromatic to something bond (but then I should have just cat that atom in template (?)
         # TODO this is not good that I do not remember this choice
-        #best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name=self.metal_name, end_atoms=end_atoms)
-        best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name=metal_name)
+        # best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name=self.metal_name, end_atoms=end_atoms)
 
-        #def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, cutoff=9, guessing=False):
-        #def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, end_atoms=[]):
+        best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint,
+                                                     metal_name=metal_name)
+
+        # def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, cutoff=9, guessing=False):
+        # def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, end_atoms=[]):
 
 
-    else: #we are guessing, and we missed
+    else:  # we are guessing, and we missed
         return None, 1e10
+
     return best_mapping, best_rmsd
 
 
+def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fingerprint_guess_list):
+    '''
+    In library path it searches for the possible fingerprints, library should consist of files pairs with coordinates and topology, named {metal}_{charge}_{vdw_type}.pdb and {metal}_{charge}_{vdw_type}.top
 
-def guess_fingerprint(cage_filename, metal_index, metal_name = None, fingerprint_guess_list = None, m_m_cutoff=10): # TODO guessing is not working
+    :param metal_name:
+    :param metal_charge:
+    :param vdw_type:
+    :param library_path:
+    :param fingerprint_guess_list:
+    :return:
+    '''
+    # Check available sites in the library directory
+    all_fingerprints_names = []
+    for file in os.listdir(library_path):  # TODO this library has to be better given
+        if file.endswith('.pdb'):
+            all_fingerprints_names.append(file[:-4])
+
+    # We choose only the one which have the same name
+    fingerprints_names = {}
+    if fingerprint_guess_list is not None:
+        for name in fingerprint_guess_list:
+            if name not in all_fingerprints_names:
+                print("Fingerprint not available")
+                raise
+            else:
+                fingerprints_names.append(name)
+    else:
+        for name in all_fingerprints_names:
+            if len(name.split('_')) > 2:
+                if metal_name.title() in name:
+                    if metal_charge == int(name.split('_')[1]):
+                        if vdw_type is None:
+                            fingerprints_names[
+                                name] = f"{library_path:}/{name:}.pdb"  # TODO check format of the all strings
+                        elif vdw_type in name:  # if vdw_type is specified we only search for specific files
+                            fingerprints_names[name] = f"{library_path:}/{name:}.pdb"
+            else:
+                logger.warning(f"Fingerprint file name ({name}) in incorrect format")
+
+    return fingerprints_names
+
+
+def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=None, fingerprint_guess_list=None,
+                      m_m_cutoff=10, vdw_type=None, library_path=f"{os.path.dirname(__file__):s}/library",
+                      search_library=True, additional_fp_files=None):
     '''
     Tries to guess the fingerprint but itereting through the library and find lowest rmsd.
     :return:
     '''
 
+    fp_files = {}
+    if search_library:
+        fp_files = {**fp_files,
+                    **search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fingerprint_guess_list)}
+
+    if additional_fp_files is not None:
+        fp_files = {**fp_files, **additional_fp_files}
+
+    ''' TODO, remove (9/06/2023)
     # Check avaialble sites in the library directory
     all_finerprints_names = []
-    for file in os.listdir(f"{os.path.dirname(__file__):s}/library"):
+    for file in os.listdir(library_path): # TODO this library has to be better given
         if file.endswith('.pdb'):
-            all_finerprints_names.append(file[:-4])
+                all_finerprints_names.append(file[:-4])
 
     # We choose only the one which have the same name
     finerprints_names = []
@@ -377,35 +478,47 @@ def guess_fingerprint(cage_filename, metal_index, metal_name = None, fingerprint
     else:
         for name in all_finerprints_names:
             if metal_name.title() in name:
-                finerprints_names.append(name)
+                if vdw_type is None:
+                    finerprints_names.append(name)
+                elif vdw_type.replace('/','_') in name: # if vdw_type is specified we only search for specific files
+                    finerprints_names.append(name)
+    '''
+    if len(fp_files) == 0:
+        logger.info(f"Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
+        return False
 
-
-
-    logger.info(f"Trying to guess which site it is: {finerprints_names:}")
+    logger.info(f"Trying to guess which site it is: {fp_files:}")
     rmsd_best = 1e10
     name_of_binding_side = None
-    for finerprint_name in finerprints_names:
+    for finerprint_name in fp_files:
         logger.info(f"[ ] Guessing fingerprint {finerprint_name:s}")
-        syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{finerprint_name:s}.pdb")
+
+        syst_fingerprint = MDAnalysis.Universe(fp_files[finerprint_name])
         # we need to find what is smaller
 
         metal_position = syst_fingerprint.atoms[0].position
         nometal_position = syst_fingerprint.atoms[1:].positions
-        cutoff = np.min([np.max(distance_array(metal_position, nometal_position))+2.0, m_m_cutoff])
-        #cutoff = 0.5*(cutoff+self.m_m_cutoff) # we make it 75% close to metal
+        cutoff = np.min([np.max(distance_array(metal_position, nometal_position)) + 2.0, m_m_cutoff])
+        # cutoff = 0.5*(cutoff+self.m_m_cutoff) # we make it 75% close to metal
 
-        mapping_fp_to_new, rmsd = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index, metal_name, syst_fingerprint, guessing=True, cutoff=cutoff)
-
+        _, rmsd = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index, metal_name,
+                                                                            syst_fingerprint, guessing=True,
+                                                                            cutoff=cutoff)
 
         if rmsd < rmsd_best:
             rmsd_best = rmsd
             name_of_binding_side = finerprint_name
-            #self.ligand_cutoff = cutoff
+            # self.ligand_cutoff = cutoff
         logger.info(f"    [ ] RMSD {rmsd:f}")
 
+    if name_of_binding_side is None:
+        logger.info(f"Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
+        return False
+
     logger.info(f"[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
-    if rmsd_best > 1.0:
-        logger.info("[!] Rmsd is quite large, want to proceed?") #TODO
+    if rmsd_best > 2.0:
+        logger.info("[!] Rmsd is quite large, want to proceed?")  # TODO
+        return False
     return name_of_binding_side
 
-#TODO assert rediculsy small ligands
+# TODO assert rediculsy small ligands

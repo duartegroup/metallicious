@@ -5,9 +5,11 @@ sys.path.insert(0, '/home/fd05/fd/chem1540/github/cgbind2pmd/')
 try:
     from main import cgbind2pmd
     from extract_metal_site import extract_metal_structure
+    from initial_site import create_initial_topol
 except:
     from cgbind2pmd.main import cgbind2pmd
     from cgbind2pmd.extract_metal_site import extract_metal_structure
+    from cgbind2pmd.initial_site import create_initial_topol
 
 f='1sp1.pdb'
 #linker_topol='linker.top'
@@ -19,7 +21,7 @@ fingerprint_style='trunc'
 
 extract_metal_structure(f, metal, "out")
 
-
+#topols = create_initial_topol(metal, metal_charge, vdw_data_name='uff')
 #cgbind2gmx.name_of_binding_side = fingerprint
 #cgbind2gmx.fingerprint_style = fingerprint_style
 

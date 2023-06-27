@@ -25,7 +25,7 @@ def create_metal_topol(metal_name, metal_charge, vdw_data_name):
 
         new_atom = pmd.topologyobjects.Atom(atomic_number=atomic_number, type=metal_name, name=metal_name,
                                             rmin=radius, epsilon=eps, mass=mass, charge=metal_charge)
-        # old -- to be removed when tested
+        # old -- to be removed when tested TODO
         #struct = pmd.structure.Structure()
         #struct.add_atom(new_atom, metal_name, metal_name)
 
@@ -50,7 +50,7 @@ def create_metal_topol(metal_name, metal_charge, vdw_data_name):
 
 def create_initial_topol(metal_name, metal_charge, vdw_data_name):
     '''
-    This creates initial (noncovalentl) topology consistent of the metal ions and residues
+    This creates initial (covalent) topology consistent of the metal ions and residues
 
     :param metal_name:
     :return:
@@ -74,7 +74,7 @@ def create_initial_topol(metal_name, metal_charge, vdw_data_name):
             unique_ligands_topologies = []
 
             for idx, unique_ligand in enumerate(unique_ligands):
-                antechamber(f"ligand{n_site:d}_{idx:}.pdb", 0, f"ligand{n_site:d}_{idx:}.itp")
+                antechamber(f"ligand_{idx:}.pdb", f"ligand_{idx:}.itp")
                 unique_ligands_topologies.append(pmd.load_file(f"ligand{n_site:d}_{idx:}.itp"))
 
             metal_topol = create_metal_topol(metal_name, metal_charge, vdw_data_name)
@@ -88,11 +88,50 @@ def create_initial_topol(metal_name, metal_charge, vdw_data_name):
                 print(pattern)
                 topol += unique_ligands_topologies[pattern]
 
-            topol.write(f"topol{n_site:d}.top", [list(range(n_metals + len(unique_ligands_pattern)))])
+            topol.write(f"topol.top", [list(range(n_metals + len(unique_ligands_pattern)))])
             topols.append(topol)
 
-        n_site+=1
+            n_site+=1
     return topols
+
+def create_initial_topol2(metal_name, metal_charge, unique_ligands_pattern, vdw_data_name):
+    unique_ligands_topologies = []
+    unique_ligands = list(set(unique_ligands_pattern))
+
+    for idx, unique_ligand in enumerate(unique_ligands):
+        antechamber(f"ligand_{idx:}.pdb", f"ligand_{idx:}.itp")
+        unique_ligands_topologies.append(pmd.load_file(f"ligand_{idx:}.itp"))
+
+    metal_topol = create_metal_topol(metal_name, metal_charge, vdw_data_name)
+
+    n_metals = 1
+    topol = metal_topol
+
+    for pattern in unique_ligands_pattern:
+        topol += unique_ligands_topologies[pattern]
+
+    topol.write(f"topol.top", [list(range(n_metals + len(unique_ligands_pattern)))])
+    return topol
+
+def create_initial_topol_from_larger_topol(metal_name, metal_charge, unique_ligands_pattern, vdw_data_name):
+    unique_ligands_topologies = []
+    unique_ligands = list(set(unique_ligands_pattern))
+
+    for idx, unique_ligand in enumerate(unique_ligands):
+        antechamber(f"ligand_{idx:}.pdb", f"ligand_{idx:}.itp")
+        unique_ligands_topologies.append(pmd.load_file(f"ligand_{idx:}.itp"))
+
+    metal_topol = create_metal_topol(metal_name, metal_charge, vdw_data_name)
+
+    n_metals = 1
+    topol = metal_topol
+
+    for pattern in unique_ligands_pattern:
+        topol += unique_ligands_topologies[pattern]
+
+    topol.write(f"topol.top", [list(range(n_metals + len(unique_ligands_pattern)))])
+    return topol
+
 
 import argparse
 
