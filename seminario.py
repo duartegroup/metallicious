@@ -17,11 +17,74 @@ try:
     from data import name_to_atomic_number
     from mapping import map_two_structures
     from improper_torsion import find_impropers_and_values
+
+    from mod_seminario import modified_seminario_method
 except:
     from cgbind2pmd.data import name_to_atomic_number
     from cgbind2pmd.mapping import map_two_structures
+    from cgbind2pmd.mod_seminario import modified_seminario_method
 
-def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
+
+def read_bonds_from_orca_output(filename="site_opt_orca.out"):
+    File = open(filename)
+    text = File.read()
+    File.close()
+
+    start_line = text.find("        Definition                    Value    dE/dq     Step     New-Value")
+
+    bonds = []
+    angles = []
+
+    for line in text[start_line:].splitlines()[2:]:
+        if line == "    ----------------------------------------------------------------------------":
+            break
+
+        if line[8] == 'B':
+
+            match = re.search("\([a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+)\)", line)
+            idx1 = int(match.group(1))
+            idx2 = int(match.group(2))
+            bonds.append([idx1, idx2])
+
+        elif line[8] == 'A':
+            match = re.search("A\([a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+)\)", line)
+            idx1 = int(match.group(1))
+            idx2 = int(match.group(2))
+            idx3 = int(match.group(3))
+            angles.append([idx1, idx2, idx3])
+
+    return bonds, angles
+
+def read_hessian_from_orca(filename):
+    File = open(filename)
+    text = File.read()
+    File.close()
+
+    temp = text[text.find('$atoms'):text.find("$actual_temperature")]
+    N_atoms = int(temp.splitlines()[1])
+
+    gaussian_coord_string = ''
+    gaussian_atomic_number_string = ''
+
+    temp = text[text.find('$hessian'):text.find("$vibrational_frequencies")]
+    N = int(temp.splitlines()[1])
+
+    hess_string = ['' for a in range(N)]
+
+    for a in range(np.ceil(N / 5).astype(int)):
+        temp2 = temp.splitlines()[3 + (1 + N) * (a):2 + (1 + N) * (a + 1)]
+        for b in range(N):
+            hess_string[b] += temp2[b][6:]
+
+    hessian = []
+    for line in hess_string:
+        hessian.append(list(map(float, line.split())))
+
+    hessian = np.array(hessian) * (627.509391)/ (0.529**2)  #Change from Hartree/bohr to kcal/mol /ang
+    return hessian
+
+
+def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"): #TODO remove
     File = open(filename)
     text = File.read()
     File.close()
@@ -84,7 +147,7 @@ def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"):
     File.close()
 
 
-def orca_to_log(filename="site_opt_orca.out", log_output="lig.log"):
+def orca_to_log(filename="site_opt_orca.out", log_output="lig.log"): #TODO remove
     File = open(filename)
     text = File.read()
     File.close()
@@ -136,10 +199,10 @@ def orca_to_log(filename="site_opt_orca.out", log_output="lig.log"):
     print(" --------------------------------------------------------------------------------\n", file=File)
     File.close()
 
-def strip_numbers_from_atom_name(atom_name):
+def strip_numbers_from_atom_name(atom_name): # TODO remove/ or unify
     return re.match("([a-zA-Z]+)", atom_name).group(0)
 
-def read_bonds():
+def read_bonds(): # REMOVE TODO
     File = open("Modified_Seminario_Bonds")
     text = File.read()
     File.close()
@@ -286,7 +349,7 @@ def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_op
 
 
 
-def read_angles():
+def read_angles(): # TODO remove
     File = open("Modified_Seminario_Angle")
     text = File.read()
     File.close()
@@ -438,7 +501,8 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     method = ade.methods.ORCA()
     site = ade.Molecule(filename, charge=charge, mult=mult)
     site.optimise(method=method, keywords=keywords)
-    return site.name
+    names = [atom.atomic_symbol for atom in site.atoms]
+    return site.name, np.array(site.coordinates), names
 
 def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1):
 
@@ -448,18 +512,22 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
 
     print("Optimising, parameters:", filename, charge)
 
-    name = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
-    orca_to_fchk(f"{name:s}_opt_orca.hess")
-    orca_to_log(f"{name:s}_opt_orca.out")
+    name, coords, atom_names = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
 
-    os.chdir(path_to_mod_seminario) #TODO this can be done form just python scrpit
-    command = f'python modified_Seminario_method.py {here:s}/bonded/ {here:s}/bonded/ 1.000' #TODO modify the 1.000 modifier
-    process = Popen(command.split(), stdout=DEVNULL, stderr=DEVNULL)
-    process.wait()
-    os.chdir(here+"/bonded")
+    bond_list, angle_list = read_bonds_from_orca_output(f"{name:s}_opt_orca.out")
+    hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
 
-    bonds_with_names = read_bonds()
-    angles_with_names = read_angles()
+    bonds_with_names ,angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=1) #vibrational scalling 
+
+
+    #os.chdir(path_to_mod_seminario) #TODO this can be done form just python scrpit # TODO remove
+    #command = f'python modified_Seminario_method.py {here:s}/bonded/ {here:s}/bonded/ 1.000' #TODO modify the 1.000 modifier
+    #process = Popen(command.split(), stdout=DEVNULL, stderr=DEVNULL)
+    #process.wait()
+    #os.chdir(here+"/bonded")
+
+    #bonds_with_names = read_bonds()
+    #angles_with_names = read_angles()
 
     dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=f"{name:s}_opt_orca.xyz")
 

@@ -45,6 +45,7 @@ cage.parametrize()
 #
 # os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Co_Lusby/")
 # cage = supramolecular_structure('cage.pdb', {'Co': (3,1)}, vdw_type='merz-tip3p')
+# cage.prepare_initial_topology()
 # cage.parametrize()
 
 #
@@ -53,9 +54,17 @@ cage.parametrize()
 # cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 #
 #
-# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Pd_Lusby/")
-# cage = supramolecular_structure('complex.pdb', {'Pd': (2, 1)}, topol='complex.top', vdw_type='merz-opc3')
-#
+#os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Pd_Lusby/")
+#cage = supramolecular_structure('complex.pdb', {'Pd': (2, 1)}, topol='complex.top', vdw_type='merz-opc3') # TODO if vdw_type is specified it should overwrite the old one
+#cage.prepare_initial_topology()
+#cage.parametrize()
+
+
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Pd_Lusby/")
+cage = supramolecular_structure('complex.pdb', {'Pd': (2, 1)}, topol='complex.top')
+#cage.prepare_initial_topology()
+cage.parametrize()
+
 
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Co_mof')
 # cage = supramolecular_structure('Co_tet.pdb', {'Co': (2,4)}, vdw_type='merz-tip3p',  improper_metal=False)
@@ -66,12 +75,12 @@ cage = supramolecular_structure('protein.pdb', {'Cu': (2,2), 'Co':(2,1)}, vdw_ty
 cage.parametrize()
 '''
 #
-os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Fe_cage')
-#cage = supramolecular_structure('fe.pdb', {'Fe': (2,1)}, vdw_type='merz-tip3p', improper_metal=False)
-
-cage = supramolecular_structure(filename='noncovalent_complex.pdb', topol='noncovalent_complex.top', metal_charge_mult={'Fe': (2, 1)}, vdw_type='merz-opc3')
-#cage.prepare_initial_topology(method='gaff')
-cage.parametrize(out_coord='out.pdb', out_topol='out.top')
+# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Fe_cage') # TODO this specific example is slow
+# #cage = supramolecular_structure('fe.pdb', {'Fe': (2,1)}, vdw_type='merz-tip3p', improper_metal=False)
+#
+# cage = supramolecular_structure(filename='noncovalent_complex.pdb', topol='noncovalent_complex.top', metal_charge_mult={'Fe': (2, 1)}, vdw_type='merz-opc3')
+# #cage.prepare_initial_topology(method='gaff')
+# cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
 # cage.prepare_initial_topology()

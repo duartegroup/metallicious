@@ -52,13 +52,12 @@ class supramolecular_structure:
             self.metal_names = list(metal_charge_mult.keys())
 
         if vdw_type is None and topol is not None:
+            self.vdw_type = 'custom'
             None
             # use vdw from topol
 
 
         elif vdw_type is None:
-
-
             for vdw_type in vdw_data:
                 present = [metal_name in vdw_data[vdw_type] for metal_name in self.metal_names]
                 if sum(present) == len(present):
@@ -243,10 +242,11 @@ class supramolecular_structure:
                 else:
                     break
 
-            print(f"Saving as {self.library_path:}/{site.name}_{file_idx}.top")
-            shutil.copyfile(site.fp_topol_file, f"{self.library_path:}/{site.name}_{file_idx}.top")
-            shutil.copyfile(site.fp_coord_file, f"{self.library_path:}/{site.name}_{file_idx}.pdb")
-            file_idx += 1
+            if self.vdw_type != 'custom': # if it custom we don't want it
+                print(f"Saving as {self.library_path:}/{site.name}_{file_idx}.top")
+                shutil.copyfile(site.fp_topol_file, f"{self.library_path:}/{site.name}_{file_idx}.top")
+                shutil.copyfile(site.fp_coord_file, f"{self.library_path:}/{site.name}_{file_idx}.pdb")
+                file_idx += 1
 
     def summary(self):
         print("Sites:")
@@ -326,6 +326,8 @@ class new_metal_site():
         self.starting_index = starting_index
         self.indecies = indecies
         self.metal_name = metal_name
+        self.metal_radius = None
+
         self.metal_charge = metal_charge
         self.mult = mult
         self.ligand_charges = ligand_charges
@@ -349,9 +351,17 @@ class new_metal_site():
         self.fp_topol_file = None
         self.fp_coord_file = None
 
-        self.name = f"{metal_name:}_{metal_charge:}_{vdw_type:}"  # TODO check if this '/' is not bad for bash command
+        self.name = f"{metal_name:}_{metal_charge:}_{vdw_type:}"  
         self.topol = topol
 
+        if vdw_type is not None:
+            self.metal_radius =  vdw_data[vdw_type][metal_name][1]
+        else:
+            if self.topol is not None:
+                self.metal_radius = self.read_radius_from_topol()
+
+    def read_radius_from_topol(self): #TODO
+        self.metal_radius = self.topol[0].rmin
 
     def _print(self):
         return f"{self.metal_name}({self.metal_charge}+) {self.name}"
@@ -363,7 +373,7 @@ class new_metal_site():
 
     def create_initial_topol(self): # TODO depracticed (22/06/2023)
         self.topol = create_initial_topol2(self.metal_name, self.metal_charge, self.unique_ligands_pattern,
-                                           self.vdw_type) # TODO this could be just cutting the itp file of existing site, antechamber does not have to be invoked at all!
+                                           self.vdw_type)
 
     def seminario(self):
         site_charge = self.metal_charge + np.sum(self.ligand_charges)
@@ -389,7 +399,7 @@ class new_metal_site():
                                              self.unique_ligands_pattern, self.ligand_charges, self.link_atoms,
                                              self.additional_atoms,
                                              self.starting_index,
-                                             vdw_data_name=self.vdw_type, mult=self.mult)
+                                             metal_radius=self.metal_radius, mult=self.mult) # TODO vdw should be not specified,
 
         #Removing additional atoms:
         partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if idx not in self.additional_atoms]

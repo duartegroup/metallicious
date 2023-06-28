@@ -121,55 +121,38 @@ def new_execute(self, calc):
     return None
 
 
-def resp_orca(filename, charge=0, opt=True, metal_name=None, vdw_data_name='uff', n_reorientations=1, mult=1,
+def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, vdw_data_name=None, n_reorientations=1, mult=1,
               extra_atoms=None):
-    '''
-
-    import sys
-    sys.path.insert(0, '/u/fd/chem1540/github/')
-    from cgbind2pmd.charges import *
-
-    filename='site.xyz'
-    charge=2
-    vdw_data_name='uff'
-    n_reorientations = 1
-    metal_name='Fe'
-
-    '''
     # TODO you cannot restart resp! you need to delete folder
 
     method = ade.methods.ORCA()
     site = ade.Molecule(filename, charge=charge, mult=mult)
-    print(filename)
-    print(site, site.atoms)
 
     molecule_qcel = qcel.models.Molecule.from_file(filename, molecular_charge=charge)
     molecule_psiresp = psiresp.Molecule(qcmol=molecule_qcel, charge=charge)
-    print("molecule_qcel", molecule_qcel)
-    print("molecule_psiresp", molecule_psiresp)
     print("Formal charge", charge)
 
     here = os.getcwd()
 
     new_directory("resp")
-
     os.chdir("resp")
 
     if opt:
         ade.wrappers.ORCA.ORCA.execute = old_execute
         site.optimise(method=method)
 
-    data = vdw_data[vdw_data_name]
-    print("data", data)
 
     ang2bohr = 1.8897261254578281
 
     # Add metal to the vdw_radii
     GridOptions = psiresp.grid.GridOptions()
 
-    if metal_name is not None:
-        GridOptions.vdw_radii[metal_name] = data[metal_name][
-            1]  # psiresp uses R distance rather then R/2 TODO check for sure
+    if metal_radius is not None and metal_name is not None:
+        GridOptions.vdw_radii[metal_name] = metal_radius
+    elif metal_name is not None and vdw_data_name is not None:
+        data = vdw_data[vdw_data_name]
+        GridOptions.vdw_radii[metal_name] = data[metal_name][1]
+        # psiresp uses R distance rather then R/2 TODO check for sure
 
     # create reorientations of the single conformer
     molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
@@ -419,7 +402,7 @@ def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
 
 # metal_name, metal_charge, filename, unique_ligands_pattern=None, link_atoms=None, additional_atoms=None, starting_index=None, indecies=None
 def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_pattern, ligand_charges_pattern, link_atoms,
-                       additional_atoms, starting_index, vdw_data_name, mult=1):
+                       additional_atoms, starting_index, metal_radius, mult=1):
     extra_atoms = link_atoms + additional_atoms
 
     unique_ligands_constraints = {}
@@ -439,11 +422,11 @@ def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_patter
     for lig_idx in list(set(unique_ligands_pattern)):
         ligand_formal_charge = ligand_charges_pattern[list(unique_ligands_pattern).index(lig_idx)]
         charges = resp_orca(f"ligand_{lig_idx:d}.xyz", charge=ligand_formal_charge, opt=False, metal_name=metal_name,
-                            vdw_data_name=vdw_data_name, extra_atoms=unique_ligands_constraints[lig_idx])
+                            metal_radius=metal_radius, extra_atoms=unique_ligands_constraints[lig_idx])
         ligand_charges.append(charges)
 
     site_charges = resp_orca('site.xyz', charge=metal_charge + np.sum(ligand_charges_pattern), opt=False,
-                             metal_name=metal_name, vdw_data_name=vdw_data_name, mult=mult, extra_atoms=extra_atoms)
+                             metal_name=metal_name, metal_radius=metal_radius, mult=mult, extra_atoms=extra_atoms)
 
     print("ligand charges", len(ligand_charges), ligand_charges)
     print("ligand        ", len(site_charges), site_charges)
