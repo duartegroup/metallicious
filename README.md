@@ -11,6 +11,7 @@ Requirements:
 * networkx
 * MDAnalysis
 * AmberTools
+* Parmed
 
 Installation:
 
