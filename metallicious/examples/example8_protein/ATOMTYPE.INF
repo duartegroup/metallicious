@@ -1,0 +1,85 @@
+====================================================================================
+-------------------------------ring property (I)------------------------------------
+
+               Ring 1               
+
+    1     1     5    CG
+    1     2     6   ND1
+    1     3     7   CD2
+    1     4     8   CE1
+    1     5     9   NE2
+
+====================================================================================
+-------------------------------ring property (II)------------------------------------
+atom[ 5] (CG  ) belongs to one member of 5-membered  ring (No  1)
+atom[ 6] (ND1 ) belongs to one member of 5-membered  ring (No  1)
+atom[ 7] (CD2 ) belongs to one member of 5-membered  ring (No  1)
+atom[ 8] (CE1 ) belongs to one member of 5-membered  ring (No  1)
+atom[ 9] (NE2 ) belongs to one member of 5-membered  ring (No  1)
+
+====================================================================================
+-------------------------------ring property (III)-----------------------------------
+atom[ 1] (H   ) is not in any ring (nr[1]=1)
+atom[ 2] (H1  ) is not in any ring (nr[2]=1)
+atom[ 3] (H2  ) is not in any ring (nr[3]=1)
+atom[ 4] (CB  ) is not in any ring (nr[4]=1)
+atom[ 5] (CG  ) involves in 1 5-member of ring(s)
+atom[ 6] (ND1 ) involves in 1 5-member of ring(s)
+atom[ 7] (CD2 ) involves in 1 5-member of ring(s)
+atom[ 8] (CE1 ) involves in 1 5-member of ring(s)
+atom[ 9] (NE2 ) involves in 1 5-member of ring(s)
+atom[10] (HD1 ) is not in any ring (nr[10]=1)
+atom[11] (HD2 ) is not in any ring (nr[11]=1)
+atom[12] (HE1 ) is not in any ring (nr[12]=1)
+
+====================================================================================
+-------------------------------aromatic property------------------------------------
+atom[ 5] (CG  ) is in 1 planar ring(s) (AR2)
+atom[ 6] (ND1 ) is in 1 planar ring(s) (AR2)
+atom[ 7] (CD2 ) is in 1 planar ring(s) (AR2)
+atom[ 8] (CE1 ) is in 1 planar ring(s) (AR2)
+atom[ 9] (NE2 ) is in 1 planar ring(s) (AR2)
+
+====================================================================================
+-------------------------------electronic property----------------------------------
+atom [ 1] (H   ) is not an electron-withdrew atom
+atom [ 2] (H1  ) is not an electron-withdrew atom
+atom [ 3] (H2  ) is not an electron-withdrew atom
+atom [ 4] (CB  ) is not an electron-withdrew atom
+atom [ 5] (CG  ) is not an electron-withdrew atom
+atom [ 6] (ND1 ) is an electron-withdrew atom
+atom [ 7] (CD2 ) is not an electron-withdrew atom
+atom [ 8] (CE1 ) is not an electron-withdrew atom
+atom [ 9] (NE2 ) is an electron-withdrew atom
+atom [10] (HD1 ) is not an electron-withdrew atom
+atom [11] (HD2 ) is not an electron-withdrew atom
+atom [12] (HE1 ) is not an electron-withdrew atom
+
+====================================================================================
+--------------------------------connectivity property-------------------------------
+atom[ 1] (H   )     4    CB
+atom[ 2] (H1  )     4    CB
+atom[ 3] (H2  )     4    CB
+atom[ 4] (CB  )     1     H
+atom[ 4] (CB  )     2    H1
+atom[ 4] (CB  )     3    H2
+atom[ 4] (CB  )     5    CG
+atom[ 5] (CG  )     4    CB
+atom[ 5] (CG  )     6   ND1
+atom[ 5] (CG  )     7   CD2
+atom[ 6] (ND1 )     5    CG
+atom[ 6] (ND1 )     8   CE1
+atom[ 6] (ND1 )    10   HD1
+atom[ 7] (CD2 )     5    CG
+atom[ 7] (CD2 )     9   NE2
+atom[ 7] (CD2 )    11   HD2
+atom[ 8] (CE1 )     6   ND1
+atom[ 8] (CE1 )     9   NE2
+atom[ 8] (CE1 )    12   HE1
+atom[ 9] (NE2 )     7   CD2
+atom[ 9] (NE2 )     8   CE1
+atom[10] (HD1 )     6   ND1
+atom[11] (HD2 )     7   CD2
+atom[12] (HE1 )     8   CE1
+----------------------------------------END-----------------------------------------
+

@@ -1,0 +1,5 @@
+ligand_pattern:0,0,0,0
+link_atoms:
+extra_atoms:
+starting_index:0,1,12,23,34,45
+charge_pattern:-1,-1,-1,-1

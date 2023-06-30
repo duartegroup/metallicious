@@ -1,0 +1,33 @@
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+ATOM      1  N   UNK X   1       6.528  29.262   1.718  1.00  0.00           N  
+ATOM      2  C   UNK X   1       6.743  30.558   2.084  1.00  0.00           C  
+ATOM      3  C   UNK X   1       6.277  31.601   1.318  1.00  0.00           C  
+ATOM      4  H   UNK X   1       6.442  32.501   1.571  1.00  0.00           H  
+ATOM      5  C   UNK X   1       5.564  31.323   0.188  1.00  0.00           C  
+ATOM      6  H   UNK X   1       5.236  32.034  -0.349  1.00  0.00           H  
+ATOM      7  C   UNK X   1       5.316  30.034  -0.181  1.00  0.00           C  
+ATOM      8  H   UNK X   1       4.805  29.836  -0.958  1.00  0.00           H  
+ATOM      9  C   UNK X   1       5.833  29.023   0.609  1.00  0.00           C  
+ATOM     10  H   UNK X   1       5.685  28.123   0.346  1.00  0.00           H  
+ATOM     11  N   UNK X   1       8.459  30.090   5.136  1.00  0.00           N  
+ATOM     12  N   UNK X   1       7.920  29.640   3.976  1.00  0.00           N  
+ATOM     13  C   UNK X   1       8.384  31.435   5.178  1.00  0.00           C  
+ATOM     14  H   UNK X   1       8.707  31.988   5.880  1.00  0.00           H  
+ATOM     15  C   UNK X   1       7.762  31.870   4.045  1.00  0.00           C  
+ATOM     16  H   UNK X   1       7.572  32.767   3.792  1.00  0.00           H  
+ATOM     17  C   UNK X   1       7.474  30.725   3.343  1.00  0.00           C  
+ATOM     18  C   UNK X   1       9.163  29.215   6.046  1.00  0.00           C  
+ATOM     19  H   UNK X   1       8.703  28.338   6.082  1.00  0.00           H  
+ATOM     20  H   UNK X   1       9.146  29.604   6.955  1.00  0.00           H  
+ATOM     21  C   UNK X   1      10.604  29.011   5.612  1.00  0.00           C  
+ATOM     22  H   UNK X   1      11.262  29.064   6.490  1.00  0.00           H  
+ATOM     23  H   UNK X   1      10.707  28.027   5.137  1.00  0.00           H  
+ATOM     24  H   UNK X   1      10.885  29.794   4.896  1.00  0.00           H  
+END

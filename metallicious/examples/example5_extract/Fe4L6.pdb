@@ -1,0 +1,631 @@
+AUTHOR cgbind
+TITLE 
+HETATM    1  O   UNL     0       6.319  13.367  27.869   1.0   0.0           O
+HETATM    2  S   UNL     0       7.261  12.449  28.538   1.0   0.0           S
+HETATM    3  C   UNL     0       7.374  12.774  30.252   1.0   0.0           C
+HETATM    4  C   UNL     0       8.599  13.097  30.842   1.0   0.0           C
+HETATM    5  C   UNL     0       8.751  13.325  32.194   1.0   0.0           C
+HETATM    6  N   UNL     0      10.026  13.652  32.740   1.0   0.0           N
+HETATM    7  C   UNL     0      10.641  14.718  32.358   1.0   0.0           C
+HETATM    8  C   UNL     0      11.961  15.089  32.899   1.0   0.0           C
+HETATM    9  C   UNL     0      12.581  16.239  32.461   1.0   0.0           C
+HETATM   10  C   UNL     0      13.831  16.609  32.960   1.0   0.0           C
+HETATM   11  C   UNL     0      14.444  15.807  33.902   1.0   0.0           C
+HETATM   12  C   UNL     0      13.785  14.668  34.308   1.0   0.0           C
+HETATM   13  N   UNL     0      12.573  14.336  33.805   1.0   0.0           N
+HETATM   14  C   UNL     0       7.630  13.227  32.986   1.0   0.0           C
+HETATM   15  C   UNL     0       6.407  12.909  32.428   1.0   0.0           C
+HETATM   16  C   UNL     0       6.270  12.684  31.072   1.0   0.0           C
+HETATM   17  C   UNL     0       4.980  12.390  30.478   1.0   0.0           C
+HETATM   18  C   UNL     0       4.618  11.096  30.171   1.0   0.0           C
+HETATM   19  C   UNL     0       3.393  10.828  29.565   1.0   0.0           C
+HETATM   20  C   UNL     0       4.107  13.435  30.179   1.0   0.0           C
+HETATM   21  S   UNL     0       4.467  15.098  30.582   1.0   0.0           S
+HETATM   22  O   UNL     0       3.343  15.970  30.044   1.0   0.0           O
+HETATM   23  O   UNL     0       5.869  15.609  29.863   1.0   0.0           O
+HETATM   24  O   UNL     0       4.517  15.283  32.088   1.0   0.0           O
+HETATM   25  C   UNL     0       2.894  13.118  29.574   1.0   0.0           C
+HETATM   26  C   UNL     0       2.512  11.840  29.258   1.0   0.0           C
+HETATM   27  N   UNL     0       1.266  11.580  28.642   1.0   0.0           N
+HETATM   28  C   UNL     0       0.216  11.206  29.285   1.0   0.0           C
+HETATM   29  C   UNL     0      -1.063  10.938  28.662   1.0   0.0           C
+HETATM   30  C   UNL     0      -2.115  10.545  29.446   1.0   0.0           C
+HETATM   31  C   UNL     0      -3.328  10.288  28.870   1.0   0.0           C
+HETATM   32  C   UNL     0      -3.476  10.427  27.514   1.0   0.0           C
+HETATM   33  C   UNL     0      -2.414  10.824  26.719   1.0   0.0           C
+HETATM   34  N   UNL     0      -1.255  11.060  27.343   1.0   0.0           N
+HETATM   35  O   UNL     0       8.819  12.695  27.900   1.0   0.0           O
+HETATM   36  O   UNL     0       6.901  10.996  28.313   1.0   0.0           O
+HETATM   37  H   UNL     0       9.477  13.173  30.215   1.0   0.0           H
+HETATM   38  H   UNL     0      10.172  15.354  31.622   1.0   0.0           H
+HETATM   39  H   UNL     0      12.099  16.855  31.731   1.0   0.0           H
+HETATM   40  H   UNL     0      14.306  17.511  32.609   1.0   0.0           H
+HETATM   41  H   UNL     0      15.408  16.044  34.321   1.0   0.0           H
+HETATM   42  H   UNL     0      14.253  14.031  35.045   1.0   0.0           H
+HETATM   43  H   UNL     0       7.697  13.393  34.032   1.0   0.0           H
+HETATM   44  H   UNL     0       5.561  12.848  33.112   1.0   0.0           H
+HETATM   45  H   UNL     0       5.278  10.244  30.393   1.0   0.0           H
+HETATM   46  H   UNL     0       3.147   9.805  29.342   1.0   0.0           H
+HETATM   47  H   UNL     0       2.216  13.919  29.339   1.0   0.0           H
+HETATM   48  H   UNL     0       0.312  11.091  30.351   1.0   0.0           H
+HETATM   49  H   UNL     0      -1.983  10.437  30.537   1.0   0.0           H
+HETATM   50  H   UNL     0      -4.168   9.973  29.509   1.0   0.0           H
+HETATM   51  H   UNL     0      -4.454  10.216  27.078   1.0   0.0           H
+HETATM   52  H   UNL     0      -2.560  10.925  25.653   1.0   0.0           H
+HETATM   53  O   UNL     0       4.982   7.675  24.476   1.0   0.0           O
+HETATM   54  S   UNL     0       6.372   7.693  24.970   1.0   0.0           S
+HETATM   55  C   UNL     0       7.430   8.579  23.896   1.0   0.0           C
+HETATM   56  C   UNL     0       8.543   7.964  23.317   1.0   0.0           C
+HETATM   57  C   UNL     0       9.430   8.625  22.493   1.0   0.0           C
+HETATM   58  N   UNL     0      10.549   7.946  21.931   1.0   0.0           N
+HETATM   59  C   UNL     0      10.369   6.939  21.147   1.0   0.0           C
+HETATM   60  C   UNL     0      11.502   6.211  20.547   1.0   0.0           C
+HETATM   61  C   UNL     0      11.260   5.140  19.713   1.0   0.0           C
+HETATM   62  C   UNL     0      12.318   4.436  19.134   1.0   0.0           C
+HETATM   63  C   UNL     0      13.614   4.825  19.406   1.0   0.0           C
+HETATM   64  C   UNL     0      13.804   5.901  20.244   1.0   0.0           C
+HETATM   65  N   UNL     0      12.758   6.563  20.791   1.0   0.0           N
+HETATM   66  C   UNL     0       9.190   9.956  22.238   1.0   0.0           C
+HETATM   67  C   UNL     0       8.096  10.588  22.797   1.0   0.0           C
+HETATM   68  C   UNL     0       7.217   9.912  23.620   1.0   0.0           C
+HETATM   69  C   UNL     0       6.045  10.563  24.176   1.0   0.0           C
+HETATM   70  C   UNL     0       6.039  11.028  25.473   1.0   0.0           C
+HETATM   71  C   UNL     0       4.897  11.617  26.010   1.0   0.0           C
+HETATM   72  C   UNL     0       4.895  10.687  23.399   1.0   0.0           C
+HETATM   73  S   UNL     0       4.833  10.170  21.729   1.0   0.0           S
+HETATM   74  O   UNL     0       3.416  10.378  21.219   1.0   0.0           O
+HETATM   75  O   UNL     0       5.174   8.555  21.580   1.0   0.0           O
+HETATM   76  O   UNL     0       5.763  11.014  20.876   1.0   0.0           O
+HETATM   77  C   UNL     0       3.777  11.281  23.979   1.0   0.0           C
+HETATM   78  C   UNL     0       3.747  11.751  25.266   1.0   0.0           C
+HETATM   79  N   UNL     0       2.581  12.346  25.801   1.0   0.0           N
+HETATM   80  C   UNL     0       2.390  13.617  25.857   1.0   0.0           C
+HETATM   81  C   UNL     0       1.199  14.234  26.404   1.0   0.0           C
+HETATM   82  C   UNL     0       1.102  15.599  26.413   1.0   0.0           C
+HETATM   83  C   UNL     0      -0.017  16.194  26.926   1.0   0.0           C
+HETATM   84  C   UNL     0      -1.029  15.416  27.425   1.0   0.0           C
+HETATM   85  C   UNL     0      -0.934  14.034  27.417   1.0   0.0           C
+HETATM   86  N   UNL     0       0.186  13.514  26.902   1.0   0.0           N
+HETATM   87  O   UNL     0       6.962   6.098  25.016   1.0   0.0           O
+HETATM   88  O   UNL     0       6.475   8.257  26.371   1.0   0.0           O
+HETATM   89  H   UNL     0       8.727   6.918  23.521   1.0   0.0           H
+HETATM   90  H   UNL     0       9.360   6.625  20.926   1.0   0.0           H
+HETATM   91  H   UNL     0      10.252   4.845  19.508   1.0   0.0           H
+HETATM   92  H   UNL     0      12.116   3.600  18.484   1.0   0.0           H
+HETATM   93  H   UNL     0      14.468   4.318  18.987   1.0   0.0           H
+HETATM   94  H   UNL     0      14.813   6.216  20.466   1.0   0.0           H
+HETATM   95  H   UNL     0       9.844  10.508  21.611   1.0   0.0           H
+HETATM   96  H   UNL     0       7.966  11.642  22.554   1.0   0.0           H
+HETATM   97  H   UNL     0       6.928  10.951  26.118   1.0   0.0           H
+HETATM   98  H   UNL     0       4.934  11.967  27.026   1.0   0.0           H
+HETATM   99  H   UNL     0       2.885  11.379  23.385   1.0   0.0           H
+HETATM  100  H   UNL     0       3.173  14.246  25.470   1.0   0.0           H
+HETATM  101  H   UNL     0       1.924  16.216  26.008   1.0   0.0           H
+HETATM  102  H   UNL     0      -0.085  17.293  26.929   1.0   0.0           H
+HETATM  103  H   UNL     0      -1.912  15.913  27.829   1.0   0.0           H
+HETATM  104  H   UNL     0      -1.746  13.445  27.817   1.0   0.0           H
+HETATM  105  O   UNL     0       3.778   8.155  30.691   1.0   0.0           O
+HETATM  106  S   UNL     0       4.949   7.333  30.330   1.0   0.0           S
+HETATM  107  C   UNL     0       4.507   5.664  30.051   1.0   0.0           C
+HETATM  108  C   UNL     0       5.083   4.634  30.800   1.0   0.0           C
+HETATM  109  C   UNL     0       4.798   3.300  30.596   1.0   0.0           C
+HETATM  110  N   UNL     0       5.417   2.293  31.391   1.0   0.0           N
+HETATM  111  C   UNL     0       5.234   2.271  32.666   1.0   0.0           C
+HETATM  112  C   UNL     0       5.858   1.245  33.522   1.0   0.0           C
+HETATM  113  C   UNL     0       5.634   1.261  34.882   1.0   0.0           C
+HETATM  114  C   UNL     0       6.214   0.299  35.711   1.0   0.0           C
+HETATM  115  C   UNL     0       7.019  -0.674  35.152   1.0   0.0           C
+HETATM  116  C   UNL     0       7.212  -0.649  33.789   1.0   0.0           C
+HETATM  117  N   UNL     0       6.635   0.298  33.011   1.0   0.0           N
+HETATM  118  C   UNL     0       3.899   2.986  29.602   1.0   0.0           C
+HETATM  119  C   UNL     0       3.315   3.985  28.848   1.0   0.0           C
+HETATM  120  C   UNL     0       3.610   5.317  29.064   1.0   0.0           C
+HETATM  121  C   UNL     0       2.967   6.370  28.301   1.0   0.0           C
+HETATM  122  C   UNL     0       3.609   6.970  27.238   1.0   0.0           C
+HETATM  123  C   UNL     0       2.999   8.006  26.536   1.0   0.0           C
+HETATM  124  C   UNL     0       1.696   6.808  28.669   1.0   0.0           C
+HETATM  125  S   UNL     0       0.792   6.068  29.970   1.0   0.0           S
+HETATM  126  O   UNL     0      -0.505   6.841  30.147   1.0   0.0           O
+HETATM  127  O   UNL     0       1.613   6.155  31.407   1.0   0.0           O
+HETATM  128  O   UNL     0       0.434   4.634  29.622   1.0   0.0           O
+HETATM  129  C   UNL     0       1.128   7.847  27.937   1.0   0.0           C
+HETATM  130  C   UNL     0       1.746   8.460  26.879   1.0   0.0           C
+HETATM  131  N   UNL     0       1.118   9.511  26.173   1.0   0.0           N
+HETATM  132  C   UNL     0       0.479   9.349  25.068   1.0   0.0           C
+HETATM  133  C   UNL     0      -0.167  10.421  24.340   1.0   0.0           C
+HETATM  134  C   UNL     0      -0.820  10.132  23.172   1.0   0.0           C
+HETATM  135  C   UNL     0      -1.434  11.135  22.474   1.0   0.0           C
+HETATM  136  C   UNL     0      -1.387  12.419  22.953   1.0   0.0           C
+HETATM  137  C   UNL     0      -0.727  12.714  24.134   1.0   0.0           C
+HETATM  138  N   UNL     0      -0.148  11.689  24.768   1.0   0.0           N
+HETATM  139  O   UNL     0       6.042   7.328  31.633   1.0   0.0           O
+HETATM  140  O   UNL     0       5.682   7.878  29.124   1.0   0.0           O
+HETATM  141  H   UNL     0       5.788   4.887  31.579   1.0   0.0           H
+HETATM  142  H   UNL     0       4.608   3.026  33.116   1.0   0.0           H
+HETATM  143  H   UNL     0       5.009   2.019  35.307   1.0   0.0           H
+HETATM  144  H   UNL     0       6.032   0.322  36.773   1.0   0.0           H
+HETATM  145  H   UNL     0       7.492  -1.440  35.743   1.0   0.0           H
+HETATM  146  H   UNL     0       7.839  -1.404  33.337   1.0   0.0           H
+HETATM  147  H   UNL     0       3.648   1.973  29.407   1.0   0.0           H
+HETATM  148  H   UNL     0       2.613   3.666  28.078   1.0   0.0           H
+HETATM  149  H   UNL     0       4.612   6.650  26.916   1.0   0.0           H
+HETATM  150  H   UNL     0       3.533   8.447  25.713   1.0   0.0           H
+HETATM  151  H   UNL     0       0.147   8.191  28.216   1.0   0.0           H
+HETATM  152  H   UNL     0       0.431   8.348  24.675   1.0   0.0           H
+HETATM  153  H   UNL     0      -0.850   9.094  22.796   1.0   0.0           H
+HETATM  154  H   UNL     0      -1.956  10.892  21.536   1.0   0.0           H
+HETATM  155  H   UNL     0      -1.884  13.202  22.379   1.0   0.0           H
+HETATM  156  H   UNL     0      -0.706  13.734  24.488   1.0   0.0           H
+HETATM  157  O   UNL     0      10.003  12.645  28.117   1.0   0.0           O
+HETATM  158  S   UNL     0       9.759  11.378  27.402   1.0   0.0           S
+HETATM  159  C   UNL     0      11.189  10.825  26.560   1.0   0.0           C
+HETATM  160  C   UNL     0      11.173  10.620  25.178   1.0   0.0           C
+HETATM  161  C   UNL     0      12.260  10.150  24.470   1.0   0.0           C
+HETATM  162  N   UNL     0      12.185   9.962  23.060   1.0   0.0           N
+HETATM  163  C   UNL     0      11.949  10.962  22.284   1.0   0.0           C
+HETATM  164  C   UNL     0      11.864  10.807  20.820   1.0   0.0           C
+HETATM  165  C   UNL     0      11.609  11.907  20.030   1.0   0.0           C
+HETATM  166  C   UNL     0      11.525  11.782  18.641   1.0   0.0           C
+HETATM  167  C   UNL     0      11.701  10.539  18.066   1.0   0.0           C
+HETATM  168  C   UNL     0      11.953   9.471  18.897   1.0   0.0           C
+HETATM  169  N   UNL     0      12.029   9.624  20.240   1.0   0.0           N
+HETATM  170  C   UNL     0      13.408   9.874  25.177   1.0   0.0           C
+HETATM  171  C   UNL     0      13.450  10.068  26.544   1.0   0.0           C
+HETATM  172  C   UNL     0      12.354  10.540  27.239   1.0   0.0           C
+HETATM  173  C   UNL     0      12.408  10.783  28.668   1.0   0.0           C
+HETATM  174  C   UNL     0      11.891   9.870  29.563   1.0   0.0           C
+HETATM  175  C   UNL     0      11.913  10.130  30.931   1.0   0.0           C
+HETATM  176  C   UNL     0      12.958  11.972  29.143   1.0   0.0           C
+HETATM  177  S   UNL     0      13.681  13.158  28.080   1.0   0.0           S
+HETATM  178  O   UNL     0      14.102  14.353  28.920   1.0   0.0           O
+HETATM  179  O   UNL     0      12.596  13.709  26.956   1.0   0.0           O
+HETATM  180  O   UNL     0      14.925  12.593  27.419   1.0   0.0           O
+HETATM  181  C   UNL     0      12.957  12.186  30.519   1.0   0.0           C
+HETATM  182  C   UNL     0      12.449  11.296  31.428   1.0   0.0           C
+HETATM  183  N   UNL     0      12.476  11.570  32.815   1.0   0.0           N
+HETATM  184  C   UNL     0      13.375  11.116  33.615   1.0   0.0           C
+HETATM  185  C   UNL     0      13.409  11.391  35.036   1.0   0.0           C
+HETATM  186  C   UNL     0      14.414  10.854  35.793   1.0   0.0           C
+HETATM  187  C   UNL     0      14.458  11.107  37.137   1.0   0.0           C
+HETATM  188  C   UNL     0      13.494  11.896  37.708   1.0   0.0           C
+HETATM  189  C   UNL     0      12.476  12.441  36.944   1.0   0.0           C
+HETATM  190  N   UNL     0      12.489  12.156  35.638   1.0   0.0           N
+HETATM  191  O   UNL     0       8.572  11.636  26.212   1.0   0.0           O
+HETATM  192  O   UNL     0       9.252  10.289  28.323   1.0   0.0           O
+HETATM  193  H   UNL     0      10.269  10.839  24.628   1.0   0.0           H
+HETATM  194  H   UNL     0      11.809  11.939  22.722   1.0   0.0           H
+HETATM  195  H   UNL     0      11.474  12.866  20.484   1.0   0.0           H
+HETATM  196  H   UNL     0      11.324  12.650  18.034   1.0   0.0           H
+HETATM  197  H   UNL     0      11.646  10.385  17.001   1.0   0.0           H
+HETATM  198  H   UNL     0      12.093   8.493  18.460   1.0   0.0           H
+HETATM  199  H   UNL     0      14.270   9.510  24.677   1.0   0.0           H
+HETATM  200  H   UNL     0      14.390   9.829  27.041   1.0   0.0           H
+HETATM  201  H   UNL     0      11.450   8.919  29.227   1.0   0.0           H
+HETATM  202  H   UNL     0      11.499   9.393  31.596   1.0   0.0           H
+HETATM  203  H   UNL     0      13.379  13.103  30.892   1.0   0.0           H
+HETATM  204  H   UNL     0      14.141  10.494  33.185   1.0   0.0           H
+HETATM  205  H   UNL     0      15.186  10.220  35.321   1.0   0.0           H
+HETATM  206  H   UNL     0      15.271  10.669  37.737   1.0   0.0           H
+HETATM  207  H   UNL     0      13.551  12.083  38.782   1.0   0.0           H
+HETATM  208  H   UNL     0      11.729  13.059  37.421   1.0   0.0           H
+HETATM  209  O   UNL     0      11.639   7.149  31.620   1.0   0.0           O
+HETATM  210  S   UNL     0      10.531   6.608  30.811   1.0   0.0           S
+HETATM  211  C   UNL     0       9.539   5.500  31.731   1.0   0.0           C
+HETATM  212  C   UNL     0       9.361   4.179  31.312   1.0   0.0           C
+HETATM  213  C   UNL     0       8.561   3.275  31.979   1.0   0.0           C
+HETATM  214  N   UNL     0       8.418   1.939  31.505   1.0   0.0           N
+HETATM  215  C   UNL     0       9.445   1.167  31.423   1.0   0.0           C
+HETATM  216  C   UNL     0       9.337  -0.222  30.937   1.0   0.0           C
+HETATM  217  C   UNL     0      10.465  -1.011  30.867   1.0   0.0           C
+HETATM  218  C   UNL     0      10.385  -2.328  30.410   1.0   0.0           C
+HETATM  219  C   UNL     0       9.159  -2.834  30.027   1.0   0.0           C
+HETATM  220  C   UNL     0       8.062  -2.006  30.115   1.0   0.0           C
+HETATM  221  N   UNL     0       8.172  -0.733  30.562   1.0   0.0           N
+HETATM  222  C   UNL     0       7.913   3.712  33.111   1.0   0.0           C
+HETATM  223  C   UNL     0       8.072   5.014  33.548   1.0   0.0           C
+HETATM  224  C   UNL     0       8.877   5.907  32.869   1.0   0.0           C
+HETATM  225  C   UNL     0       9.078   7.263  33.348   1.0   0.0           C
+HETATM  226  C   UNL     0       8.384   8.319  32.798   1.0   0.0           C
+HETATM  227  C   UNL     0       8.611   9.621  33.238   1.0   0.0           C
+HETATM  228  C   UNL     0      10.012   7.505  34.352   1.0   0.0           C
+HETATM  229  S   UNL     0      10.897   6.218  35.137   1.0   0.0           S
+HETATM  230  O   UNL     0      11.878   6.844  36.116   1.0   0.0           O
+HETATM  231  O   UNL     0      11.786   5.339  34.049   1.0   0.0           O
+HETATM  232  O   UNL     0       9.955   5.329  35.929   1.0   0.0           O
+HETATM  233  C   UNL     0      10.206   8.823  34.758   1.0   0.0           C
+HETATM  234  C   UNL     0       9.529   9.890  34.227   1.0   0.0           C
+HETATM  235  N   UNL     0       9.768  11.208  34.680   1.0   0.0           N
+HETATM  236  C   UNL     0       9.035  11.808  35.550   1.0   0.0           C
+HETATM  237  C   UNL     0       9.274  13.157  36.018   1.0   0.0           C
+HETATM  238  C   UNL     0       8.427  13.698  36.948   1.0   0.0           C
+HETATM  239  C   UNL     0       8.641  14.971  37.399   1.0   0.0           C
+HETATM  240  C   UNL     0       9.702  15.690  36.914   1.0   0.0           C
+HETATM  241  C   UNL     0      10.561  15.147  35.974   1.0   0.0           C
+HETATM  242  N   UNL     0      10.297  13.898  35.574   1.0   0.0           N
+HETATM  243  O   UNL     0      11.178   5.712  29.518   1.0   0.0           O
+HETATM  244  O   UNL     0       9.666   7.701  30.220   1.0   0.0           O
+HETATM  245  H   UNL     0       9.872   3.840  30.422   1.0   0.0           H
+HETATM  246  H   UNL     0      10.410   1.550  31.720   1.0   0.0           H
+HETATM  247  H   UNL     0      11.411  -0.610  31.167   1.0   0.0           H
+HETATM  248  H   UNL     0      11.274  -2.935  30.360   1.0   0.0           H
+HETATM  249  H   UNL     0       9.040  -3.842  29.666   1.0   0.0           H
+HETATM  250  H   UNL     0       7.096  -2.389  29.818   1.0   0.0           H
+HETATM  251  H   UNL     0       7.286   3.054  33.659   1.0   0.0           H
+HETATM  252  H   UNL     0       7.530   5.294  34.451   1.0   0.0           H
+HETATM  253  H   UNL     0       7.636   8.168  32.005   1.0   0.0           H
+HETATM  254  H   UNL     0       8.049  10.418  32.783   1.0   0.0           H
+HETATM  255  H   UNL     0      10.927   9.018  35.532   1.0   0.0           H
+HETATM  256  H   UNL     0       8.197  11.260  35.943   1.0   0.0           H
+HETATM  257  H   UNL     0       7.575  13.108  37.331   1.0   0.0           H
+HETATM  258  H   UNL     0       7.953  15.396  38.147   1.0   0.0           H
+HETATM  259  H   UNL     0       9.852  16.704  37.289   1.0   0.0           H
+HETATM  260  H   UNL     0      11.389  15.737  35.609   1.0   0.0           H
+HETATM  261  O   UNL     0       7.805   5.298  24.440   1.0   0.0           O
+HETATM  262  S   UNL     0       7.478   5.392  25.875   1.0   0.0           S
+HETATM  263  C   UNL     0       8.154   4.059  26.782   1.0   0.0           C
+HETATM  264  C   UNL     0       7.332   3.205  27.523   1.0   0.0           C
+HETATM  265  C   UNL     0       7.817   2.162  28.284   1.0   0.0           C
+HETATM  266  N   UNL     0       6.930   1.323  29.019   1.0   0.0           N
+HETATM  267  C   UNL     0       6.035   0.630  28.405   1.0   0.0           C
+HETATM  268  C   UNL     0       5.100  -0.250  29.130   1.0   0.0           C
+HETATM  269  C   UNL     0       4.159  -0.972  28.430   1.0   0.0           C
+HETATM  270  C   UNL     0       3.263  -1.811  29.097   1.0   0.0           C
+HETATM  271  C   UNL     0       3.331  -1.909  30.473   1.0   0.0           C
+HETATM  272  C   UNL     0       4.289  -1.167  31.128   1.0   0.0           C
+HETATM  273  N   UNL     0       5.143  -0.363  30.452   1.0   0.0           N
+HETATM  274  C   UNL     0       9.179   1.967  28.304   1.0   0.0           C
+HETATM  275  C   UNL     0      10.014   2.797  27.580   1.0   0.0           C
+HETATM  276  C   UNL     0       9.513   3.837  26.821   1.0   0.0           C
+HETATM  277  C   UNL     0      10.384   4.684  26.028   1.0   0.0           C
+HETATM  278  C   UNL     0      10.769   5.928  26.481   1.0   0.0           C
+HETATM  279  C   UNL     0      11.573   6.750  25.696   1.0   0.0           C
+HETATM  280  C   UNL     0      10.809   4.251  24.774   1.0   0.0           C
+HETATM  281  S   UNL     0      10.409   2.668  24.147   1.0   0.0           S
+HETATM  282  O   UNL     0      10.963   2.563  22.735   1.0   0.0           O
+HETATM  283  O   UNL     0       8.770   2.450  24.046   1.0   0.0           O
+HETATM  284  O   UNL     0      11.063   1.582  24.983   1.0   0.0           O
+HETATM  285  C   UNL     0      11.612   5.108  24.026   1.0   0.0           C
+HETATM  286  C   UNL     0      12.006   6.348  24.453   1.0   0.0           C
+HETATM  287  N   UNL     0      12.823   7.175  23.648   1.0   0.0           N
+HETATM  288  C   UNL     0      14.099   7.267  23.782   1.0   0.0           C
+HETATM  289  C   UNL     0      14.941   8.111  22.961   1.0   0.0           C
+HETATM  290  C   UNL     0      16.290   8.131  23.193   1.0   0.0           C
+HETATM  291  C   UNL     0      17.098   8.924  22.425   1.0   0.0           C
+HETATM  292  C   UNL     0      16.545   9.690  21.431   1.0   0.0           C
+HETATM  293  C   UNL     0      15.181   9.672  21.194   1.0   0.0           C
+HETATM  294  N   UNL     0      14.447   8.876  21.979   1.0   0.0           N
+HETATM  295  O   UNL     0       5.790   5.294  26.065   1.0   0.0           O
+HETATM  296  O   UNL     0       7.928   6.705  26.480   1.0   0.0           O
+HETATM  297  H   UNL     0       6.263   3.362  27.504   1.0   0.0           H
+HETATM  298  H   UNL     0       5.972   0.697  27.329   1.0   0.0           H
+HETATM  299  H   UNL     0       4.113  -0.890  27.364   1.0   0.0           H
+HETATM  300  H   UNL     0       2.532  -2.371  28.538   1.0   0.0           H
+HETATM  301  H   UNL     0       2.666  -2.540  31.038   1.0   0.0           H
+HETATM  302  H   UNL     0       4.353  -1.234  32.204   1.0   0.0           H
+HETATM  303  H   UNL     0       9.599   1.178  28.876   1.0   0.0           H
+HETATM  304  H   UNL     0      11.081   2.586  27.640   1.0   0.0           H
+HETATM  305  H   UNL     0      10.456   6.305  27.467   1.0   0.0           H
+HETATM  306  H   UNL     0      11.851   7.713  26.086   1.0   0.0           H
+HETATM  307  H   UNL     0      11.942   4.780  23.056   1.0   0.0           H
+HETATM  308  H   UNL     0      14.552   6.673  24.557   1.0   0.0           H
+HETATM  309  H   UNL     0      16.724   7.509  23.997   1.0   0.0           H
+HETATM  310  H   UNL     0      18.181   8.932  22.620   1.0   0.0           H
+HETATM  311  H   UNL     0      17.209  10.314  20.832   1.0   0.0           H
+HETATM  312  H   UNL     0      14.773  10.286  20.404   1.0   0.0           H
+HETATM  313  Fe  UNL     0       0.607  11.612  26.628   1.0   0.0          Fe
+HETATM  314  Fe  UNL     0       6.806   0.801  30.991   1.0   0.0          Fe
+HETATM  315  Fe  UNL     0      12.473   8.367  21.946   1.0   0.0          Fe
+HETATM  316  Fe  UNL     0      11.264  12.800  34.209   1.0   0.0          Fe
+CONECT    1    2
+CONECT    2    1    3   35   36
+CONECT    3    2    4   16
+CONECT    4    3    5   37
+CONECT    5    4    6   14
+CONECT    6    5    7
+CONECT    7    6    8   38
+CONECT    8    7    9   13
+CONECT    9    8   10   39
+CONECT   10    9   11   40
+CONECT   11   10   12   41
+CONECT   12   11   13   42
+CONECT   13   12    8
+CONECT   14    5   15   43
+CONECT   15   14   16   44
+CONECT   16   15   17    3
+CONECT   17   16   18   20
+CONECT   18   17   19   45
+CONECT   19   18   26   46
+CONECT   20   17   21   25
+CONECT   21   20   22   23   24
+CONECT   22   21
+CONECT   23   21
+CONECT   24   21
+CONECT   25   20   26   47
+CONECT   26   25   27   19
+CONECT   27   26   28
+CONECT   28   27   29   48
+CONECT   29   28   30   34
+CONECT   30   29   31   49
+CONECT   31   30   32   50
+CONECT   32   31   33   51
+CONECT   33   32   34   52
+CONECT   34   33   29
+CONECT   35    2
+CONECT   36    2
+CONECT   37    4
+CONECT   38    7
+CONECT   39    9
+CONECT   40   10
+CONECT   41   11
+CONECT   42   12
+CONECT   43   14
+CONECT   44   15
+CONECT   45   18
+CONECT   46   19
+CONECT   47   25
+CONECT   48   28
+CONECT   49   30
+CONECT   50   31
+CONECT   51   32
+CONECT   52   33
+CONECT   53   54
+CONECT   54   53   55   87   88
+CONECT   55   54   56   68
+CONECT   56   55   57   89
+CONECT   57   56   58   66
+CONECT   58   57   59
+CONECT   59   58   60   90
+CONECT   60   59   61   65
+CONECT   61   60   62   91
+CONECT   62   61   63   92
+CONECT   63   62   64   93
+CONECT   64   63   65   94
+CONECT   65   64   60
+CONECT   66   57   67   95
+CONECT   67   66   68   96
+CONECT   68   67   69   55
+CONECT   69   68   70   72
+CONECT   70   69   71   97
+CONECT   71   70   78   98
+CONECT   72   69   73   77
+CONECT   73   72   74   75   76
+CONECT   74   73
+CONECT   75   73
+CONECT   76   73
+CONECT   77   72   78   99
+CONECT   78   77   79   71
+CONECT   79   78   80
+CONECT   80   79   81  100
+CONECT   81   80   82   86
+CONECT   82   81   83  101
+CONECT   83   82   84  102
+CONECT   84   83   85  103
+CONECT   85   84   86  104
+CONECT   86   85   81
+CONECT   87   54
+CONECT   88   54
+CONECT   89   56
+CONECT   90   59
+CONECT   91   61
+CONECT   92   62
+CONECT   93   63
+CONECT   94   64
+CONECT   95   66
+CONECT   96   67
+CONECT   97   70
+CONECT   98   71
+CONECT   99   77
+CONECT  100   80
+CONECT  101   82
+CONECT  102   83
+CONECT  103   84
+CONECT  104   85
+CONECT  105  106
+CONECT  106  105  107  139  140
+CONECT  107  106  108  120
+CONECT  108  107  109  141
+CONECT  109  108  110  118
+CONECT  110  109  111
+CONECT  111  110  112  142
+CONECT  112  111  113  117
+CONECT  113  112  114  143
+CONECT  114  113  115  144
+CONECT  115  114  116  145
+CONECT  116  115  117  146
+CONECT  117  116  112
+CONECT  118  109  119  147
+CONECT  119  118  120  148
+CONECT  120  119  121  107
+CONECT  121  120  122  124
+CONECT  122  121  123  149
+CONECT  123  122  130  150
+CONECT  124  121  125  129
+CONECT  125  124  126  127  128
+CONECT  126  125
+CONECT  127  125
+CONECT  128  125
+CONECT  129  124  130  151
+CONECT  130  129  131  123
+CONECT  131  130  132
+CONECT  132  131  133  152
+CONECT  133  132  134  138
+CONECT  134  133  135  153
+CONECT  135  134  136  154
+CONECT  136  135  137  155
+CONECT  137  136  138  156
+CONECT  138  137  133
+CONECT  139  106
+CONECT  140  106
+CONECT  141  108
+CONECT  142  111
+CONECT  143  113
+CONECT  144  114
+CONECT  145  115
+CONECT  146  116
+CONECT  147  118
+CONECT  148  119
+CONECT  149  122
+CONECT  150  123
+CONECT  151  129
+CONECT  152  132
+CONECT  153  134
+CONECT  154  135
+CONECT  155  136
+CONECT  156  137
+CONECT  157  158
+CONECT  158  157  159  191  192
+CONECT  159  158  160  172
+CONECT  160  159  161  193
+CONECT  161  160  162  170
+CONECT  162  161  163
+CONECT  163  162  164  194
+CONECT  164  163  165  169
+CONECT  165  164  166  195
+CONECT  166  165  167  196
+CONECT  167  166  168  197
+CONECT  168  167  169  198
+CONECT  169  168  164
+CONECT  170  161  171  199
+CONECT  171  170  172  200
+CONECT  172  171  173  159
+CONECT  173  172  174  176
+CONECT  174  173  175  201
+CONECT  175  174  182  202
+CONECT  176  173  177  181
+CONECT  177  176  178  179  180
+CONECT  178  177
+CONECT  179  177
+CONECT  180  177
+CONECT  181  176  182  203
+CONECT  182  181  183  175
+CONECT  183  182  184
+CONECT  184  183  185  204
+CONECT  185  184  186  190
+CONECT  186  185  187  205
+CONECT  187  186  188  206
+CONECT  188  187  189  207
+CONECT  189  188  190  208
+CONECT  190  189  185
+CONECT  191  158
+CONECT  192  158
+CONECT  193  160
+CONECT  194  163
+CONECT  195  165
+CONECT  196  166
+CONECT  197  167
+CONECT  198  168
+CONECT  199  170
+CONECT  200  171
+CONECT  201  174
+CONECT  202  175
+CONECT  203  181
+CONECT  204  184
+CONECT  205  186
+CONECT  206  187
+CONECT  207  188
+CONECT  208  189
+CONECT  209  210
+CONECT  210  209  211  243  244
+CONECT  211  210  212  224
+CONECT  212  211  213  245
+CONECT  213  212  214  222
+CONECT  214  213  215
+CONECT  215  214  216  246
+CONECT  216  215  217  221
+CONECT  217  216  218  247
+CONECT  218  217  219  248
+CONECT  219  218  220  249
+CONECT  220  219  221  250
+CONECT  221  220  216
+CONECT  222  213  223  251
+CONECT  223  222  224  252
+CONECT  224  223  225  211
+CONECT  225  224  226  228
+CONECT  226  225  227  253
+CONECT  227  226  234  254
+CONECT  228  225  229  233
+CONECT  229  228  230  231  232
+CONECT  230  229
+CONECT  231  229
+CONECT  232  229
+CONECT  233  228  234  255
+CONECT  234  233  235  227
+CONECT  235  234  236
+CONECT  236  235  237  256
+CONECT  237  236  238  242
+CONECT  238  237  239  257
+CONECT  239  238  240  258
+CONECT  240  239  241  259
+CONECT  241  240  242  260
+CONECT  242  241  237
+CONECT  243  210
+CONECT  244  210
+CONECT  245  212
+CONECT  246  215
+CONECT  247  217
+CONECT  248  218
+CONECT  249  219
+CONECT  250  220
+CONECT  251  222
+CONECT  252  223
+CONECT  253  226
+CONECT  254  227
+CONECT  255  233
+CONECT  256  236
+CONECT  257  238
+CONECT  258  239
+CONECT  259  240
+CONECT  260  241
+CONECT  261  262
+CONECT  262  261  263  295  296
+CONECT  263  262  264  276
+CONECT  264  263  265  297
+CONECT  265  264  266  274
+CONECT  266  265  267
+CONECT  267  266  268  298
+CONECT  268  267  269  273
+CONECT  269  268  270  299
+CONECT  270  269  271  300
+CONECT  271  270  272  301
+CONECT  272  271  273  302
+CONECT  273  272  268
+CONECT  274  265  275  303
+CONECT  275  274  276  304
+CONECT  276  275  277  263
+CONECT  277  276  278  280
+CONECT  278  277  279  305
+CONECT  279  278  286  306
+CONECT  280  277  281  285
+CONECT  281  280  282  283  284
+CONECT  282  281
+CONECT  283  281
+CONECT  284  281
+CONECT  285  280  286  307
+CONECT  286  285  287  279
+CONECT  287  286  288
+CONECT  288  287  289  308
+CONECT  289  288  290  294
+CONECT  290  289  291  309
+CONECT  291  290  292  310
+CONECT  292  291  293  311
+CONECT  293  292  294  312
+CONECT  294  293  289
+CONECT  295  262
+CONECT  296  262
+CONECT  297  264
+CONECT  298  267
+CONECT  299  269
+CONECT  300  270
+CONECT  301  271
+CONECT  302  272
+CONECT  303  274
+CONECT  304  275
+CONECT  305  278
+CONECT  306  279
+CONECT  307  285
+CONECT  308  288
+CONECT  309  290
+CONECT  310  291
+CONECT  311  292
+CONECT  312  293
+END   

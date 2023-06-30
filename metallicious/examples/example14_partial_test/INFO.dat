@@ -1,0 +1,4 @@
+ligand_pattern:0,0,0,0
+link_atoms:2,16,30,44
+extra_atoms:12,13,14,26,27,28,40,41,42,54,55,56
+starting_index:0,1,15,29,43,57

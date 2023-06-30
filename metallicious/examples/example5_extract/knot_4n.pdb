@@ -1,0 +1,625 @@
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+ATOM      1  Fe  RES1X   1      10.937  13.387   3.645  1.00  0.00      SYSTFE  
+ATOM      2  C   RES1X   1      16.199  14.907   3.190  1.00  0.00      SYST C  
+ATOM      3  N   RES1X   1      12.531  14.120   2.724  1.00  0.00      SYST N  
+ATOM      4  C   RES1X   1      12.280  14.702   1.531  1.00  0.00      SYST C  
+ATOM      5  C   RES1X   1      13.273  15.349   0.806  1.00  0.00      SYST C  
+ATOM      6  C   RES1X   1      14.562  15.419   1.337  1.00  0.00      SYST C  
+ATOM      7  C   RES1X   1      14.840  14.828   2.564  1.00  0.00      SYST C  
+ATOM      8  C   RES1X   1      13.782  14.188   3.218  1.00  0.00      SYST C  
+ATOM      9  N   RES1X   1      10.052  14.037   1.996  1.00  0.00      SYST N  
+ATOM     10  C   RES1X   1      10.886  14.607   1.081  1.00  0.00      SYST C  
+ATOM     11  C   RES1X   1      10.411  15.086  -0.135  1.00  0.00      SYST C  
+ATOM     12  C   RES1X   1       9.073  14.979  -0.433  1.00  0.00      SYST C  
+ATOM     13  C   RES1X   1       8.209  14.411   0.510  1.00  0.00      SYST C  
+ATOM     14  C   RES1X   1       8.746  13.953   1.693  1.00  0.00      SYST C  
+ATOM     15  C   RES1X   1       6.723  14.378   0.261  1.00  0.00      SYST C  
+ATOM     16  O   RES1X   1       6.158  13.304   0.988  1.00  0.00      SYST O  
+ATOM     17  C   RES1X   1       4.759  13.256   0.887  1.00  0.00      SYST C  
+ATOM     18  N   RES1X   1      11.068  11.569   2.881  1.00  0.00      SYST N  
+ATOM     19  C   RES1X   1      10.030  10.744   3.193  1.00  0.00      SYST C  
+ATOM     20  C   RES1X   1       9.985   9.437   2.760  1.00  0.00      SYST C  
+ATOM     21  C   RES1X   1      11.023   8.917   2.019  1.00  0.00      SYST C  
+ATOM     22  C   RES1X   1       4.247  12.101   1.697  1.00  0.00      SYST C  
+ATOM     23  C   RES1X   1      12.078  11.054   2.147  1.00  0.00      SYST C  
+ATOM     24  N   RES1X   1       9.255  12.654   4.380  1.00  0.00      SYST N  
+ATOM     25  C   RES1X   1       8.992  11.376   4.028  1.00  0.00      SYST C  
+ATOM     26  C   RES1X   1       7.831  10.735   4.414  1.00  0.00      SYST C  
+ATOM     27  C   RES1X   1       6.891  11.423   5.176  1.00  0.00      SYST C  
+ATOM     28  C   RES1X   1       7.154  12.738   5.534  1.00  0.00      SYST C  
+ATOM     29  C   RES1X   1       8.343  13.301   5.126  1.00  0.00      SYST C  
+ATOM     30  C   RES1X   1       6.192  13.541   6.350  1.00  0.00      SYST C  
+ATOM     31  O   RES1X   1       4.935  12.892   6.364  1.00  0.00      SYST O  
+ATOM     32  C   RES1X   1       3.945  13.653   7.036  1.00  0.00      SYST C  
+ATOM     33  N   RES1X   1      11.868  12.867   5.313  1.00  0.00      SYST N  
+ATOM     34  C   RES1X   1      11.846  13.813   6.299  1.00  0.00      SYST C  
+ATOM     35  C   RES1X   1      12.375  13.552   7.549  1.00  0.00      SYST C  
+ATOM     36  C   RES1X   1      12.945  12.324   7.817  1.00  0.00      SYST C  
+ATOM     37  C   RES1X   1       2.619  12.999   6.826  1.00  0.00      SYST C  
+ATOM     38  C   RES1X   1      12.445  11.686   5.592  1.00  0.00      SYST C  
+ATOM     39  N   RES1X   1      10.771  15.102   4.621  1.00  0.00      SYST N  
+ATOM     40  C   RES1X   1      11.250  15.086   5.901  1.00  0.00      SYST C  
+ATOM     41  C   RES1X   1      11.174  16.191   6.701  1.00  0.00      SYST C  
+ATOM     42  C   RES1X   1      10.629  17.369   6.219  1.00  0.00      SYST C  
+ATOM     43  C   RES1X   1      10.139  17.408   4.919  1.00  0.00      SYST C  
+ATOM     44  C   RES1X   1      10.245  16.252   4.157  1.00  0.00      SYST C  
+ATOM     45  C   RES1X   1       9.521  18.661   4.347  1.00  0.00      SYST C  
+ATOM     46  H   RES1X   1      16.885  14.896   2.488  1.00  0.00      SYST H  
+ATOM     47  H   RES1X   1      16.331  14.137   3.784  1.00  0.00      SYST H  
+ATOM     48  H   RES1X   1      16.275  15.735   3.709  1.00  0.00      SYST H  
+ATOM     49  H   RES1X   1      13.077  15.740  -0.039  1.00  0.00      SYST H  
+ATOM     50  H   RES1X   1      15.248  15.869   0.861  1.00  0.00      SYST H  
+ATOM     51  H   RES1X   1      13.953  13.779   4.058  1.00  0.00      SYST H  
+ATOM     52  H   RES1X   1      11.009  15.483  -0.757  1.00  0.00      SYST H  
+ATOM     53  H   RES1X   1       8.740  15.290  -1.267  1.00  0.00      SYST H  
+ATOM     54  H   RES1X   1       8.161  13.555   2.328  1.00  0.00      SYST H  
+ATOM     55  H   RES1X   1       6.315  15.231   0.549  1.00  0.00      SYST H  
+ATOM     56  H   RES1X   1       6.547  14.260  -0.706  1.00  0.00      SYST H  
+ATOM     57  H   RES1X   1       4.493  13.147  -0.060  1.00  0.00      SYST H  
+ATOM     58  H   RES1X   1       4.367  14.101   1.225  1.00  0.00      SYST H  
+ATOM     59  H   RES1X   1       9.236   8.891   2.975  1.00  0.00      SYST H  
+ATOM     60  H   RES1X   1      11.007   8.010   1.734  1.00  0.00      SYST H  
+ATOM     61  H   RES1X   1      12.811  11.619   1.929  1.00  0.00      SYST H  
+ATOM     62  H   RES1X   1       7.674   9.832   4.160  1.00  0.00      SYST H  
+ATOM     63  H   RES1X   1       6.085  11.001   5.447  1.00  0.00      SYST H  
+ATOM     64  H   RES1X   1       8.531  14.196   5.385  1.00  0.00      SYST H  
+ATOM     65  H   RES1X   1       6.533  13.634   7.275  1.00  0.00      SYST H  
+ATOM     66  H   RES1X   1       6.096  14.448   5.962  1.00  0.00      SYST H  
+ATOM     67  H   RES1X   1       3.925  14.576   6.677  1.00  0.00      SYST H  
+ATOM     68  H   RES1X   1       4.149  13.698   8.003  1.00  0.00      SYST H  
+ATOM     69  H   RES1X   1      12.344  14.218   8.224  1.00  0.00      SYST H  
+ATOM     70  H   RES1X   1      13.301  12.137   8.678  1.00  0.00      SYST H  
+ATOM     71  H   RES1X   1      12.473  11.029   4.908  1.00  0.00      SYST H  
+ATOM     72  H   RES1X   1      11.499  16.152   7.594  1.00  0.00      SYST H  
+ATOM     73  H   RES1X   1      10.590  18.141   6.771  1.00  0.00      SYST H  
+ATOM     74  H   RES1X   1       9.929  16.272   3.262  1.00  0.00      SYST H  
+ATOM     75  H   RES1X   1       9.177  18.477   3.448  1.00  0.00      SYST H  
+ATOM     76  H   RES1X   1      10.201  19.366   4.296  1.00  0.00      SYST H  
+ATOM     77  H   RES1X   1       8.788  18.958   4.924  1.00  0.00      SYST H  
+ATOM     78  C   RES1X   1      12.101   9.742   1.697  1.00  0.00      SYST C  
+ATOM     79  C   RES1X   1      13.256   9.230   0.887  1.00  0.00      SYST C  
+ATOM     80  O   RES1X   1      13.304   7.831   0.988  1.00  0.00      SYST O  
+ATOM     81  C   RES1X   1      14.378   7.266   0.261  1.00  0.00      SYST C  
+ATOM     82  C   RES1X   1      14.411   5.780   0.510  1.00  0.00      SYST C  
+ATOM     83  C   RES1X   1      14.979   4.916  -0.433  1.00  0.00      SYST C  
+ATOM     84  C   RES1X   1      15.086   3.578  -0.135  1.00  0.00      SYST C  
+ATOM     85  C   RES1X   1      14.607   3.103   1.081  1.00  0.00      SYST C  
+ATOM     86  C   RES1X   1      14.702   1.709   1.531  1.00  0.00      SYST C  
+ATOM     87  N   RES1X   1      14.120   1.458   2.724  1.00  0.00      SYST N  
+ATOM     88  Fe  RES1X   1      13.387   3.052   3.645  1.00  0.00      SYSTFE  
+ATOM     89  N   RES1X   1      14.037   3.937   1.996  1.00  0.00      SYST N  
+ATOM     90  C   RES1X   1      13.953   5.243   1.693  1.00  0.00      SYST C  
+ATOM     91  H   RES1X   1      13.555   5.828   2.328  1.00  0.00      SYST H  
+ATOM     92  N   RES1X   1      11.569   2.921   2.881  1.00  0.00      SYST N  
+ATOM     93  C   RES1X   1      10.744   3.959   3.193  1.00  0.00      SYST C  
+ATOM     94  C   RES1X   1       9.437   4.004   2.760  1.00  0.00      SYST C  
+ATOM     95  C   RES1X   1       8.917   2.966   2.019  1.00  0.00      SYST C  
+ATOM     96  C   RES1X   1       9.742   1.888   1.697  1.00  0.00      SYST C  
+ATOM     97  C   RES1X   1       9.230   0.733   0.887  1.00  0.00      SYST C  
+ATOM     98  O   RES1X   1       7.831   0.686   0.988  1.00  0.00      SYST O  
+ATOM     99  C   RES1X   1       7.266  -0.389   0.261  1.00  0.00      SYST C  
+ATOM    100  C   RES1X   1       5.780  -0.423   0.510  1.00  0.00      SYST C  
+ATOM    101  C   RES1X   1       4.916  -0.990  -0.433  1.00  0.00      SYST C  
+ATOM    102  C   RES1X   1       3.578  -1.097  -0.135  1.00  0.00      SYST C  
+ATOM    103  C   RES1X   1       3.103  -0.618   1.081  1.00  0.00      SYST C  
+ATOM    104  C   RES1X   1       1.709  -0.713   1.531  1.00  0.00      SYST C  
+ATOM    105  N   RES1X   1       1.458  -0.132   2.724  1.00  0.00      SYST N  
+ATOM    106  Fe  RES1X   1       3.052   0.601   3.645  1.00  0.00      SYSTFE  
+ATOM    107  N   RES1X   1       3.937  -0.048   1.996  1.00  0.00      SYST N  
+ATOM    108  C   RES1X   1       5.243   0.036   1.693  1.00  0.00      SYST C  
+ATOM    109  H   RES1X   1       5.828   0.434   2.328  1.00  0.00      SYST H  
+ATOM    110  N   RES1X   1       2.921   2.420   2.881  1.00  0.00      SYST N  
+ATOM    111  C   RES1X   1       3.959   3.245   3.193  1.00  0.00      SYST C  
+ATOM    112  C   RES1X   1       4.004   4.552   2.760  1.00  0.00      SYST C  
+ATOM    113  C   RES1X   1       2.966   5.072   2.019  1.00  0.00      SYST C  
+ATOM    114  C   RES1X   1       1.888   4.247   1.697  1.00  0.00      SYST C  
+ATOM    115  C   RES1X   1       0.733   4.759   0.887  1.00  0.00      SYST C  
+ATOM    116  O   RES1X   1       0.686   6.158   0.988  1.00  0.00      SYST O  
+ATOM    117  C   RES1X   1      -0.389   6.723   0.261  1.00  0.00      SYST C  
+ATOM    118  C   RES1X   1      -0.423   8.209   0.510  1.00  0.00      SYST C  
+ATOM    119  C   RES1X   1      -0.990   9.073  -0.433  1.00  0.00      SYST C  
+ATOM    120  C   RES1X   1      -1.097  10.411  -0.135  1.00  0.00      SYST C  
+ATOM    121  C   RES1X   1      -0.618  10.886   1.081  1.00  0.00      SYST C  
+ATOM    122  C   RES1X   1      -0.713  12.280   1.531  1.00  0.00      SYST C  
+ATOM    123  N   RES1X   1      -0.132  12.531   2.724  1.00  0.00      SYST N  
+ATOM    124  Fe  RES1X   1       0.601  10.937   3.645  1.00  0.00      SYSTFE  
+ATOM    125  N   RES1X   1      -0.048  10.052   1.996  1.00  0.00      SYST N  
+ATOM    126  C   RES1X   1       0.036   8.746   1.693  1.00  0.00      SYST C  
+ATOM    127  H   RES1X   1       0.434   8.161   2.328  1.00  0.00      SYST H  
+ATOM    128  N   RES1X   1       2.420  11.068   2.881  1.00  0.00      SYST N  
+ATOM    129  C   RES1X   1       3.245  10.030   3.193  1.00  0.00      SYST C  
+ATOM    130  C   RES1X   1       4.552   9.985   2.760  1.00  0.00      SYST C  
+ATOM    131  C   RES1X   1       5.072  11.023   2.019  1.00  0.00      SYST C  
+ATOM    132  C   RES1X   1       2.935  12.078   2.147  1.00  0.00      SYST C  
+ATOM    133  H   RES1X   1       2.370  12.811   1.929  1.00  0.00      SYST H  
+ATOM    134  H   RES1X   1       5.979  11.007   1.734  1.00  0.00      SYST H  
+ATOM    135  H   RES1X   1       5.098   9.236   2.975  1.00  0.00      SYST H  
+ATOM    136  C   RES1X   1       2.613   8.992   4.028  1.00  0.00      SYST C  
+ATOM    137  N   RES1X   1       1.335   9.255   4.380  1.00  0.00      SYST N  
+ATOM    138  N   RES1X   1       1.122  11.868   5.313  1.00  0.00      SYST N  
+ATOM    139  C   RES1X   1       0.176  11.846   6.299  1.00  0.00      SYST C  
+ATOM    140  C   RES1X   1       0.437  12.375   7.549  1.00  0.00      SYST C  
+ATOM    141  C   RES1X   1       1.665  12.945   7.817  1.00  0.00      SYST C  
+ATOM    142  C   RES1X   1      12.999  11.370   6.826  1.00  0.00      SYST C  
+ATOM    143  C   RES1X   1      13.653  10.044   7.036  1.00  0.00      SYST C  
+ATOM    144  O   RES1X   1      12.892   9.054   6.364  1.00  0.00      SYST O  
+ATOM    145  C   RES1X   1      13.541   7.798   6.350  1.00  0.00      SYST C  
+ATOM    146  C   RES1X   1      12.738   6.835   5.534  1.00  0.00      SYST C  
+ATOM    147  C   RES1X   1      11.423   7.098   5.176  1.00  0.00      SYST C  
+ATOM    148  C   RES1X   1      10.735   6.158   4.414  1.00  0.00      SYST C  
+ATOM    149  C   RES1X   1      11.376   4.997   4.028  1.00  0.00      SYST C  
+ATOM    150  N   RES1X   1      12.654   4.734   4.380  1.00  0.00      SYST N  
+ATOM    151  N   RES1X   1      12.867   2.121   5.313  1.00  0.00      SYST N  
+ATOM    152  C   RES1X   1      13.813   2.143   6.299  1.00  0.00      SYST C  
+ATOM    153  C   RES1X   1      13.552   1.614   7.549  1.00  0.00      SYST C  
+ATOM    154  C   RES1X   1      12.324   1.044   7.817  1.00  0.00      SYST C  
+ATOM    155  C   RES1X   1      11.370   0.990   6.826  1.00  0.00      SYST C  
+ATOM    156  C   RES1X   1      10.044   0.336   7.036  1.00  0.00      SYST C  
+ATOM    157  O   RES1X   1       9.054   1.097   6.364  1.00  0.00      SYST O  
+ATOM    158  C   RES1X   1       7.798   0.448   6.350  1.00  0.00      SYST C  
+ATOM    159  C   RES1X   1       6.835   1.251   5.534  1.00  0.00      SYST C  
+ATOM    160  C   RES1X   1       7.098   2.566   5.176  1.00  0.00      SYST C  
+ATOM    161  C   RES1X   1       6.158   3.254   4.414  1.00  0.00      SYST C  
+ATOM    162  C   RES1X   1       4.997   2.613   4.028  1.00  0.00      SYST C  
+ATOM    163  N   RES1X   1       4.734   1.335   4.380  1.00  0.00      SYST N  
+ATOM    164  N   RES1X   1       2.121   1.122   5.313  1.00  0.00      SYST N  
+ATOM    165  C   RES1X   1       2.143   0.176   6.299  1.00  0.00      SYST C  
+ATOM    166  C   RES1X   1       1.614   0.437   7.549  1.00  0.00      SYST C  
+ATOM    167  C   RES1X   1       1.044   1.665   7.817  1.00  0.00      SYST C  
+ATOM    168  C   RES1X   1       0.990   2.619   6.826  1.00  0.00      SYST C  
+ATOM    169  C   RES1X   1       0.336   3.945   7.036  1.00  0.00      SYST C  
+ATOM    170  O   RES1X   1       1.097   4.935   6.364  1.00  0.00      SYST O  
+ATOM    171  C   RES1X   1       0.448   6.192   6.350  1.00  0.00      SYST C  
+ATOM    172  C   RES1X   1       1.251   7.154   5.534  1.00  0.00      SYST C  
+ATOM    173  C   RES1X   1       2.566   6.891   5.176  1.00  0.00      SYST C  
+ATOM    174  C   RES1X   1       3.254   7.831   4.414  1.00  0.00      SYST C  
+ATOM    175  H   RES1X   1       4.157   7.674   4.160  1.00  0.00      SYST H  
+ATOM    176  H   RES1X   1       2.988   6.085   5.447  1.00  0.00      SYST H  
+ATOM    177  C   RES1X   1       0.688   8.343   5.126  1.00  0.00      SYST C  
+ATOM    178  H   RES1X   1      -0.207   8.531   5.385  1.00  0.00      SYST H  
+ATOM    179  H   RES1X   1       0.355   6.533   7.275  1.00  0.00      SYST H  
+ATOM    180  H   RES1X   1      -0.459   6.096   5.962  1.00  0.00      SYST H  
+ATOM    181  H   RES1X   1      -0.587   3.925   6.677  1.00  0.00      SYST H  
+ATOM    182  H   RES1X   1       0.291   4.149   8.003  1.00  0.00      SYST H  
+ATOM    183  C   RES1X   1       1.544   2.303   5.592  1.00  0.00      SYST C  
+ATOM    184  H   RES1X   1       1.516   2.960   4.908  1.00  0.00      SYST H  
+ATOM    185  H   RES1X   1       0.688   1.852   8.678  1.00  0.00      SYST H  
+ATOM    186  H   RES1X   1       1.645  -0.229   8.224  1.00  0.00      SYST H  
+ATOM    187  C   RES1X   1       2.739  -1.097   5.901  1.00  0.00      SYST C  
+ATOM    188  N   RES1X   1       3.217  -1.113   4.621  1.00  0.00      SYST N  
+ATOM    189  C   RES1X   1       3.743  -2.263   4.157  1.00  0.00      SYST C  
+ATOM    190  C   RES1X   1       3.850  -3.419   4.919  1.00  0.00      SYST C  
+ATOM    191  C   RES1X   1       3.360  -3.380   6.219  1.00  0.00      SYST C  
+ATOM    192  C   RES1X   1       2.815  -2.202   6.701  1.00  0.00      SYST C  
+ATOM    193  H   RES1X   1       2.490  -2.163   7.594  1.00  0.00      SYST H  
+ATOM    194  H   RES1X   1       3.399  -4.152   6.771  1.00  0.00      SYST H  
+ATOM    195  C   RES1X   1       4.468  -4.672   4.347  1.00  0.00      SYST C  
+ATOM    196  H   RES1X   1       4.812  -4.488   3.448  1.00  0.00      SYST H  
+ATOM    197  H   RES1X   1       3.788  -5.377   4.296  1.00  0.00      SYST H  
+ATOM    198  H   RES1X   1       5.201  -4.969   4.924  1.00  0.00      SYST H  
+ATOM    199  H   RES1X   1       4.060  -2.283   3.262  1.00  0.00      SYST H  
+ATOM    200  C   RES1X   1       5.646   0.688   5.126  1.00  0.00      SYST C  
+ATOM    201  H   RES1X   1       5.458  -0.207   5.385  1.00  0.00      SYST H  
+ATOM    202  H   RES1X   1       6.315   4.157   4.160  1.00  0.00      SYST H  
+ATOM    203  H   RES1X   1       7.904   2.988   5.447  1.00  0.00      SYST H  
+ATOM    204  H   RES1X   1       7.456   0.355   7.275  1.00  0.00      SYST H  
+ATOM    205  H   RES1X   1       7.893  -0.459   5.962  1.00  0.00      SYST H  
+ATOM    206  H   RES1X   1      10.064  -0.587   6.677  1.00  0.00      SYST H  
+ATOM    207  H   RES1X   1       9.840   0.291   8.003  1.00  0.00      SYST H  
+ATOM    208  C   RES1X   1      11.686   1.544   5.592  1.00  0.00      SYST C  
+ATOM    209  H   RES1X   1      11.029   1.516   4.908  1.00  0.00      SYST H  
+ATOM    210  H   RES1X   1      12.137   0.688   8.678  1.00  0.00      SYST H  
+ATOM    211  H   RES1X   1      14.218   1.645   8.224  1.00  0.00      SYST H  
+ATOM    212  C   RES1X   1      15.086   2.739   5.901  1.00  0.00      SYST C  
+ATOM    213  N   RES1X   1      15.102   3.217   4.621  1.00  0.00      SYST N  
+ATOM    214  C   RES1X   1      16.252   3.743   4.157  1.00  0.00      SYST C  
+ATOM    215  C   RES1X   1      17.408   3.850   4.919  1.00  0.00      SYST C  
+ATOM    216  C   RES1X   1      17.369   3.360   6.219  1.00  0.00      SYST C  
+ATOM    217  C   RES1X   1      16.191   2.815   6.701  1.00  0.00      SYST C  
+ATOM    218  H   RES1X   1      16.152   2.490   7.594  1.00  0.00      SYST H  
+ATOM    219  H   RES1X   1      18.141   3.399   6.771  1.00  0.00      SYST H  
+ATOM    220  C   RES1X   1      18.661   4.468   4.347  1.00  0.00      SYST C  
+ATOM    221  H   RES1X   1      18.477   4.812   3.448  1.00  0.00      SYST H  
+ATOM    222  H   RES1X   1      19.366   3.788   4.296  1.00  0.00      SYST H  
+ATOM    223  H   RES1X   1      18.958   5.201   4.924  1.00  0.00      SYST H  
+ATOM    224  H   RES1X   1      16.272   4.060   3.262  1.00  0.00      SYST H  
+ATOM    225  C   RES1X   1      13.301   5.646   5.126  1.00  0.00      SYST C  
+ATOM    226  H   RES1X   1      14.196   5.458   5.385  1.00  0.00      SYST H  
+ATOM    227  H   RES1X   1       9.832   6.315   4.160  1.00  0.00      SYST H  
+ATOM    228  H   RES1X   1      11.001   7.904   5.447  1.00  0.00      SYST H  
+ATOM    229  H   RES1X   1      13.634   7.456   7.275  1.00  0.00      SYST H  
+ATOM    230  H   RES1X   1      14.448   7.893   5.962  1.00  0.00      SYST H  
+ATOM    231  H   RES1X   1      14.576  10.064   6.677  1.00  0.00      SYST H  
+ATOM    232  H   RES1X   1      13.698   9.840   8.003  1.00  0.00      SYST H  
+ATOM    233  C   RES1X   1       2.303  12.445   5.592  1.00  0.00      SYST C  
+ATOM    234  H   RES1X   1       2.960  12.473   4.908  1.00  0.00      SYST H  
+ATOM    235  H   RES1X   1       1.852  13.301   8.678  1.00  0.00      SYST H  
+ATOM    236  H   RES1X   1      -0.229  12.344   8.224  1.00  0.00      SYST H  
+ATOM    237  C   RES1X   1      -1.097  11.250   5.901  1.00  0.00      SYST C  
+ATOM    238  N   RES1X   1      -1.113  10.771   4.621  1.00  0.00      SYST N  
+ATOM    239  C   RES1X   1      -2.263  10.245   4.157  1.00  0.00      SYST C  
+ATOM    240  C   RES1X   1      -3.419  10.139   4.919  1.00  0.00      SYST C  
+ATOM    241  C   RES1X   1      -3.380  10.629   6.219  1.00  0.00      SYST C  
+ATOM    242  C   RES1X   1      -2.202  11.174   6.701  1.00  0.00      SYST C  
+ATOM    243  H   RES1X   1      -2.163  11.499   7.594  1.00  0.00      SYST H  
+ATOM    244  H   RES1X   1      -4.152  10.590   6.771  1.00  0.00      SYST H  
+ATOM    245  C   RES1X   1      -4.672   9.521   4.347  1.00  0.00      SYST C  
+ATOM    246  H   RES1X   1      -4.488   9.177   3.448  1.00  0.00      SYST H  
+ATOM    247  H   RES1X   1      -5.377  10.201   4.296  1.00  0.00      SYST H  
+ATOM    248  H   RES1X   1      -4.969   8.788   4.924  1.00  0.00      SYST H  
+ATOM    249  H   RES1X   1      -2.283   9.929   3.262  1.00  0.00      SYST H  
+ATOM    250  C   RES1X   1      -0.199  13.782   3.218  1.00  0.00      SYST C  
+ATOM    251  C   RES1X   1      -0.839  14.840   2.564  1.00  0.00      SYST C  
+ATOM    252  C   RES1X   1      -0.918  16.199   3.190  1.00  0.00      SYST C  
+ATOM    253  H   RES1X   1      -0.906  16.885   2.488  1.00  0.00      SYST H  
+ATOM    254  H   RES1X   1      -0.148  16.331   3.784  1.00  0.00      SYST H  
+ATOM    255  H   RES1X   1      -1.746  16.275   3.709  1.00  0.00      SYST H  
+ATOM    256  C   RES1X   1      -1.430  14.562   1.337  1.00  0.00      SYST C  
+ATOM    257  C   RES1X   1      -1.360  13.273   0.806  1.00  0.00      SYST C  
+ATOM    258  H   RES1X   1      -1.751  13.077  -0.039  1.00  0.00      SYST H  
+ATOM    259  H   RES1X   1      -1.880  15.248   0.861  1.00  0.00      SYST H  
+ATOM    260  H   RES1X   1       0.210  13.953   4.058  1.00  0.00      SYST H  
+ATOM    261  H   RES1X   1      -1.494  11.009  -0.757  1.00  0.00      SYST H  
+ATOM    262  H   RES1X   1      -1.301   8.740  -1.267  1.00  0.00      SYST H  
+ATOM    263  H   RES1X   1      -1.242   6.315   0.549  1.00  0.00      SYST H  
+ATOM    264  H   RES1X   1      -0.271   6.547  -0.706  1.00  0.00      SYST H  
+ATOM    265  H   RES1X   1       0.842   4.493  -0.060  1.00  0.00      SYST H  
+ATOM    266  H   RES1X   1      -0.112   4.367   1.225  1.00  0.00      SYST H  
+ATOM    267  C   RES1X   1       1.911   2.935   2.147  1.00  0.00      SYST C  
+ATOM    268  H   RES1X   1       1.178   2.370   1.929  1.00  0.00      SYST H  
+ATOM    269  H   RES1X   1       2.983   5.979   1.734  1.00  0.00      SYST H  
+ATOM    270  H   RES1X   1       4.753   5.098   2.975  1.00  0.00      SYST H  
+ATOM    271  C   RES1X   1       0.207  -0.199   3.218  1.00  0.00      SYST C  
+ATOM    272  C   RES1X   1      -0.850  -0.839   2.564  1.00  0.00      SYST C  
+ATOM    273  C   RES1X   1      -2.210  -0.918   3.190  1.00  0.00      SYST C  
+ATOM    274  H   RES1X   1      -2.896  -0.906   2.488  1.00  0.00      SYST H  
+ATOM    275  H   RES1X   1      -2.342  -0.148   3.784  1.00  0.00      SYST H  
+ATOM    276  H   RES1X   1      -2.286  -1.746   3.709  1.00  0.00      SYST H  
+ATOM    277  C   RES1X   1      -0.573  -1.430   1.337  1.00  0.00      SYST C  
+ATOM    278  C   RES1X   1       0.716  -1.360   0.806  1.00  0.00      SYST C  
+ATOM    279  H   RES1X   1       0.912  -1.751  -0.039  1.00  0.00      SYST H  
+ATOM    280  H   RES1X   1      -1.259  -1.880   0.861  1.00  0.00      SYST H  
+ATOM    281  H   RES1X   1       0.036   0.210   4.058  1.00  0.00      SYST H  
+ATOM    282  H   RES1X   1       2.980  -1.494  -0.757  1.00  0.00      SYST H  
+ATOM    283  H   RES1X   1       5.249  -1.301  -1.267  1.00  0.00      SYST H  
+ATOM    284  H   RES1X   1       7.674  -1.242   0.549  1.00  0.00      SYST H  
+ATOM    285  H   RES1X   1       7.442  -0.271  -0.706  1.00  0.00      SYST H  
+ATOM    286  H   RES1X   1       9.496   0.842  -0.060  1.00  0.00      SYST H  
+ATOM    287  H   RES1X   1       9.622  -0.112   1.225  1.00  0.00      SYST H  
+ATOM    288  C   RES1X   1      11.054   1.911   2.147  1.00  0.00      SYST C  
+ATOM    289  H   RES1X   1      11.619   1.178   1.929  1.00  0.00      SYST H  
+ATOM    290  H   RES1X   1       8.010   2.983   1.734  1.00  0.00      SYST H  
+ATOM    291  H   RES1X   1       8.891   4.753   2.975  1.00  0.00      SYST H  
+ATOM    292  C   RES1X   1      14.188   0.207   3.218  1.00  0.00      SYST C  
+ATOM    293  C   RES1X   1      14.828  -0.850   2.564  1.00  0.00      SYST C  
+ATOM    294  C   RES1X   1      14.907  -2.210   3.190  1.00  0.00      SYST C  
+ATOM    295  H   RES1X   1      14.896  -2.896   2.488  1.00  0.00      SYST H  
+ATOM    296  H   RES1X   1      14.137  -2.342   3.784  1.00  0.00      SYST H  
+ATOM    297  H   RES1X   1      15.735  -2.286   3.709  1.00  0.00      SYST H  
+ATOM    298  C   RES1X   1      15.419  -0.573   1.337  1.00  0.00      SYST C  
+ATOM    299  C   RES1X   1      15.349   0.716   0.806  1.00  0.00      SYST C  
+ATOM    300  H   RES1X   1      15.740   0.912  -0.039  1.00  0.00      SYST H  
+ATOM    301  H   RES1X   1      15.869  -1.259   0.861  1.00  0.00      SYST H  
+ATOM    302  H   RES1X   1      13.779   0.036   4.058  1.00  0.00      SYST H  
+ATOM    303  H   RES1X   1      15.483   2.980  -0.757  1.00  0.00      SYST H  
+ATOM    304  H   RES1X   1      15.290   5.249  -1.267  1.00  0.00      SYST H  
+ATOM    305  H   RES1X   1      15.231   7.674   0.549  1.00  0.00      SYST H  
+ATOM    306  H   RES1X   1      14.260   7.442  -0.706  1.00  0.00      SYST H  
+ATOM    307  H   RES1X   1      13.147   9.496  -0.060  1.00  0.00      SYST H  
+ATOM    308  H   RES1X   1      14.101   9.622   1.225  1.00  0.00      SYST H  
+CONECT    1    3    9   18   24   33   39
+CONECT    2    7   46   47   48
+CONECT    3    1    4    8
+CONECT    4    3    5   10
+CONECT    5    4    6   49
+CONECT    6    5    7   50
+CONECT    7    2    6    8
+CONECT    8    3    7   51
+CONECT    9    1   10   14
+CONECT   10    4    9   11
+CONECT   11   10   12   52
+CONECT   12   11   13   53
+CONECT   13   12   14   15
+CONECT   14    9   13   54
+CONECT   15   13   16   55   56
+CONECT   16   15   17
+CONECT   17   16   22   57   58
+CONECT   18    1   19   23
+CONECT   19   18   20   25
+CONECT   20   19   21   59
+CONECT   21   20   60   78
+CONECT   22   17  131  132
+CONECT   23   18   61   78
+CONECT   24    1   25   29
+CONECT   25   19   24   26
+CONECT   26   25   27   62
+CONECT   27   26   28   63
+CONECT   28   27   29   30
+CONECT   29   24   28   64
+CONECT   30   28   31   65   66
+CONECT   31   30   32
+CONECT   32   31   37   67   68
+CONECT   33    1   34   38
+CONECT   34   33   35   40
+CONECT   35   34   36   69
+CONECT   36   35   70  142
+CONECT   37   32  141  233
+CONECT   38   33   71  142
+CONECT   39    1   40   44
+CONECT   40   34   39   41
+CONECT   41   40   42   72
+CONECT   42   41   43   73
+CONECT   43   42   44   45
+CONECT   44   39   43   74
+CONECT   45   43   75   76   77
+CONECT   46    2
+CONECT   47    2
+CONECT   48    2
+CONECT   49    5
+CONECT   50    6
+CONECT   51    8
+CONECT   52   11
+CONECT   53   12
+CONECT   54   14
+CONECT   55   15
+CONECT   56   15
+CONECT   57   17
+CONECT   58   17
+CONECT   59   20
+CONECT   60   21
+CONECT   61   23
+CONECT   62   26
+CONECT   63   27
+CONECT   64   29
+CONECT   65   30
+CONECT   66   30
+CONECT   67   32
+CONECT   68   32
+CONECT   69   35
+CONECT   70   36
+CONECT   71   38
+CONECT   72   41
+CONECT   73   42
+CONECT   74   44
+CONECT   75   45
+CONECT   76   45
+CONECT   77   45
+CONECT   78   21   23   79
+CONECT   79   78   80  307  308
+CONECT   80   79   81
+CONECT   81   80   82  305  306
+CONECT   82   81   83   90
+CONECT   83   82   84  304
+CONECT   84   83   85  303
+CONECT   85   84   86   89
+CONECT   86   85   87  299
+CONECT   87   86   88  292
+CONECT   88   87   89   92  150  151  213
+CONECT   89   85   88   90
+CONECT   90   82   89   91
+CONECT   91   90
+CONECT   92   88   93  288
+CONECT   93   92   94  149
+CONECT   94   93   95  291
+CONECT   95   94   96  290
+CONECT   96   95   97  288
+CONECT   97   96   98  286  287
+CONECT   98   97   99
+CONECT   99   98  100  284  285
+CONECT  100   99  101  108
+CONECT  101  100  102  283
+CONECT  102  101  103  282
+CONECT  103  102  104  107
+CONECT  104  103  105  278
+CONECT  105  104  106  271
+CONECT  106  105  107  110  163  164  188
+CONECT  107  103  106  108
+CONECT  108  100  107  109
+CONECT  109  108
+CONECT  110  106  111  267
+CONECT  111  110  112  162
+CONECT  112  111  113  270
+CONECT  113  112  114  269
+CONECT  114  113  115  267
+CONECT  115  114  116  265  266
+CONECT  116  115  117
+CONECT  117  116  118  263  264
+CONECT  118  117  119  126
+CONECT  119  118  120  262
+CONECT  120  119  121  261
+CONECT  121  120  122  125
+CONECT  122  121  123  257
+CONECT  123  122  124  250
+CONECT  124  123  125  128  137  138  238
+CONECT  125  121  124  126
+CONECT  126  118  125  127
+CONECT  127  126
+CONECT  128  124  129  132
+CONECT  129  128  130  136
+CONECT  130  129  131  135
+CONECT  131   22  130  134
+CONECT  132   22  128  133
+CONECT  133  132
+CONECT  134  131
+CONECT  135  130
+CONECT  136  129  137  174
+CONECT  137  124  136  177
+CONECT  138  124  139  233
+CONECT  139  138  140  237
+CONECT  140  139  141  236
+CONECT  141   37  140  235
+CONECT  142   36   38  143
+CONECT  143  142  144  231  232
+CONECT  144  143  145
+CONECT  145  144  146  229  230
+CONECT  146  145  147  225
+CONECT  147  146  148  228
+CONECT  148  147  149  227
+CONECT  149   93  148  150
+CONECT  150   88  149  225
+CONECT  151   88  152  208
+CONECT  152  151  153  212
+CONECT  153  152  154  211
+CONECT  154  153  155  210
+CONECT  155  154  156  208
+CONECT  156  155  157  206  207
+CONECT  157  156  158
+CONECT  158  157  159  204  205
+CONECT  159  158  160  200
+CONECT  160  159  161  203
+CONECT  161  160  162  202
+CONECT  162  111  161  163
+CONECT  163  106  162  200
+CONECT  164  106  165  183
+CONECT  165  164  166  187
+CONECT  166  165  167  186
+CONECT  167  166  168  185
+CONECT  168  167  169  183
+CONECT  169  168  170  181  182
+CONECT  170  169  171
+CONECT  171  170  172  179  180
+CONECT  172  171  173  177
+CONECT  173  172  174  176
+CONECT  174  136  173  175
+CONECT  175  174
+CONECT  176  173
+CONECT  177  137  172  178
+CONECT  178  177
+CONECT  179  171
+CONECT  180  171
+CONECT  181  169
+CONECT  182  169
+CONECT  183  164  168  184
+CONECT  184  183
+CONECT  185  167
+CONECT  186  166
+CONECT  187  165  188  192
+CONECT  188  106  187  189
+CONECT  189  188  190  199
+CONECT  190  189  191  195
+CONECT  191  190  192  194
+CONECT  192  187  191  193
+CONECT  193  192
+CONECT  194  191
+CONECT  195  190  196  197  198
+CONECT  196  195
+CONECT  197  195
+CONECT  198  195
+CONECT  199  189
+CONECT  200  159  163  201
+CONECT  201  200
+CONECT  202  161
+CONECT  203  160
+CONECT  204  158
+CONECT  205  158
+CONECT  206  156
+CONECT  207  156
+CONECT  208  151  155  209
+CONECT  209  208
+CONECT  210  154
+CONECT  211  153
+CONECT  212  152  213  217
+CONECT  213   88  212  214
+CONECT  214  213  215  224
+CONECT  215  214  216  220
+CONECT  216  215  217  219
+CONECT  217  212  216  218
+CONECT  218  217
+CONECT  219  216
+CONECT  220  215  221  222  223
+CONECT  221  220
+CONECT  222  220
+CONECT  223  220
+CONECT  224  214
+CONECT  225  146  150  226
+CONECT  226  225
+CONECT  227  148
+CONECT  228  147
+CONECT  229  145
+CONECT  230  145
+CONECT  231  143
+CONECT  232  143
+CONECT  233   37  138  234
+CONECT  234  233
+CONECT  235  141
+CONECT  236  140
+CONECT  237  139  238  242
+CONECT  238  124  237  239
+CONECT  239  238  240  249
+CONECT  240  239  241  245
+CONECT  241  240  242  244
+CONECT  242  237  241  243
+CONECT  243  242
+CONECT  244  241
+CONECT  245  240  246  247  248
+CONECT  246  245
+CONECT  247  245
+CONECT  248  245
+CONECT  249  239
+CONECT  250  123  251  260
+CONECT  251  250  252  256
+CONECT  252  251  253  254  255
+CONECT  253  252
+CONECT  254  252
+CONECT  255  252
+CONECT  256  251  257  259
+CONECT  257  122  256  258
+CONECT  258  257
+CONECT  259  256
+CONECT  260  250
+CONECT  261  120
+CONECT  262  119
+CONECT  263  117
+CONECT  264  117
+CONECT  265  115
+CONECT  266  115
+CONECT  267  110  114  268
+CONECT  268  267
+CONECT  269  113
+CONECT  270  112
+CONECT  271  105  272  281
+CONECT  272  271  273  277
+CONECT  273  272  274  275  276
+CONECT  274  273
+CONECT  275  273
+CONECT  276  273
+CONECT  277  272  278  280
+CONECT  278  104  277  279
+CONECT  279  278
+CONECT  280  277
+CONECT  281  271
+CONECT  282  102
+CONECT  283  101
+CONECT  284   99
+CONECT  285   99
+CONECT  286   97
+CONECT  287   97
+CONECT  288   92   96  289
+CONECT  289  288
+CONECT  290   95
+CONECT  291   94
+CONECT  292   87  293  302
+CONECT  293  292  294  298
+CONECT  294  293  295  296  297
+CONECT  295  294
+CONECT  296  294
+CONECT  297  294
+CONECT  298  293  299  301
+CONECT  299   86  298  300
+CONECT  300  299
+CONECT  301  298
+CONECT  302  292
+CONECT  303   84
+CONECT  304   83
+CONECT  305   81
+CONECT  306   81
+CONECT  307   79
+CONECT  308   79
+END

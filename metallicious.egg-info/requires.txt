@@ -1,0 +1,6 @@
+autode
+rdkit
+networkx
+MDAnalysis
+AmberTools
+parmed

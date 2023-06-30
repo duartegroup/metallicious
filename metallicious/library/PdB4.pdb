@@ -1,0 +1,79 @@
+HEADER    
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+HETATM    1  PD  PD1 X   1       1.980  -2.066  -0.122  0.00  0.00      SYST P
+HETATM    2  C1  LN1 X   2      -3.380   1.879   0.212  0.00  0.00      SYST C
+HETATM    3  C2  LN1 X   2      -4.360   0.892   0.087  0.00  0.00      SYST C
+HETATM    4  H3  LN1 X   2      -3.673   2.914   0.335  0.00  0.00      SYST H
+HETATM    5  H4  LN1 X   2      -5.403   1.179   0.132  0.00  0.00      SYST H
+HETATM    6  C5  LN1 X   2      -2.027   1.535   0.206  0.00  0.00      SYST C
+HETATM    7  C6  LN1 X   2      -4.002  -0.453  -0.095  0.00  0.00      SYST C
+HETATM    8  C7  LN1 X   2      -1.645   0.200   0.027  0.00  0.00      SYST C
+HETATM    9  C8  LN1 X   2      -2.632  -0.796  -0.176  0.00  0.00      SYST C
+HETATM   10  C9  LN1 X   2      -5.082  -1.504  -0.173  0.00  0.00      SYST C
+HETATM   11  C10 LN1 X   2      -0.291  -0.176   0.058  0.00  0.00      SYST C
+HETATM   12  C11 LN1 X   2      -2.217  -2.107  -0.450  0.00  0.00      SYST C
+HETATM   13  C12 LN1 X   2      -0.864  -2.397  -0.530  0.00  0.00      SYST C
+HETATM   14  H13 LN1 X   2       0.482   0.557   0.258  0.00  0.00      SYST H
+HETATM   15  N14 LN1 X   2       0.067  -1.454  -0.242  0.00  0.00      SYST N
+HETATM   16  H15 LN1 X   2      -2.916  -2.916  -0.606  0.00  0.00      SYST H
+HETATM   17  H16 LN1 X   2      -0.572  -3.414  -0.702  0.00  0.00      SYST H
+HETATM   18  H17 LN1 X   2      -1.283   2.313   0.326  0.00  0.00      SYST H
+HETATM   19  C1  LN2 X   3       8.530  -2.953   0.961  0.00  0.00      SYST C
+HETATM   20  C2  LN2 X   3       8.489  -4.346   1.059  0.00  0.00      SYST C
+HETATM   21  H3  LN2 X   3       9.465  -2.432   1.112  0.00  0.00      SYST H
+HETATM   22  H4  LN2 X   3       9.397  -4.882   1.303  0.00  0.00      SYST H
+HETATM   23  C5  LN2 X   3       7.366  -2.228   0.701  0.00  0.00      SYST C
+HETATM   24  C6  LN2 X   3       7.290  -5.044   0.849  0.00  0.00      SYST C
+HETATM   25  C7  LN2 X   3       6.157  -2.898   0.487  0.00  0.00      SYST C
+HETATM   26  C8  LN2 X   3       6.125  -4.317   0.509  0.00  0.00      SYST C
+HETATM   27  C9  LN2 X   3       7.264  -6.543   1.024  0.00  0.00      SYST C
+HETATM   28  C10 LN2 X   3       4.961  -2.185   0.280  0.00  0.00      SYST C
+HETATM   29  C11 LN2 X   3       4.922  -4.964   0.206  0.00  0.00      SYST C
+HETATM   30  C12 LN2 X   3       3.804  -4.213  -0.111  0.00  0.00      SYST C
+HETATM   31  H13 LN2 X   3       4.942  -1.105   0.329  0.00  0.00      SYST H
+HETATM   32  N14 LN2 X   3       3.824  -2.857  -0.039  0.00  0.00      SYST N
+HETATM   33  H15 LN2 X   3       4.821  -6.041   0.223  0.00  0.00      SYST H
+HETATM   34  H16 LN2 X   3       2.879  -4.733  -0.273  0.00  0.00      SYST H
+HETATM   35  H17 LN2 X   3       7.412  -1.147   0.656  0.00  0.00      SYST H
+HETATM   36  C1  LN3 X   4       2.418  -1.947  -6.696  0.00  0.00      SYST C
+HETATM   37  C2  LN3 X   4       1.981  -3.236  -7.002  0.00  0.00      SYST C
+HETATM   38  H3  LN3 X   4       2.710  -1.274  -7.494  0.00  0.00      SYST H
+HETATM   39  H4  LN3 X   4       1.944  -3.541  -8.041  0.00  0.00      SYST H
+HETATM   40  C5  LN3 X   4       2.484  -1.525  -5.366  0.00  0.00      SYST C
+HETATM   41  C6  LN3 X   4       1.594  -4.124  -5.983  0.00  0.00      SYST C
+HETATM   42  C7  LN3 X   4       2.105  -2.398  -4.331  0.00  0.00      SYST C
+HETATM   43  C8  LN3 X   4       1.649  -3.701  -4.632  0.00  0.00      SYST C
+HETATM   44  C9  LN3 X   4       1.135  -5.509  -6.350  0.00  0.00      SYST C
+HETATM   45  C10 LN3 X   4       2.172  -1.999  -2.989  0.00  0.00      SYST C
+HETATM   46  C11 LN3 X   4       1.263  -4.542  -3.570  0.00  0.00      SYST C
+HETATM   47  C12 LN3 X   4       1.333  -4.090  -2.255  0.00  0.00      SYST C
+HETATM   48  H13 LN3 X   4       2.525  -1.004  -2.736  0.00  0.00      SYST H
+HETATM   49  N14 LN3 X   4       1.788  -2.841  -1.983  0.00  0.00      SYST N
+HETATM   50  H15 LN3 X   4       0.907  -5.547  -3.738  0.00  0.00      SYST H
+HETATM   51  H16 LN3 X   4       1.034  -4.748  -1.455  0.00  0.00      SYST H
+HETATM   52  H17 LN3 X   4       2.830  -0.520  -5.153  0.00  0.00      SYST H
+HETATM   53  C1  LN4 X   5       3.649   1.145   5.572  0.00  0.00      SYST C
+HETATM   54  C2  LN4 X   5       3.072   0.200   6.425  0.00  0.00      SYST C
+HETATM   55  H3  LN4 X   5       4.165   1.997   5.993  0.00  0.00      SYST H
+HETATM   56  H4  LN4 X   5       3.160   0.335   7.496  0.00  0.00      SYST H
+HETATM   57  C5  LN4 X   5       3.577   0.989   4.185  0.00  0.00      SYST C
+HETATM   58  C6  LN4 X   5       2.391  -0.909   5.907  0.00  0.00      SYST C
+HETATM   59  C7  LN4 X   5       2.903  -0.108   3.634  0.00  0.00      SYST C
+HETATM   60  C8  LN4 X   5       2.285  -1.052   4.502  0.00  0.00      SYST C
+HETATM   61  C9  LN4 X   5       1.807  -1.931   6.857  0.00  0.00      SYST C
+HETATM   62  C10 LN4 X   5       2.844  -0.303   2.232  0.00  0.00      SYST C
+HETATM   63  C11 LN4 X   5       1.586  -2.123   3.939  0.00  0.00      SYST C
+HETATM   64  C12 LN4 X   5       1.514  -2.237   2.567  0.00  0.00      SYST C
+HETATM   65  H13 LN4 X   5       3.343   0.373   1.550  0.00  0.00      SYST H
+HETATM   66  N14 LN4 X   5       2.137  -1.357   1.744  0.00  0.00      SYST N
+HETATM   67  H15 LN4 X   5       1.101  -2.884   4.536  0.00  0.00      SYST H
+HETATM   68  H16 LN4 X   5       0.999  -3.085   2.134  0.00  0.00      SYST H
+HETATM   69  H17 LN4 X   5       4.043   1.727   3.545  0.00  0.00      SYST H
+END
