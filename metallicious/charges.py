@@ -1,22 +1,14 @@
 import argparse
-
-multiwfn_path = "/home/fd05/fd/chem1540/Programs/Multiwfn/Multiwfn"
-
 import autode as ade
 from autode.wrappers.ORCA import *
-from subprocess import Popen, PIPE, STDOUT
-import MDAnalysis
+from subprocess import Popen, PIPE
 import psiresp
 import qcelemental as qcel
 
 import os
 
-try: # TODO remove these wirdoes
-    from cgbind2pmd.data import vdw_data
-    from cgbind2pmd.data import name_to_atomic_number
-except:
-    from data import vdw_data
-    from data import name_to_atomic_number
+from metallicious.data import vdw_data
+from metallicious.data import name_to_atomic_number
 
 
 def new_directory(directory):
@@ -123,7 +115,6 @@ def new_execute(self, calc):
 
 def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, vdw_data_name=None, n_reorientations=1, mult=1,
               extra_atoms=None):
-    # TODO you cannot restart resp! you need to delete folder
 
     method = ade.methods.ORCA()
     site = ade.Molecule(filename, charge=charge, mult=mult)
@@ -151,8 +142,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
         GridOptions.vdw_radii[metal_name] = metal_radius
     elif metal_name is not None and vdw_data_name is not None:
         data = vdw_data[vdw_data_name]
-        GridOptions.vdw_radii[metal_name] = data[metal_name][1]
-        # psiresp uses R distance rather then R/2 TODO check for sure
+        GridOptions.vdw_radii[metal_name] = data[metal_name][1]*2 # we convert Rmin/2 to R_min
 
     # create reorientations of the single conformer
     molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
@@ -217,7 +207,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
               np.sum(normal_charges[0][constrained_atoms]))
 
     resp_charges = normal_charges[0]
-    print("before RESP:", resp_charges, "Sum:", np.sum(resp_charges))
+    print("RESP before making extra atoms zero:", resp_charges, "Sum:", np.sum(resp_charges))
 
     # for some reason there is small charge left on this residue
     # we calculatte mean of all, but not constrained atoms (we will set up them to zero)
@@ -298,7 +288,7 @@ def resp_psi4(filename, charge=0, opt=True, metal_name=None):
 
 
 def calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, site_charges, ligand_charges):
-    print("calcualte_diffrence", metal_charge, unique_ligands_pattern, site_charges, ligand_charges)
+    print("calcualte_diffrence() arguments:", metal_charge, unique_ligands_pattern, site_charges, ligand_charges)
     # unconcatanatet to the split charges:
     # atoms in ligands
     n_lingads = [len(temp) for temp in ligand_charges]
@@ -308,8 +298,7 @@ def calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, sit
     site_atoms = [1] + site_atoms
     split_site_charges = [np.array(site_charges[sum(site_atoms[:a]):sum(site_atoms[:a + 1])]) for a in
                           range(len(site_atoms))]
-    print("Charges of the whole site (should be charge of metal)", np.sum(np.concatenate(split_site_charges)))
-    assert np.abs(np.sum(np.concatenate(split_site_charges)) - metal_charge) < 0.1
+    print("Charges of the whole site:", np.sum(np.concatenate(split_site_charges)))
 
     print(f"Changing metal charge from {metal_charge} to {split_site_charges[0][0]}")
     split_site_charges[0][0] = split_site_charges[0][0] - metal_charge
@@ -331,6 +320,7 @@ def calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, sit
 
     return new_charges
 
+# general; TODO remove garbage files, like "ligand"
 
 def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
     File = open("INFO.dat")
@@ -388,7 +378,7 @@ def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
                                      vdw_data_name=vdw_data_name, mult=mult, extra_atoms=extra_atoms)
 
             print("ligand charges", len(ligand_charges), ligand_charges)
-            print("ligand        ", len(site_charges), site_charges)
+            print("site charges:", len(site_charges), site_charges)
 
             new_site_charges = calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, site_charges,
                                                                   ligand_charges)
@@ -425,7 +415,7 @@ def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_patter
                             metal_radius=metal_radius, extra_atoms=unique_ligands_constraints[lig_idx])
         ligand_charges.append(charges)
 
-    site_charges = resp_orca('site.xyz', charge=metal_charge + np.sum(ligand_charges_pattern), opt=False,
+    site_charges = resp_orca('saturated_template.xyz', charge=metal_charge + np.sum(ligand_charges_pattern), opt=False,
                              metal_name=metal_name, metal_radius=metal_radius, mult=mult, extra_atoms=extra_atoms)
 
     print("ligand charges", len(ligand_charges), ligand_charges)

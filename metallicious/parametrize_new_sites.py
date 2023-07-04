@@ -2,14 +2,16 @@ import argparse
 import shutil
 
 # TODO this should be class not INFO file
-from extract_metal_site import extract_metal_structure, read_info_file, find_metal_indices
-from seminario import single_seminario
-from charges import calculate_charges2
-from initial_site import create_initial_topol2
-from copy_topology_params import copy_bonds, copy_angles, copy_dihedrals
-from load_fingerprint import guess_fingerprint, load_fp_from_file
-from data import vdw_data
-from prepare_initial_topology import prepare_initial_topology
+from metallicious.extract_metal_site import extract_metal_structure, read_info_file, find_metal_indices
+from metallicious.seminario import single_seminario
+from metallicious.charges import calculate_charges2
+from metallicious.initial_site import create_initial_topol2
+from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals
+from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
+from metallicious.data import vdw_data
+from metallicious.prepare_initial_topology import prepare_initial_topology
+from metallicious.log import logger
+from metallicious.main import cgbind2pmd
 
 from tempfile import mkdtemp
 
@@ -21,9 +23,9 @@ import MDAnalysis
 from MDAnalysis.lib.distances import distance_array
 
 import os
-from main import cgbind2pmd
 
-from log import logger
+
+
 
 
 class supramolecular_structure:
@@ -68,7 +70,7 @@ class supramolecular_structure:
         #    self.vdw_type = None
         else:
             for metal_name in self.metal_names:
-                if metal_name not in vdw_data[vdw_type]:
+                if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name][0]:}" not in vdw_data[vdw_type]:
                     raise
 
             self.vdw_type = vdw_type
@@ -85,8 +87,8 @@ class supramolecular_structure:
         self.path = os.getcwd()
 
 
-        self.tmpdir_path = '..'  #mkdtemp()
-        #shutil.copy(self.filename, f'{self.tmpdir_path:}')
+        #TODO there was idea of creating temporary place... but I think the code breaks too often
+        self.tmpdir_path = '.'  #mkdtemp()
         os.chdir(self.tmpdir_path)
 
         if self.topol is None:
@@ -165,7 +167,7 @@ class supramolecular_structure:
     def prepare_initial_topology(self, coord_filename= 'noncovalent_complex.pdb', topol_filename = 'noncovalent_complex.top', method='gaff', homoleptic_ligand_topol=None):
         if method=='gaff':
             metal_indicies = prepare_initial_topology(self.filename, self.metal_names, self.sites[0].metal_charge,
-                                                      coord_filename, topol_filename, ligand_topol=homoleptic_ligand_topol)
+                                                      coord_filename, topol_filename,self.vdw_type, ligand_topol=homoleptic_ligand_topol)
             self.filename = coord_filename
             self.topol = topol_filename
 
@@ -338,7 +340,7 @@ class new_metal_site():
         self.dihedrals = None
 
         self.directory = directory
-        self.filename = 'site.xyz' # TODO maybe this needs to be also passed
+        self.filename = 'saturated_template.xyz'
         self.ligand_names = ligand_names
         self.topol = None
 
@@ -355,13 +357,16 @@ class new_metal_site():
         self.topol = topol
 
         if vdw_type is not None:
-            self.metal_radius =  vdw_data[vdw_type][metal_name][1]
+            if metal_name in vdw_data[vdw_type]:
+                self.metal_radius = (vdw_data[vdw_type][metal_name][1])*2
+            elif f"{metal_name:}{metal_charge:}" in vdw_data[vdw_type]:
+                self.metal_radius = vdw_data[vdw_type][f"{metal_name:}{metal_charge:}"][1]*2
         else:
             if self.topol is not None:
                 self.metal_radius = self.read_radius_from_topol()
 
-    def read_radius_from_topol(self): #TODO
-        self.metal_radius = self.topol[0].rmin
+    def read_radius_from_topol(self):
+        self.metal_radius = self.topol[0].rmin*2
 
     def _print(self):
         return f"{self.metal_name}({self.metal_charge}+) {self.name}"
@@ -399,7 +404,7 @@ class new_metal_site():
                                              self.unique_ligands_pattern, self.ligand_charges, self.link_atoms,
                                              self.additional_atoms,
                                              self.starting_index,
-                                             metal_radius=self.metal_radius, mult=self.mult) # TODO vdw should be not specified,
+                                             metal_radius=self.metal_radius, mult=self.mult)
 
         #Removing additional atoms:
         partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if idx not in self.additional_atoms]
@@ -425,7 +430,7 @@ class new_metal_site():
         self.fp_coord_file = f"{self.directory}/{out_coord}"
 
     def check_library(self):
-        return guess_fingerprint(self.directory + "/site.xyz", 0, metal_name=self.metal_name)  # TODO library
+        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name)  # TODO library
 
     def parametrize(self):
         here = os.getcwd()

@@ -15,14 +15,14 @@ from networkx import isomorphism
 import parmed as pmd
 
 
-try:
-    from cgbind2pmd.log import logger
-    from cgbind2pmd.mapping import map_two_structures, unwrap
-    from cgbind2pmd.utils import new_directory, mdanalysis_to_rdkit,strip_numbers_from_atom_names
-except:
-    from log import logger
-    from mapping import map_two_structures, unwrap
-    from utils import new_directory, mdanalysis_to_rdkit, strip_numbers_from_atom_names
+#try:
+from metallicious.log import logger
+from metallicious.mapping import map_two_structures, unwrap
+from metallicious.utils import new_directory, mdanalysis_to_rdkit,strip_numbers_from_atom_names
+#except:
+#    from log import logger
+#    from mapping import map_two_structures, unwrap
+#    from utils import new_directory, mdanalysis_to_rdkit, strip_numbers_from_atom_names
 
 
 def find_metal_indices(cage, metal_name):
@@ -691,6 +691,7 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
 
     return new_ligands, new_extra_atoms, new_link_atoms
 
+#TODO general: are vdw paramters definitly correct? some wierd stuff is happening with zinc and protein
 
 def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None):
     '''
@@ -790,7 +791,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
             ligand_topol.strip(f"!@{','.join(list(map(str, np.array(selected_atoms_indices) + 1))):s}")
             unique_ligand_topols.append(ligand_topol)
 
-            ligand_coord = MDAnalysis.Merge(new_syst.atoms[unique_ligand])
+            ligand_coord = MDAnalysis.Merge(new_syst.atoms[sorted(unique_ligand)])
             ligand_coord.atoms.write(f"{output:s}{n_site:d}/ligand_{idx:}.pdb") # TODO do we need both (?)
             ligand_coord.atoms.write(f"{output:s}{n_site:d}/ligand_{idx:}.xyz")
             
@@ -832,8 +833,8 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
         # Saving the files ------------------------
         new_cage = MDAnalysis.Merge(*sorted_renumbered_ligands)  # , dimensions=crystal.dimensions)
-        new_cage.atoms.write(f"{output:s}{n_site:d}/site.pdb")
-        new_cage.atoms.write(f"{output:s}{n_site:d}/site.xyz")
+        new_cage.atoms.write(f"{output:s}{n_site:d}/saturated_template.pdb")
+        new_cage.atoms.write(f"{output:s}{n_site:d}/saturated_template.xyz")
 
         metal_topol = deepcopy(site_topol)
         # metal is the first (we renumbered them in selection site), in amber counting starts from 1
@@ -845,11 +846,11 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
 
         # MDAnalysis writer captials (i.g., FE), orca needs title type (i.g., Fe)
-        File = open(f"{output:s}{n_site:d}/site.xyz")
+        File = open(f"{output:s}{n_site:d}/saturated_template.xyz")
         text = File.read()
         File.close()
         
-        with open(f"{output:s}{n_site:d}/site.xyz", "w") as File:
+        with open(f"{output:s}{n_site:d}/saturated_template.xyz", "w") as File:
             File.write(text.title())
 
         starting_index = [0]
@@ -860,10 +861,10 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
         charge_pattern = [unique_ligands_charges[unique_ligands_pattern[a]] for a in np.argsort(unique_ligands_pattern)]
         smiles_pattern = [unique_ligands_smiles[unique_ligands_pattern[a]] for a in np.argsort(unique_ligands_pattern)]
-        sorted_renumbered_extra_atoms = [np.array(sorted_extra_atoms[a]) for a in np.argsort(unique_ligands_pattern)]
+        sorted_renumbered_extra_atoms = [np.array(sorted_extra_atoms[a], dtype=int) for a in np.argsort(unique_ligands_pattern)]
         sorted_renumbered_extra_atoms = list(np.concatenate([starting_index[idx + 1] + extra_atoms for idx, extra_atoms in enumerate(sorted_renumbered_extra_atoms)]))
         
-        sorted_renumbered_extra_link_atoms = [np.array(sorted_link_atoms[a]) for a in np.argsort(unique_ligands_pattern)]
+        sorted_renumbered_extra_link_atoms = [np.array(sorted_link_atoms[a], dtype=int) for a in np.argsort(unique_ligands_pattern)]
         sorted_renumbered_extra_link_atoms = list(np.concatenate([starting_index[idx + 1] + link_atoms for idx, link_atoms in
                                          enumerate(sorted_renumbered_extra_link_atoms)]))
 
@@ -879,7 +880,6 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
                                     np.sort(unique_ligands_pattern), sorted_renumbered_extra_link_atoms,
                                     sorted_renumbered_extra_atoms, starting_index, indecies, charge_pattern,
                                     smiles_pattern, new_site_topol]
-        # charge is set up to redicouls value, to make sure that I remember to change it, #TODO chage it to 0
 
         metal_sites.append(selected_metal_site_list)
     

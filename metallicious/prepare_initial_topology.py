@@ -8,15 +8,17 @@ from networkx.algorithms import isomorphism
 import parmed as pmd
 from copy import deepcopy
 
-try:
-    from antechamber_interface import antechamber
-    from data import name2mass
-
-    from extract_metal_site import find_metal_indices
-except:
-    from cgbind2pmd.antechamber_interface import antechamber # TODO it should also allow to use created topology files
-    from cgbind2pmd.data import name2mass
-    from cgbind2pmd.extract_metal_site import find_metal_indices
+# try:
+#     from antechamber_interface import antechamber
+#     from data import name2mass
+#
+#     from extract_metal_site import find_metal_indices
+# except:
+from metallicious.antechamber_interface import antechamber
+from metallicious.data import name2mass
+from metallicious.extract_metal_site import find_metal_indices
+from metallicious.initial_site import create_metal_topol
+from metallicious.mapping import unwrap
 
 import os
 
@@ -42,18 +44,19 @@ def mapping_itp_coords(syst, ligand_file):
 
         return True, topol, ordered, G_top
 
-def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, output_top, ligand_topol=None):
+def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, output_top, metal_vdw, ligand_topol=None):
     crystal = MDAnalysis.Universe(filename)
     crystal.residues.resids = 0 # Antechamber requires one residue
+
     table = MDAnalysis.topology.tables.vdwradii
     table['Cl'] = table['CL']
     metal_ions = None
 
-    #metal_names = [metal_name.title() for metal_name in metal_names] # TODO
-
-
-
     if len(metal_names) > 0:
+        if crystal.dimensions is not None:
+            for metal_name in metal_names:
+                crystal = unwrap(crystal, metal_name, metal_cutoff=0.1)
+
         #metal_ions = crystal.select_atoms(f"name {metal_name.title():s}* {metal_name.upper():s}* {metal_name.lower():s}* ")
         metal_indecies = []
         for metal_name in metal_names:
@@ -68,14 +71,11 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
             MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table,
                                                      box=crystal.dimensions))
         nx.set_node_attributes(G1, {atom.index: atom.name[0] for atom in ligands.atoms}, "name")
-        #new_ligands = [metal_ions]
     else:
         ligands = crystal.atoms
-        G1 = nx.Graph(
-            MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table,
+        G1 = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(ligands.atoms, ligands.atoms.positions, vdwradii=table,
                                                      box=crystal.dimensions))
         nx.set_node_attributes(G1, {atom.index: atom.name[0] for atom in ligands.atoms}, "name")
-        #new_ligands = []
 
     ligand_library = []
 
@@ -103,7 +103,6 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
         ligand_coords_mda = crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}")
 
         ligand_coords_mda.write(f"temp.pdb")
-        #os.system("obabel -ipdb temp2.pdb -opdb -O temp.pdb --minimize --ff uff --steps 50 --log")  # TODO remove
         ligand_coords_mda = MDAnalysis.Universe("temp.pdb").atoms
 
         is_iso, ligand, topology, Gtop = mapping_itp_coords(ligand_coords_mda, ligand_topol) # what if there are more then one topologies (?)
@@ -111,7 +110,6 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
 
 
             antechamber('temp.pdb', f'linker{idx:}.top')
-            # TODO there should be here option to use seminario if the seminario is btter
             ligand = pmd.load_file(f'linker{idx:}.top')
 
             topology = MDAnalysis.Universe.empty(len(ligand.atoms), trajectory=True)
@@ -127,8 +125,6 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
         topologies.append(topology)
         Gtops.append(Gtop)
 
-
-
     new_ligands = []
 
     n_ligands = 0
@@ -138,12 +134,7 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
 
     for z, nodes in enumerate(nx.connected_components(G1)):
 
-        # print(nodes)
-        #print(ligands)
-        #print(list(nodes))
-        #print(list(map(str, list(nodes))))
         ligands.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}").write(f"temp.pdb")
-        print(len(ligands.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}")), len(list(nodes)))
 
         # logger.info(len(nodes))
         Gsub = G1.subgraph(nodes)
@@ -197,10 +188,12 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
     if metal_ions is not None:
         for metal_name, indecies in zip(metal_names, metal_indecies):
 
-            metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')  # TODO I thought I eliminated that ?
-            metal.atoms[0].name = metal_name
-            metal.atoms[0].charge = metal_charge # someting wierd with atomic number #TODO what about charges of Ru (?)
-            metal.atoms[0].mass = name2mass[metal_name.title()]
+            metal = create_metal_topol(metal_name, metal_charge, metal_vdw)
+
+            #metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')  # TODO I thought I eliminated that ?
+            #metal.atoms[0].name = metal_name
+            #metal.atoms[0].charge = metal_charge # someting wierd with atomic number #TODO what about charges of Ru (?)
+            #metal.atoms[0].mass = name2mass[metal_name.title()]
 
             n_metals = len(indecies)
             if cage_topol is None:
@@ -213,16 +206,12 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
     order = np.argsort(list(ligand_group.values()))
 
     #firstly the topology file
-
-    
-    
     for idx in order:
         top_idx = ligand_group[idx]
         cage_topol += deepcopy(ligand_tops[top_idx])
 
     # and then ligands
     reordered_new_ligands = [metal_ions] + [new_ligands[idx] for idx in order]
-
 
     # save new renumered (atoms of linkers and order of linkers) cage
     new_cage = MDAnalysis.Merge(*reordered_new_ligands)
@@ -250,12 +239,13 @@ def get_args():
     parser.add_argument("-metal_charge", help="Metal charge")
     parser.add_argument("-output_coord", default="cage.gro", help="Output topology structure of the cage")
     parser.add_argument("-output_top", default="cage.top", help="Output topology structure of the cage")
+    parser.add_argument("-metal_vdw", default="merz-tip3p", help="Where to take parameters from")
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = get_args()
     if args.f is not None:
-        prepare_initial_topology(args.f, args.metal_name, int(args.metal_charge), args.output_coord, args.output_top)
+        prepare_initial_topology(args.f, args.metal_name, int(args.metal_charge), args.output_coord, args.output_top, args.metal_vdw)
 
 
 

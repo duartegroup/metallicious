@@ -13,16 +13,17 @@ import MDAnalysis
 
 
 
-try:
-    from data import name_to_atomic_number
-    from mapping import map_two_structures
-    from improper_torsion import find_impropers_and_values
-
-    from mod_seminario import modified_seminario_method
-except:
-    from cgbind2pmd.data import name_to_atomic_number
-    from cgbind2pmd.mapping import map_two_structures
-    from cgbind2pmd.mod_seminario import modified_seminario_method
+# try:
+#     from data import name_to_atomic_number
+#     from mapping import map_two_structures
+#     from improper_torsion import find_impropers_and_values
+#
+#     from mod_seminario import modified_seminario_method
+# except:
+from metallicious.data import name_to_atomic_number
+from metallicious.mapping import map_two_structures
+from metallicious.mod_seminario import modified_seminario_method
+from metallicious.improper_torsion import find_impropers_and_values
 
 
 def read_bonds_from_orca_output(filename="site_opt_orca.out"):
@@ -591,6 +592,8 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
         bonds, angles, dihedrals = remove_indices_of_removed_atoms(bonds, angles, dihedrals, atoms_to_remove)
 
     return bonds, angles, dihedrals, filename_opt
+
+#TODO general: check if LJ paramters are changed if topology is specified
 
 def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False, donors=['N', 'S', 'O']):
 

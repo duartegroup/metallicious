@@ -12,10 +12,10 @@ import re
 import MDAnalysis.transformations
 
 
-try:
-    from cgbind2pmd.log import logger
-except:
-    from log import logger
+#try:
+from metallicious.log import logger
+# except:
+#     from log import logger
 
 
 def syst_to_graph(atoms, vdwradii):
@@ -30,7 +30,7 @@ def syst_to_graph(atoms, vdwradii):
     return G_fingerprint
 
 
-def unwrap(syst, metal_type):
+def unwrap(syst, metal_type, metal_cutoff=3):
     '''
     This tries to unwrap the trajectory through PBC
     
@@ -41,7 +41,7 @@ def unwrap(syst, metal_type):
 
     G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(syst.atoms,
                                                                syst.atoms.positions,
-                                                               vdwradii={metal_type: 3},
+                                                               vdwradii={metal_type: metal_cutoff},
                                                                box=new_universe.dimensions))
     bonds = list(G_cage.edges)
     new_universe.add_TopologyAttr('bonds', bonds)

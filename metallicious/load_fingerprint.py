@@ -7,17 +7,17 @@ import networkx as nx
 from MDAnalysis.lib.distances import distance_array
 from rdkit import Chem
 
-try:
-    from cgbind2pmd.extract_metal_site import find_bound_ligands_nx
-    from cgbind2pmd.log import logger
-    from cgbind2pmd.mapping import map_two_structures
-    from cgbind2pmd.utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
+# try:
+from metallicious.extract_metal_site import find_bound_ligands_nx
+from metallicious.log import logger
+from metallicious.mapping import map_two_structures
+from metallicious.utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
 
-except:
-    from extract_metal_site import find_bound_ligands_nx
-    from log import logger
-    from mapping import map_two_structures
-    from utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
+# except:
+#     from extract_metal_site import find_bound_ligands_nx
+#     from log import logger
+#     from mapping import map_two_structures
+#     from utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
 
 
 #def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):

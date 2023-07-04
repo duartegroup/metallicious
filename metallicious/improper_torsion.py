@@ -9,12 +9,12 @@ from scipy.optimize import minimize
 import networkx as nx
 from autode.wrappers.ORCA import *
 
-try:
-    from mapping import map_two_structures
-    from utils import new_directory, strip_numbers_from_atom_names
-except:
-    from cgbind2pmd.mapping import map_two_structures
-    from cgbind2pmd.utils import new_directory, strip_numbers_from_atom_names
+# try:
+#     from mapping import map_two_structures
+#     from utils import new_directory, strip_numbers_from_atom_names
+# except:
+from metallicious.mapping import map_two_structures
+from metallicious.utils import new_directory, strip_numbers_from_atom_names
 
 def find_donor_indices(bonds):
     indicies = list(nx.generators.ego_graph(nx.Graph([bond for bond in bonds]), 0, radius=1).nodes)

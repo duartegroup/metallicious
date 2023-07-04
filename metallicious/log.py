@@ -15,7 +15,6 @@ def get_log_level():
         print("yep",log_level_str)
     except KeyError:
         log_level_str = ''
-        print("npoe")
     if log_level_str == 'DEBUG':
         return logging.DEBUG
     if log_level_str == 'WARNING':

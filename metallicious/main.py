@@ -20,24 +20,20 @@ from tempfile import mkdtemp
 
 
 
-try:
-    from cgbind2pmd.log import logger
-except:
-    from log import logger
+#try:
+from metallicious.log import logger
+from metallicious.load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
+from metallicious.prepare_initial_topology import prepare_initial_topology
+from metallicious.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
+from metallicious.data import name2mass
+from metallicious.data import name_to_atomic_number
 
-try:
-    from cgbind2pmd.load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
-    from cgbind2pmd.prepare_initial_topology import prepare_initial_topology
-    from cgbind2pmd.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
-    from cgbind2pmd.data import name2mass
-    from cgbind2pmd.data import name_to_atomic_number
-
-except:
-    from load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
-    from prepare_initial_topology import prepare_initial_topology
-    from copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
-    from data import name2mass
-    from data import name_to_atomic_number
+# except:
+#     from load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
+#     from prepare_initial_topology import prepare_initial_topology
+#     from copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
+#     from data import name2mass
+#     from data import name_to_atomic_number
 
 from copy import deepcopy
 

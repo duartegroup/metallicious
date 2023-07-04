@@ -1,10 +1,10 @@
 import parmed as pmd
 import re
 
-try:
-    from cgbind2pmd.log import logger
-except:
-    from log import logger
+#try:
+#    from cgbind2pmd.log import logger
+#except:
+from metallicious.log import logger
 
 
 def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
@@ -413,7 +413,6 @@ def copy_dihedrals(topol_new, dihedrals, metal_name):
                 (dihedral_o == dihedral or dihedral_o == dihedral[::-1])]
         if len(find) == 1:
             print("It found dihedral in the topology, but it should not, as they should be not present, doing noting")
-            print(dihedral)  # TODO
             raise Error
             # This procedures are not done in reality
             # dihedral_new = topol_new.dihedrals[find[0]]

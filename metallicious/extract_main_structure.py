@@ -2,7 +2,6 @@ import argparse
 import MDAnalysis
 import networkx as nx
 import re
-from mapping import map_two_structures
 
 
 def extract_structure(filename, output=None):  # TODO this will be delated

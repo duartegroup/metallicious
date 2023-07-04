@@ -6,12 +6,12 @@ import shutil
 from subprocess import Popen, DEVNULL
 import MDAnalysis
 
-try:
-    from cgbind2pmd.log import logger
-    from cgbind2pmd.utils import mdanalysis_to_rdkit
-except:
-    from log import logger
-    from utils import mdanalysis_to_rdkit
+# try:
+from metallicious.log import logger
+from metallicious.utils import mdanalysis_to_rdkit
+# except:
+#     from log import logger
+#     from utils import mdanalysis_to_rdkit
 
 
 
