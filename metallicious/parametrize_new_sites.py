@@ -25,6 +25,8 @@ class supramolecular_structure:
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
                  fingerprint_guess_list=None, truncation_scheme = None):
 
+        print("Liberary with templates is located:", library_path)
+
         self.unique_sites = []
         self.sites = []
         self.filename = filename
@@ -39,6 +41,8 @@ class supramolecular_structure:
         self.allow_new_templates = True
 
         self.metal_charge_dict = {}
+        self.metal_mult_dict = None
+
         if metal_charge_mult is not None:
             self.metal_charge_dict = {}
             self.metal_mult_dict = {}
@@ -129,8 +133,10 @@ class supramolecular_structure:
                                                  all_metal_names=self.metal_names)
 
             for site_list in site_lists:
+
                 site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
-                site_list[2] = self.metal_mult_dict[metal_name]  # we change the multiplicity
+                if self.metal_mult_dict is not None:
+                    site_list[2] = self.metal_mult_dict[metal_name]  # we change the multiplicity
                 site_list += [self.autode_keywords, self.improper_metal, self.donors, self.vdw_type]
                 unique_sites += [new_metal_site(*site_list)]
 

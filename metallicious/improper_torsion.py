@@ -3,16 +3,10 @@ import MDAnalysis
 from MDAnalysis.lib.distances import calc_dihedrals
 import numpy as np
 from collections.abc import MutableMapping
-from autode.values import Angle
-import autode as ade
+import os
+
 from scipy.optimize import minimize
 import networkx as nx
-from autode.wrappers.ORCA import *
-
-# try:
-#     from mapping import map_two_structures
-#     from utils import new_directory, strip_numbers_from_atom_names
-# except:
 from metallicious.mapping import map_two_structures
 from metallicious.utils import new_directory, strip_numbers_from_atom_names
 
@@ -74,108 +68,115 @@ def filter_aromatic_impropers(filename, potential_impropers, metal_name):
     return aromatic_impropers
 
 
-class DihedralConstraints(MutableMapping):
-    def __init__(self, *args, **kwargs):
-        self._store = dict()
-        self.update(dict(*args, **kwargs))  # use the free update to set keys
-
-    def __getitem__(self, key):
-        return self._store[self._key_transform(key)]
-
-    def __delitem__(self, key):
-        del self._store[self._key_transform(key)]
-
-    def __iter__(self):
-        return iter(self._store)
-
-    def __len__(self):
-        return len(self._store)
-
-    @staticmethod
-    def _key_transform(key):
-        """Transform the key to a sorted tuple"""
-        return tuple(key)
-
-    def __setitem__(self, key, value):
-        """
-        Set a key-value pair in the dictionary
-        -----------------------------------------------------------------------
-        Arguments:
-            key (tuple(int)): Pair of atom indexes
-            value (int | float): Distance
-        """
-        try:
-            n_unique_atoms = len(set(key))
-        except TypeError:
-            raise ValueError(f"Cannot set a key with {key}, must be iterable")
-        if n_unique_atoms != 4:
-            logger.error(
-                "Tried to set a distance constraint with a key: "
-                f"{key}. Must be a unique pair of atom indexes"
-            )
-            return
-        if any(int(atom_idx) < 0 for atom_idx in key):
-            raise ValueError(
-                "Distance constraint key must be an atom index "
-                f"pair but had: {key} which cannot be valid (<0)"
-            )
-        self._store[self._key_transform(key)] = Angle(value)
-
-
-def print_dihedral_constraints(inp_file, molecule):
-    """Print the distance constraints to the input file"""
-    if molecule.constraints.dihedral is None:
-        return
-    print("%geom Constraints", file=inp_file)
-    for (i, j, k, l), ang in molecule.constraints.dihedral.items():
-        print("{ D", i, j, k, l, ang, "C }", file=inp_file)
-    print("    end\nend", file=inp_file)
-    return
-
-
-
-def generate_input_for_new(self, calc: "CalculationExecutor") -> None:
-    molecule = calc.molecule
-    keywords = self.get_keywords(calc.input, molecule)
-    #with open(calc.input.directory, "w") as inp_file: #change from 1.2.1 autode to 1.3
-    with open(calc.input.filename, "w") as inp_file:
-        print("!", *keywords, file=inp_file)
-        self.print_solvent(inp_file, molecule, keywords)
-        print_added_internals(inp_file, calc.input)
-        print_distance_constraints(inp_file, molecule)
-        print_dihedral_constraints(inp_file, molecule)
-        print_cartesian_constraints(inp_file, molecule)
-        print_num_optimisation_steps(inp_file, molecule, calc.input)
-        print_point_charges(inp_file, calc.input)
-        print_default_params(inp_file)
-        if calc.n_cores > 1:
-            print(f"%pal nprocs {calc.n_cores}\nend", file=inp_file)
-        print_coordinates(inp_file, molecule)
-    return None
-
-
-def generate_input_for(self, calc: "CalculationExecutor") -> None:
-    molecule = calc.molecule
-    keywords = self.get_keywords(calc.input, molecule)
-
-    #with open(calc.input.directory, "w") as inp_file:
-    with open(calc.input.filename, "w") as inp_file:
-        print("!", *keywords, file=inp_file)
-        self.print_solvent(inp_file, molecule, keywords)
-        print_added_internals(inp_file, calc.input)
-        print_distance_constraints(inp_file, molecule)
-        print_cartesian_constraints(inp_file, molecule)
-        print_num_optimisation_steps(inp_file, molecule, calc.input)
-        print_point_charges(inp_file, calc.input)
-        print_default_params(inp_file)
-
-        if calc.n_cores > 1:
-            print(f"%pal nprocs {calc.n_cores}\nend", file=inp_file)
-
-        print_coordinates(inp_file, molecule)
-    return None
 
 def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0, mult=1, x=np.linspace(0,30, 7)):
+    try:
+        import autode as ade
+        from autode.wrappers.ORCA import MutableMapping,logger, print_added_internals, print_distance_constraints, print_dihedral_constraints, print_cartesian_constraints, print_num_optimisation_steps, print_point_charges, print_default_params, print_coordinates
+        from autode.values import Angle
+    except:
+        raise
+
+    class DihedralConstraints(MutableMapping):
+        def __init__(self, *args, **kwargs):
+            self._store = dict()
+            self.update(dict(*args, **kwargs))  # use the free update to set keys
+
+        def __getitem__(self, key):
+            return self._store[self._key_transform(key)]
+
+        def __delitem__(self, key):
+            del self._store[self._key_transform(key)]
+
+        def __iter__(self):
+            return iter(self._store)
+
+        def __len__(self):
+            return len(self._store)
+
+        @staticmethod
+        def _key_transform(key):
+            """Transform the key to a sorted tuple"""
+            return tuple(key)
+
+        def __setitem__(self, key, value):
+            """
+            Set a key-value pair in the dictionary
+            -----------------------------------------------------------------------
+            Arguments:
+                key (tuple(int)): Pair of atom indexes
+                value (int | float): Distance
+            """
+            try:
+                n_unique_atoms = len(set(key))
+            except TypeError:
+                raise ValueError(f"Cannot set a key with {key}, must be iterable")
+            if n_unique_atoms != 4:
+                logger.error(
+                    "Tried to set a distance constraint with a key: "
+                    f"{key}. Must be a unique pair of atom indexes"
+                )
+                return
+            if any(int(atom_idx) < 0 for atom_idx in key):
+                raise ValueError(
+                    "Distance constraint key must be an atom index "
+                    f"pair but had: {key} which cannot be valid (<0)"
+                )
+            self._store[self._key_transform(key)] = Angle(value)
+
+    def print_dihedral_constraints(inp_file, molecule):
+        """Print the distance constraints to the input file"""
+        if molecule.constraints.dihedral is None:
+            return
+        print("%geom Constraints", file=inp_file)
+        for (i, j, k, l), ang in molecule.constraints.dihedral.items():
+            print("{ D", i, j, k, l, ang, "C }", file=inp_file)
+        print("    end\nend", file=inp_file)
+        return
+
+    def generate_input_for_new(self, calc: "CalculationExecutor") -> None:
+        molecule = calc.molecule
+        keywords = self.get_keywords(calc.input, molecule)
+        # with open(calc.input.directory, "w") as inp_file: #change from 1.2.1 autode to 1.3
+        with open(calc.input.filename, "w") as inp_file:
+            print("!", *keywords, file=inp_file)
+            self.print_solvent(inp_file, molecule, keywords)
+            print_added_internals(inp_file, calc.input)
+            print_distance_constraints(inp_file, molecule)
+            print_dihedral_constraints(inp_file, molecule)
+            print_cartesian_constraints(inp_file, molecule)
+            print_num_optimisation_steps(inp_file, molecule, calc.input)
+            print_point_charges(inp_file, calc.input)
+            print_default_params(inp_file)
+            if calc.n_cores > 1:
+                print(f"%pal nprocs {calc.n_cores}\nend", file=inp_file)
+            print_coordinates(inp_file, molecule)
+        return None
+
+    def generate_input_for(self, calc: "CalculationExecutor") -> None:
+        molecule = calc.molecule
+        keywords = self.get_keywords(calc.input, molecule)
+
+        # with open(calc.input.directory, "w") as inp_file:
+        with open(calc.input.filename, "w") as inp_file:
+            print("!", *keywords, file=inp_file)
+            self.print_solvent(inp_file, molecule, keywords)
+            print_added_internals(inp_file, calc.input)
+            print_distance_constraints(inp_file, molecule)
+            print_cartesian_constraints(inp_file, molecule)
+            print_num_optimisation_steps(inp_file, molecule, calc.input)
+            print_point_charges(inp_file, calc.input)
+            print_default_params(inp_file)
+
+            if calc.n_cores > 1:
+                print(f"%pal nprocs {calc.n_cores}\nend", file=inp_file)
+
+            print_coordinates(inp_file, molecule)
+        return None
+
+
+
+
     method = ade.methods.ORCA()
     #overwrite the autode ORCA input
     ade.wrappers.ORCA.ORCA.generate_input_for = generate_input_for_new

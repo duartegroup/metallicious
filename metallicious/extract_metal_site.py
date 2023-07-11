@@ -1,7 +1,7 @@
 import argparse
 import MDAnalysis
 import networkx as nx
-import re
+
 import numpy as np
 
 from MDAnalysis.lib.distances import distance_array
@@ -346,8 +346,6 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
     return unique_sites, unique_site_link_atoms
 
 
-from tempfile import mkdtemp
-import openbabel
 
 def rotation_matrix_from_vectors(vec1, vec2):
     """ Find the rotation matrix that aligns vec1 to vec2

@@ -30,6 +30,7 @@ metallicious.egg-info/PKG-INFO
 metallicious.egg-info/SOURCES.txt
 metallicious.egg-info/dependency_links.txt
 metallicious.egg-info/entry_points.txt
+metallicious.egg-info/requires.txt
 metallicious.egg-info/top_level.txt
 metallicious/examples/__init__.py
 metallicious/examples/example1/__init__.py

@@ -1,30 +1,18 @@
-path_to_mod_seminario = "/u/fd/chem1540/github/ModSeminario_Py/Python_Modified_Seminario_Method"
 
-import autode as ade
-#method = ade.methods.XTB()
+
+
+
+
 import os
 import re
-from subprocess import Popen, DEVNULL
 import numpy as np
 
 from MDAnalysis.lib.distances import calc_dihedrals
 import MDAnalysis
-
-
-
-
-# try:
-#     from data import name_to_atomic_number
-#     from mapping import map_two_structures
-#     from improper_torsion import find_impropers_and_values
-#
-#     from mod_seminario import modified_seminario_method
-# except:
-from metallicious.data import name_to_atomic_number
 from metallicious.mapping import map_two_structures
 from metallicious.mod_seminario import modified_seminario_method
 from metallicious.improper_torsion import find_impropers_and_values
-from metallicious.utils import strip_numbers_from_atom_name
+
 
 
 def read_bonds_from_orca_output(filename="site_opt_orca.out"):
@@ -497,7 +485,15 @@ def strip_names_from_covalent(covalent_paramters):
     return new_covalent
 
 def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+    try:
+        import autode as ade
+    except:
+        print("Autode is required for the calculations")
+        raise #TODO raise should be cleared
+
     method = ade.methods.ORCA()
+    #TODO check if available
+
     site = ade.Molecule(filename, charge=charge, mult=mult)
     site.optimise(method=method, keywords=keywords)
     names = [atom.atomic_symbol for atom in site.atoms]
@@ -651,21 +647,6 @@ def save_bonded_paramters_to_file(self, n_site=0):
     for dihedral in self.dihedrals:
         File.write(f'{"-".join(list(map(str, dihedral))):}:{",".join(list(map(str, self.dihedrals[dihedral]))):}')
     File.close()
-
-import argparse
-
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-metal_charge", help="Clean structure")
-    parser.add_argument("-metal_name", help="Clean structure")
-    return parser.parse_args()
-
-
-if __name__ == '__main__':
-    args = get_args()
-    multi_seminario(args.metal_charge, args.metal_name)
-
-
 
 
 

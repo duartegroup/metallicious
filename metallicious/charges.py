@@ -1,9 +1,6 @@
 import argparse
-import autode as ade
-from autode.wrappers.ORCA import *
 from subprocess import Popen, PIPE
-import psiresp
-import qcelemental as qcel
+import numpy as np
 
 import os
 
@@ -14,24 +11,23 @@ from metallicious.data import name_to_atomic_number
 def new_directory(directory):
     if not os.path.isdir(directory):
         os.mkdir(directory)
-
-
+'''
 def perform_resp_with_multiwfn(molden_input):
-    '''
+    
     Depracticed function as Multiwfn is hard to use on cluster and it cannot be installed from conda
 
     :param molden_input:
     :return:
-    '''
-    File = open("molden_input.txt", "w")
+
+     open("molden_input.txt", "w")
     File.write("7\n18\n1\n\ny\nq\n")
     File.close()
 
-    '''
+
     with open("molden_input.txt") as infile:
         process = Popen([multiwfn_path, molden_input, "-silent"], stdin=infile)
         process.wait()
-    '''
+    
     filename_core = molden_input.replace(".input", "")
 
     File = open(filename_core + ".chg")
@@ -39,82 +35,86 @@ def perform_resp_with_multiwfn(molden_input):
     File.close()
     charges = list(map(float, text.split()[4::5]))
     return charges
+'''
 
-
-def old_execute(self, calc):
-    @work_in_tmp_dir(filenames_to_copy=calc.input.filenames,
-                     kept_file_exts=('.out', '.hess', '.xyz', '.inp', '.pc'))
-    def execute_orca():
-        # Run the calculations
-        run_external(params=[calc.method.path, calc.input.filename],
-                     output_filename=calc.output.filename)
-
-    execute_orca()
-    return None
-
-
-# @check_sufficient_memory
-def run_external(params, output_filename):
-    """
-    Standard method to run a EST calculation with subprocess writing the
-    output to the calculation output filename
-
-    ---------------------------------------------------------------------------
-    Arguments:
-        output_filename (str):
-
-        params (list(str)): e.g. [/path/to/method, input-filename]
-    """
-    print("running new execute", params)
-
-    with open(output_filename, 'w') as output_file:
-        # /path/to/method input_filename > output_filename
-        process = Popen(params, stdout=output_file, stderr=PIPE, close_fds=True)
-
-        with process.stderr:
-            for line in iter(process.stderr.readline, b''):
-                logger.warning('STDERR: %r', line.decode())
-                print(line.decode())
-
-        poll = process.poll()
-        if poll is None:
-            print("Process is running 1")
-
-        process.wait()
-
-        poll = process.poll()
-        if poll is None:
-            print("Process is running 2")
-
-    return None
-
-
-def new_execute(self, calc):
-    @work_in_tmp_dir(filenames_to_copy=calc.input.filenames + ["grid.vpot.xyz"],
-                     kept_file_exts=('.out', '.hess', '.xyz', '.inp', '.pc', '.input', '.densities', '.gbw'))
-    def execute_orca():
-        # print([calc.method.path, calc.input.filename], calc.output.filename)
-        # Run the calculations
-        run_external(params=[calc.method.path, calc.input.filename],
-                     output_filename=calc.output.filename)
-        # Created molden file
-        # filename_core = calc.input.filename.replace(".inp", "")
-        # run_external(params=[calc.method.path + "_2mkl", filename_core, "-molden"],
-        #                     output_filename=filename_core + ".input")
-        print(os.listdir())
-        # orca_vpot filename.gbw filename.scfp filename.vpot.xyz filename.vpot.out
-        filename_core = calc.input.filename.replace(".inp", "")
-        run_external(
-            params=[calc.method.path + "_vpot", filename_core + ".gbw", filename_core + ".scfp", "grid.vpot.xyz",
-                    filename_core + ".vpot.out"],
-            output_filename=filename_core + "_vpot.out")
-
-    execute_orca()
-    return None
 
 
 def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, vdw_data_name=None, n_reorientations=1, mult=1,
               extra_atoms=None):
+    try:
+        import autode as ade
+        from autode.wrappers.ORCA import work_in_tmp_dir, logger
+        import psiresp
+        import qcelemental as qcel
+    except:
+        print ("autode is required")
+        raise
+
+    def old_execute(self, calc):
+        @work_in_tmp_dir(filenames_to_copy=calc.input.filenames,
+                         kept_file_exts=('.out', '.hess', '.xyz', '.inp', '.pc'))
+        def execute_orca():
+            # Run the calculations
+            run_external(params=[calc.method.path, calc.input.filename],
+                         output_filename=calc.output.filename)
+
+        execute_orca()
+        return None
+
+    # @check_sufficient_memory
+    def run_external(params, output_filename):
+        """
+        Standard method to run a EST calculation with subprocess writing the
+        output to the calculation output filename
+
+        ---------------------------------------------------------------------------
+        Arguments:
+            output_filename (str):
+
+            params (list(str)): e.g. [/path/to/method, input-filename]
+        """
+        print("running new execute", params)
+        with open(output_filename, 'w') as output_file:
+            # /path/to/method input_filename > output_filename
+            process = Popen(params, stdout=output_file, stderr=PIPE, close_fds=True)
+
+            with process.stderr:
+                for line in iter(process.stderr.readline, b''):
+                    logger.warning('STDERR: %r', line.decode())
+                    print(line.decode())
+
+            poll = process.poll()
+            if poll is None:
+                print("Process is running 1")
+            process.wait()
+
+            poll = process.poll()
+            if poll is None:
+                print("Process is running 2")
+        return None
+
+    def new_execute(self, calc):
+        @work_in_tmp_dir(filenames_to_copy=calc.input.filenames + ["grid.vpot.xyz"],
+                         kept_file_exts=('.out', '.hess', '.xyz', '.inp', '.pc', '.input', '.densities', '.gbw'))
+        def execute_orca():
+            # print([calc.method.path, calc.input.filename], calc.output.filename)
+            # Run the calculations
+            run_external(params=[calc.method.path, calc.input.filename],
+                         output_filename=calc.output.filename)
+            # Created molden file
+            # filename_core = calc.input.filename.replace(".inp", "")
+            # run_external(params=[calc.method.path + "_2mkl", filename_core, "-molden"],
+            #                     output_filename=filename_core + ".input")
+            print(os.listdir())
+            # orca_vpot filename.gbw filename.scfp filename.vpot.xyz filename.vpot.out
+            filename_core = calc.input.filename.replace(".inp", "")
+            run_external(
+                params=[calc.method.path + "_vpot", filename_core + ".gbw", filename_core + ".scfp", "grid.vpot.xyz",
+                        filename_core + ".vpot.out"],
+                output_filename=filename_core + "_vpot.out")
+
+        execute_orca()
+        return None
 
     method = ade.methods.ORCA()
     site = ade.Molecule(filename, charge=charge, mult=mult)

@@ -68,7 +68,6 @@ def main():
     else:
         keywords = args.keywords
 
-    library_path = f'{os.path.dirname(__file__):s}/library/'
 
     vdw_type = args.vdw_type
 
@@ -78,7 +77,7 @@ def main():
 
     cage = supramolecular_structure(filename=filename, metal_charge_mult=metal_charge_mult,
                                     metal_charges=metal_charges, vdw_type=vdw_type, topol=topol, keywords=keywords,
-                                    improper_metal=improper_metal, donors=donors, library_path=library_path,
+                                    improper_metal=improper_metal, donors=donors,
                                     truncation_scheme=truncation_scheme)
     cage.parametrize()
 

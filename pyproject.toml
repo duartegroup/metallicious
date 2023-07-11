@@ -4,7 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "metallicious"
-version = "0.1.0"
+version = "0.2.10"
+
+dependencies = [
+    "numpy",
+    "MDAnalysis",
+    "rdkit",
+    "parmed",
+    "networkx",
+    "psiresp"]
 
 [project.scripts]
 metallicious = "metallicious.__main__:main"
