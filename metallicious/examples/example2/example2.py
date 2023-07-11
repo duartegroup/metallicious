@@ -1,6 +1,6 @@
 
 try:
-    from metallicious.main import cgbind2pmd
+    from metallicious.main import patcher
 except:
     from cgbind2pmd.main import cgbind2pmd
 
@@ -23,7 +23,7 @@ metal_charge=2
 fingerprint='Pd2dm'
 fingerprint_style='dih'
 
-cgbind2gmx = cgbind2pmd()
+cgbind2gmx = patcher()
 cgbind2gmx.name_of_binding_side = fingerprint
 cgbind2gmx.fingerprint_style = fingerprint_style
 

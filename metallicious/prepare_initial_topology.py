@@ -39,7 +39,7 @@ def mapping_itp_coords(syst, ligand_file):
     else:
         ordered = MDAnalysis.Universe.empty(len(topol.atoms), trajectory=True)
         ordered.add_TopologyAttr('name')
-        for a in range(len(ordered.atoms)):
+        for a, _ in enumerate(ordered.atoms):
             ordered.atoms[a].name = topol.atoms[a].name
 
         return True, topol, ordered, G_top
@@ -100,15 +100,16 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
     ligand_tops = [] # parmed topologies
 
     for idx, nodes in enumerate(ligand_library):
-        ligand_coords_mda = crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}")
+        #ligand_coords_mda = crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}") # TODO remove (2023/07/10)
 
-        ligand_coords_mda.write(f"temp.pdb")
-        ligand_coords_mda = MDAnalysis.Universe("temp.pdb").atoms
+        #ligand_coords_mda.write(f"temp.pdb")
+        ligand_coords_mda = MDAnalysis.Merge(crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}"))
+        #    Universe("temp.pdb").atoms
 
         is_iso, ligand, topology, Gtop = mapping_itp_coords(ligand_coords_mda, ligand_topol) # what if there are more then one topologies (?)
         if not is_iso: # if not isomorphic we paramterize with antechamber:
 
-
+            ligand_coords_mda.atoms.write('temp.pdb')
             antechamber('temp.pdb', f'linker{idx:}.top')
             ligand = pmd.load_file(f'linker{idx:}.top')
 
@@ -189,12 +190,6 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
         for metal_name, indecies in zip(metal_names, metal_indecies):
 
             metal = create_metal_topol(metal_name, metal_charge, metal_vdw)
-
-            #metal = pmd.load_file(f'{os.path.dirname(__file__):s}/library/M.itp')  # TODO I thought I eliminated that ?
-            #metal.atoms[0].name = metal_name
-            #metal.atoms[0].charge = metal_charge # someting wierd with atomic number #TODO what about charges of Ru (?)
-            #metal.atoms[0].mass = name2mass[metal_name.title()]
-
             n_metals = len(indecies)
             if cage_topol is None:
                 cage_topol = metal * n_metals

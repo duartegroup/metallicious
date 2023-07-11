@@ -6,3 +6,5 @@ build-backend = "setuptools.build_meta"
 name = "metallicious"
 version = "0.1.0"
 
+[project.scripts]
+metallicious = "metallicious.__main__:main"

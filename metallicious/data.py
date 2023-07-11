@@ -1,3 +1,6 @@
+# Taken form: https://gist.github.com/lukasrichters14/
+# Dictionary of all elements matched with their atomic masses.
+
 name2mass = {'H' : 1.008,'He' : 4.003, 'Li' : 6.941, 'BE' : 9.012,\
                  'B' : 10.811, 'C' : 12.011, 'N' : 14.007, 'O' : 15.999,\
                  'F' : 18.998, 'Ne' : 20.180, 'Na' : 22.990, 'Mg' : 24.305,\

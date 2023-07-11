@@ -5,46 +5,18 @@ warnings.filterwarnings('ignore')
 
 import os
 import MDAnalysis
-import numpy as np
-import networkx as nx
-import re
-
-from networkx.algorithms import isomorphism
-from MDAnalysis.lib.distances import distance_array
 
 import argparse
 import parmed as pmd
 import shutil
 from tempfile import mkdtemp
 
-
-
-
-#try:
 from metallicious.log import logger
 from metallicious.load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
-from metallicious.prepare_initial_topology import prepare_initial_topology
 from metallicious.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
-from metallicious.data import name2mass
-from metallicious.data import name_to_atomic_number
-
-# except:
-#     from load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
-#     from prepare_initial_topology import prepare_initial_topology
-#     from copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
-#     from data import name2mass
-#     from data import name_to_atomic_number
-
-from copy import deepcopy
-
-# Taken form: https://gist.github.com/lukasrichters14/
-# Dictionary of all elements matched with their atomic masses.
 
 
-
-
-
-class cgbind2pmd(): # TODO refactor this name
+class patcher():
     path = None
     tmpdir_path = None
     cage = None
@@ -78,6 +50,7 @@ class cgbind2pmd(): # TODO refactor this name
         logger.info('Current directory:' )
         logger.info(f'Created temporary directory: {self.tmpdir_path:s}')
 
+    ''' TODO remove (2023/07/04)
     def from_cgbind(self): #TODO
         os.chdir(self.tmpdir_path)
 
@@ -98,14 +71,13 @@ class cgbind2pmd(): # TODO refactor this name
         self.construct_cage(cage_file=cage_file, ligand_file=ligand_file, metal_name=metal_name, metal_charge=metal_charge)
         #self.clean_up()
         os.chdir(self.path)
-
+    '''
 
     def tmp_directory(self):
         self.path = os.getcwd()
         self.tmpdir_path = mkdtemp()
 
     def save(self,output_coords, output_topol, tmpdir_path):
-        # copy everything TODO
 
         if output_coords.endswith('.gro'):
             shutil.copy(f'{self.cage_coord:s}', f'{output_coords:s}')
@@ -120,12 +92,14 @@ class cgbind2pmd(): # TODO refactor this name
         else:
             topol = pmd.load_file(f'temp_topol.top')
             topol.save(f'{output_topol:s}', overwrite=True)
+        print("directory", os.getcwd())
+        os.remove(f"temp_topol.top")
 
     def close(self):
         shutil.rmtree(self.tmpdir_path)
-
+    ''' # TODO remove (2023/07/04)
     def construct_cage(self, cage_file=None, ligand_file=None, metal_name=None, metal_charge=None): #TODO remove
-        '''
+        
         The main function, which copies all the bonded paramters to the cage
         Sepearated for stages;
         1) Loads the cage
@@ -138,7 +112,7 @@ class cgbind2pmd(): # TODO refactor this name
         :param metal_charge:
         :param name_of_binding_side:
         :return:
-        '''
+        
 
         self.metal_name = metal_name.title()
         self.metal_charge = metal_charge
@@ -165,6 +139,7 @@ class cgbind2pmd(): # TODO refactor this name
         logger.info(f'Saving as {self.output_topol:s}')
 
         logger.info('Finished')
+    '''
 
 
     def copy_site_topology_to_supramolecular(self, sites, cage_coord=None, cage_topol=None):
@@ -193,8 +168,6 @@ class cgbind2pmd(): # TODO refactor this name
 
             mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_coord, site.index, site.metal_name, site.fp_syst, cutoff=site.ligand_cutoff)
 
-            #self.topol_new = adjust_bonds(self.topol_new, site.fp_topol, mapping_fp_to_new)
-
             self.topol_new = adjust_charge(self.topol_new, site.fp_topol,mapping_fp_to_new)
 
             self.topol_new = adjust_bonds(self.topol_new, site.fp_topol,mapping_fp_to_new)
@@ -207,16 +180,17 @@ class cgbind2pmd(): # TODO refactor this name
 
         logger.info('Finished')
 
+    ''' TODO remove (2023/07/04)
     def create_cage_and_linker_cgbind(self, smiles, arch_name, metal, metal_charge):
-        '''
-        Creates cage and linker using cgbind. Then it paramterizes the linker using antechamber
-
-        :param smiles:
-        :param arch_name:
-        :param metal:
-        :param metal_charge:
-        :return:
-        '''
+        
+        # Creates cage and linker using cgbind. Then it paramterizes the linker using antechamber
+        # 
+        # :param smiles:
+        # :param arch_name:
+        # :param metal:
+        # :param metal_charge:
+        # :return:
+        
 
         try:
             from cgbind import Linker, Cage
@@ -236,16 +210,17 @@ class cgbind2pmd(): # TODO refactor this name
         syst.atoms.write('linker.pdb')
         logger.info("[ ] Calling antechamber to parametrize linker") # TODO, that should not be hidden here
         antechamber('linker.pdb', 'linker.top')
+    '''
 
-
+    ''' TODO remove (2023/07/04)
     def load_cage(self, cage_file, ligand_file):
-        '''
+        
         Copies the cage file to the class. Renumbers the ligands to match the MD topology. Extracts some properties
 
         :param cage_file:
         :param ligand_file:
         :return:
-        '''
+        
         #cage = MDAnalysis.Universe(cage_file)
         #cage.atoms.write("temp.gro")
         #self.crystal2pdb("temp.gro", ligand_file, "cage.gro", metal_name=self.metal_name)
@@ -254,11 +229,11 @@ class cgbind2pmd(): # TODO refactor this name
         #self.ligand = pmd.load_file(ligand_file)
 
         # Find metal indeces:
-        '''
-        self.metal_indices = [a for a, name in enumerate(self.cage.atoms.names) if
-                         name[:len(self.metal_name)].upper() == self.metal_name]
-        self.n_metals = len(self.metal_indices)
-        '''
+        
+        # self.metal_indices = [a for a, name in enumerate(self.cage.atoms.names) if
+        #                  name[:len(self.metal_name)].upper() == self.metal_name]
+        # self.n_metals = len(self.metal_indices)
+        
 
 
         logger.info(self.metal_indices)
@@ -283,14 +258,16 @@ class cgbind2pmd(): # TODO refactor this name
 
         # Find how many ligands are bound to single metal:
         metal_index = self.metal_indices[0] # TODO check if all have the same number of ligands bound to single side
+        '''
 
+    ''' TODO remove (2023/07/04)
     def load_fingerprint_old(self, cage_file): #TODO remove
-        '''
-        Loads files from the library into the class, if the name is not known, it will try to guess the fingerprint
-
-        :param name_of_binding_side:
-        :return:
-        '''
+        
+        # Loads files from the library into the class, if the name is not known, it will try to guess the fingerprint
+        # 
+        # :param name_of_binding_side:
+        # :return:
+        
 
 
         if self.name_of_binding_side is None:
@@ -311,20 +288,20 @@ class cgbind2pmd(): # TODO refactor this name
         #self.topol_fp = pmd.load_file(f'{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.top')
         #self.syst_fingerprint = MDAnalysis.Universe(f"{os.path.dirname(__file__):s}/library/{self.name_of_binding_side:s}.pdb")
         return True
+    '''
 
-
-
+    ''' TODO remove (2023/07/04) 
     def crystal2pdb(self, crystal_pdb, topology_itp, output, metal_name=""):
-        '''
-        Function which renumbers crystal_pdb that it maches topology of ligand, it adds metals at the begining, creates
-          the file output with renumbered atoms
-
-        :param crystal_pdb:
-        :param topology_itp:
-        :param output:
-        :param metal_name:
-        :return:
-        '''
+        
+        # Function which renumbers crystal_pdb that it maches topology of ligand, it adds metals at the begining, creates
+        #   the file output with renumbered atoms
+        #
+        # :param crystal_pdb:
+        # :param topology_itp:
+        # :param output:
+        # :param metal_name:
+        # :return:
+        
 
         crystal = MDAnalysis.Universe(crystal_pdb)
         ligand = pmd.load_file(topology_itp)
@@ -412,7 +389,7 @@ class cgbind2pmd(): # TODO refactor this name
         new_cage.dimensions=crystal.dimensions
         new_cage.atoms.write(output)
 
-
+    '''
     #def prepare_new_topology(self, cage_coord, cage_topol, metal_name, metal_charge, ligand_file=None):
     def prepare_new_topology(self, cage_coord, cage_topol):
         '''
@@ -436,7 +413,7 @@ class cgbind2pmd(): # TODO refactor this name
         # parmed is sometimes wierd :-(
 
         topol_new2 = pmd.load_file(cage_topol)
-        for a in range(len(self.topol_new.atoms)):
+        for a, _ in enumerate(self.topol_new.atoms):
             self.topol_new.atoms[a].type = topol_new2.atoms[a].type
             self.topol_new.atoms[a].epsilon = topol_new2.atoms[a].epsilon
             self.topol_new.atoms[a].sigma = topol_new2.atoms[a].sigma
@@ -453,7 +430,7 @@ class cgbind2pmd(): # TODO refactor this name
             self.m_m_cutoff = 1e10
             #self.m_m_cutoff=9
         '''
-
+    ''' TODO remove (2023/07/04)
     def adjust_charge(self, mapping_fp_to_new):
         logger.info("   [ ] Changing charges and atomtypes")
         sum_of_charge_diffrences = 0
@@ -632,11 +609,11 @@ class cgbind2pmd(): # TODO refactor this name
                     logger.info("And you should be worry if it is not the end of fingerprint")
                     found = True # TODO I don't remember why this is True
                     #raise
-                    '''
-                    for dihedral in self.topol_fp.dihedrals:
-                    if dihedral.atom1.idx==0:
-                    print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
-                    '''
+                    
+                    # for dihedral in self.topol_fp.dihedrals:
+                    # if dihedral.atom1.idx==0:
+                    # print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
+                    
 
             if not found:
                 type_to_assign= pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k, per=dihedral_fp.type.per,
@@ -690,11 +667,11 @@ class cgbind2pmd(): # TODO refactor this name
                     logger.info("And you should be worry if it is not the end of fingerprint")
                     found = True # TODO I don't remember why this is True
                     #raise
-                    '''
-                    for dihedral in self.topol_fp.dihedrals:
-                    if dihedral.atom1.idx==0:
-                    print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
-                    '''
+                    
+                    # for dihedral in self.topol_fp.dihedrals:
+                    # if dihedral.atom1.idx==0:
+                    # print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
+                    
 
             if not found:
                 type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedral_fp.type.psi_k,
@@ -713,7 +690,7 @@ class cgbind2pmd(): # TODO refactor this name
                 atom4 = self.topol_new.atoms[mapping_fp_to_new[dihedral_fp.atom4.idx]]
 
                 self.topol_new.impropers.append(pmd.topologyobjects.Improper(atom1, atom2, atom3, atom4, type=type_to_assign))
-
+    '''
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -739,7 +716,7 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    cgbind2gmx = cgbind2pmd()
+    cgbind2gmx = patcher()
 
     if args.fingerprint is not None:
         cgbind2gmx.name_of_binding_side = args.fingerprint

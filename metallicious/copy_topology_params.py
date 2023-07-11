@@ -172,32 +172,40 @@ def adjust_dihedrals(topol_new, topol_fp, mapping_fp_to_new):
         if dihedral_fp.atom1.idx in mapping_fp_to_new and dihedral_fp.atom2.idx in mapping_fp_to_new and dihedral_fp.atom3.idx in mapping_fp_to_new and dihedral_fp.atom4.idx in mapping_fp_to_new:
             for dihedral_new in topol_new.dihedrals:
                 # Check if atoms in mapping (that they are not the additional atoms)
-                if (((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom1.idx] and dihedral_new.atom2.idx ==
-                      mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
-                          dihedral_fp.atom3.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
-                          dihedral_fp.atom4.idx]) or
-                     ((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom4.idx] and dihedral_new.atom2.idx ==
-                       mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
-                           dihedral_fp.atom2.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
-                           dihedral_fp.atom1.idx]))) and
-                        (dihedral_new.type.per == dihedral_fp.type.per)):
-                    if (dihedral_fp.type != dihedral_new.type):
-                        logger.info(
-                            f"      [a] Diffrent Dihedral type: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:}")
-                        logger.info(f"           {dihedral_new.type:}")
-                        logger.info(f"        -> {dihedral_fp.type:}")
 
-                        type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k,
-                                                                          per=dihedral_fp.type.per,
-                                                                          phase=dihedral_fp.type.phase,
-                                                                          scee=dihedral_fp.type.scee,
-                                                                          scnb=dihedral_fp.type.scnb,
-                                                                          list=topol_new.dihedral_types)
-                        # if type_to_assign not in topol_new.dihedral_types:
-                        topol_new.dihedral_types.append(type_to_assign)
-                        dihedral_new.type = type_to_assign
+                # There can be more then one parameter per dihedral, that should be in fingerprint, seems common in charmm #TODO
+                if isinstance(dihedral_new.type, list):
+                    dihedral_new_types = dihedral_new.type
+                else:
+                    dihedral_new_types = [dihedral_new.type]
 
-                    found = True
+                for dihedral_new_type in dihedral_new_types:
+                    if (((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom1.idx] and dihedral_new.atom2.idx ==
+                          mapping_fp_to_new[dihedral_fp.atom2.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
+                              dihedral_fp.atom3.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
+                              dihedral_fp.atom4.idx]) or
+                         ((dihedral_new.atom1.idx == mapping_fp_to_new[dihedral_fp.atom4.idx] and dihedral_new.atom2.idx ==
+                           mapping_fp_to_new[dihedral_fp.atom3.idx] and dihedral_new.atom3.idx == mapping_fp_to_new[
+                               dihedral_fp.atom2.idx] and dihedral_new.atom4.idx == mapping_fp_to_new[
+                               dihedral_fp.atom1.idx]))) and
+                            (dihedral_new_type.per == dihedral_fp.type.per)):
+                        if (dihedral_fp.type != dihedral_new_type):
+                            logger.info(
+                                f"      [a] Diffrent Dihedral type: {dihedral_fp.atom1.name:}-{dihedral_fp.atom2.name:}-{dihedral_fp.atom3.name:}-{dihedral_fp.atom4.name:}")
+                            logger.info(f"           {dihedral_new_type:}")
+                            logger.info(f"        -> {dihedral_fp.type:}")
+
+                            type_to_assign = pmd.topologyobjects.DihedralType(phi_k=dihedral_fp.type.phi_k,
+                                                                              per=dihedral_fp.type.per,
+                                                                              phase=dihedral_fp.type.phase,
+                                                                              scee=dihedral_fp.type.scee,
+                                                                              scnb=dihedral_fp.type.scnb,
+                                                                              list=topol_new.dihedral_types)
+                            # if type_to_assign not in topol_new.dihedral_types:
+                            topol_new.dihedral_types.append(type_to_assign)
+                            dihedral_new_type.type = type_to_assign
+
+                        found = True
         else:
             logger.info(
                 f"[-] Not found in finger print: {dihedral_fp.atom1.idx + 1:} {dihedral_fp.atom2.idx + 1:} {dihedral_fp.atom3.idx + 1:} {dihedral_fp.atom4.idx + 1:}")

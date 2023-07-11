@@ -1,39 +1,29 @@
 import argparse
 import shutil
 
-# TODO this should be class not INFO file
-from metallicious.extract_metal_site import extract_metal_structure, read_info_file, find_metal_indices
+from metallicious.extract_metal_site import extract_metal_structure, find_metal_indices
 from metallicious.seminario import single_seminario
 from metallicious.charges import calculate_charges2
-from metallicious.initial_site import create_initial_topol2
 from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals
 from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
 from metallicious.data import vdw_data
 from metallicious.prepare_initial_topology import prepare_initial_topology
 from metallicious.log import logger
-from metallicious.main import cgbind2pmd
+from metallicious.main import patcher
+from metallicious.utils import new_directory
 
-from tempfile import mkdtemp
-
-
-
-import parmed as pmd
 import numpy as np
 import MDAnalysis
 from MDAnalysis.lib.distances import distance_array
 
 import os
 
-
-
-
-
 class supramolecular_structure:
     def __init__(self, filename, metal_charge_mult=None, metal_charges=None, vdw_type=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
-                 fingerprint_guess_list=None, fingerprint_style = 'full', new_template=True):
+                 fingerprint_guess_list=None, truncation_scheme = None):
 
         self.unique_sites = []
         self.sites = []
@@ -44,50 +34,51 @@ class supramolecular_structure:
         self.donors = donors
         self.improper_metal = improper_metal
         self.ff = ff
-
         self.topol = topol
 
-        if metal_charge_mult is None:
-            print("Guessing metals not implemented ")  # TODO
-        else:
-            self.metal_charge_dict = metal_charge_mult
+        self.allow_new_templates = True
+
+        self.metal_charge_dict = {}
+        if metal_charge_mult is not None:
+            self.metal_charge_dict = {}
+            self.metal_mult_dict = {}
+            for key in metal_charge_mult:
+                self.metal_charge_dict[key] = metal_charge_mult[key][0]
+                self.metal_mult_dict[key] = metal_charge_mult[key][1]
+
             self.metal_names = list(metal_charge_mult.keys())
+        elif metal_charges is not None:
+            self.metal_charge_dict = metal_charges
+            self.metal_names = list(metal_charges.keys())
+            #self.
+            self.allow_new_templates = False
+        else:
+            raise  # TODO raise have to besolved
 
-        if vdw_type is None and topol is not None:
+        if vdw_type=='custom' and topol is not None:
             self.vdw_type = 'custom'
-            None
-            # use vdw from topol
-
-
         elif vdw_type is None:
             for vdw_type in vdw_data:
                 present = [metal_name in vdw_data[vdw_type] for metal_name in self.metal_names]
                 if sum(present) == len(present):
                     self.vdw_type = vdw_type
-                    print(f"vdw_type not selected, will use first available for selected metals: {vdw_type:}")
-                    break
-        #elif vdw_type == 'force':
-        #    self.vdw_type = None
+                    print(f"vdw_type not selected, will use first available for selected metals: {vdw_type:}") # TODO make first merz-opc
         else:
             for metal_name in self.metal_names:
-                if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name][0]:}" not in vdw_data[vdw_type]:
+                if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in vdw_data[vdw_type]:
                     raise
 
             self.vdw_type = vdw_type
 
         self.fingerprint_guess_list = fingerprint_guess_list
-        self.fingerprint_style = 'full'
+        self.truncation_scheme = truncation_scheme
         self.search_library = search_library
         self.library_path = f"{os.path.dirname(__file__):s}/library"
 
         self.find_metal_sites()
 
-        # copy main file and create temp directory
-
         self.path = os.getcwd()
-
-
-        #TODO there was idea of creating temporary place... but I think the code breaks too often
+        #This is placeholder for temporary direction, but ORCA often breaks, and it is easier just to restart a job
         self.tmpdir_path = '.'  #mkdtemp()
         os.chdir(self.tmpdir_path)
 
@@ -97,14 +88,9 @@ class supramolecular_structure:
     def find_metal_sites(self):
         syst = MDAnalysis.Universe(self.filename)
         for name in self.metal_names:
-
-            #TODO
-
             indices, _ = find_metal_indices(syst, name)
-
-            #metal_atoms = syst.select_atoms(f'name {name.title():}* {name.upper():}* {name.lower():}*')
             for index in indices:
-                site = metal_site(name.title(), self.metal_charge_dict[name][0], index)
+                site = metal_site(name.title(), self.metal_charge_dict[name], index, fp_style=self.truncation_scheme)
                 self.sites.append(site)
 
         self.assign_fingerprints()
@@ -124,18 +110,13 @@ class supramolecular_structure:
                                         additional_fp_files=additional_fp_coords) #TODO what about fp style (?)
 
             if guessed is not False:
-                site.fp_coord_file = f"{self.library_path:s}/{guessed:}.pdb" #TODO
+                site.fp_coord_file = f"{self.library_path:s}/{guessed:}.pdb"
                 site.fp_topol_file = f"{self.library_path:s}/{guessed:}.top"
                 site.load_fingerprint()
                 site.set_cutoff()
 
     def extract_unique_metal_sites(self):
         logger.info(f"Extracting")
-
-        # Resetting Info file and sites
-        if os.path.isfile("INFO.dat"):  # TODO is info file still needed?
-            os.remove('INFO.dat')
-
         unique_sites = []
 
         if self.topol is None:
@@ -148,15 +129,12 @@ class supramolecular_structure:
                                                  all_metal_names=self.metal_names)
 
             for site_list in site_lists:
-                site_list[1] = self.metal_charge_dict[metal_name][0]  # we change the charge
-                site_list[2] = self.metal_charge_dict[metal_name][1]  # we change the multiplicity
+                site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
+                site_list[2] = self.metal_mult_dict[metal_name]  # we change the multiplicity
                 site_list += [self.autode_keywords, self.improper_metal, self.donors, self.vdw_type]
                 unique_sites += [new_metal_site(*site_list)]
 
         self.unique_sites = unique_sites
-
-    def read_info_file(self, filename='INFO.dat'):
-        self.unique_sites = read_info_file(filename)
 
     def check_if_parameters_available(self):
         if len([1 for site in self.sites if site.fp_topol_file is not None]) == len(self.sites):
@@ -164,19 +142,28 @@ class supramolecular_structure:
         else:
             return False
 
-    def prepare_initial_topology(self, coord_filename= 'noncovalent_complex.pdb', topol_filename = 'noncovalent_complex.top', method='gaff', homoleptic_ligand_topol=None):
-        if method=='gaff':
+    def prepare_initial_topology(self, coord_filename= 'noncovalent_complex.pdb', topol_filename = 'noncovalent_complex.top', method='gaff', homoleptic_ligand_topol=None, subdir='init_topol'):
+        here = os.getcwd()
+        new_directory(subdir)
+        shutil.copyfile(self.filename, f'{subdir}/{self.filename}')
+        if homoleptic_ligand_topol is not None:
+            shutil.copyfile(homoleptic_ligand_topol, f'{subdir}/{homoleptic_ligand_topol}')
+        os.chdir(subdir)
+
+        if method=='gaff' or homoleptic_ligand_topol is not None:
             metal_indicies = prepare_initial_topology(self.filename, self.metal_names, self.sites[0].metal_charge,
                                                       coord_filename, topol_filename,self.vdw_type, ligand_topol=homoleptic_ligand_topol)
-            self.filename = coord_filename
-            self.topol = topol_filename
+            self.filename = f'{subdir}/{coord_filename}'
+            self.topol = f'{subdir}/{topol_filename}'
 
             for metal_index, site in zip(metal_indicies, self.sites):
                 site.index = metal_index
         else:
-            print("Only gaff suported")
+            print("Only gaff supported")
 
-    def parametrize(self, out_coord='out.pdb', out_topol='out.top', parametrize_metal_sites=True):
+        os.chdir(here)
+
+    def parametrize(self, out_coord='out.pdb', out_topol='out.top'):
         print("Parametrizing")
         if self.check_if_parameters_available() is False:
             print("[ ] Extracting the structure")
@@ -186,14 +173,12 @@ class supramolecular_structure:
         self.summary()
         print("Available!")
 
-
         if self.topol is None:
             print(f"Please provide topology, or use .prepare_initial_topology()")
             return False
 
-
         else:
-            print("Checking topology") # TODO Metals needs to be at the beggining of the file
+            print("Checking topology") # TODO Metals needs to be at the begining of the file
             '''
             topol = pmd.load_file(self.topol)
             #topol.write(f"complex.top", [list(range(len(topol.split())))])
@@ -215,7 +200,7 @@ class supramolecular_structure:
 
         # check if topol and coord have the same names of atoms TODO
 
-        parameter_copier = cgbind2pmd()
+        parameter_copier = patcher()
         parameter_copier.copy_site_topology_to_supramolecular(self.sites, cage_coord=self.filename, cage_topol=self.topol)
         parameter_copier.save(f'{self.path:s}/{out_coord:s}', f'{self.path:s}/{out_topol:s}', tmpdir_path=self.tmpdir_path)
         print("Finished!")
@@ -223,14 +208,16 @@ class supramolecular_structure:
 
 
     def parametrize_metal_sites(self):
-        #TODO check if ORCA available !!
         if len(self.unique_sites) == 0:
             self.extract_unique_metal_sites()
 
         for site in self.unique_sites:
             if site.check_library() is False:
-                site.parametrize()
-                self.add_site_to_library(site)
+                if self.allow_new_templates is True:
+                    site.parametrize()
+                    self.add_site_to_library(site)
+                else:
+                    print("Not possible to parametrize metal site (did you specify multiplicity)?")
 
 
     def add_site_to_library(self, site):
@@ -262,13 +249,13 @@ class supramolecular_structure:
 
 
 class metal_site():
-    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fingerprint_style='full'):
+    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style='full'):
         self.metal_name = metal_name
         self.metal_charge = metal_charge
         self.index = index
         self.fp_topol_file = fp_topol
         self.fp_coord_file = fp_coord
-        self.fp_style = fingerprint_style # TODO chang all names "finerprints" to "fp"
+        self.fp_style = fp_style
 
     def _print(self):
         if self.fp_coord_file is not None:
@@ -281,7 +268,7 @@ class metal_site():
     def __repr__(self):
         return self._print()
 
-    def load_fingerprint(self, fp_style='full'):
+    def load_fingerprint(self):
         '''
         Loads files from the library into the class, if the name is not known, it will try to guess the fingerprint
 
@@ -289,9 +276,7 @@ class metal_site():
         :return:
         '''
 
-        # Inputd
-        self.fp_topol, self.fp_syst = load_fp_from_file(self.fp_coord_file, self.fp_topol_file, fp_style)
-
+        self.fp_topol, self.fp_syst = load_fp_from_file(self.fp_coord_file, self.fp_topol_file, self.fp_style)
 
         return True
 
@@ -302,7 +287,6 @@ class metal_site():
         self.ligand_cutoff = np.max(distance_array(metal_position, nometal_position)) + 2.0
 
         return True
-
 
         '''
         # In past I used this one, which should be working, but I think, I could solved the issue with ligands on the way. So, checked it and delete after testes:
@@ -376,10 +360,6 @@ class new_metal_site():
     def __repr__(self):
         return self._print()
 
-    def create_initial_topol(self): # TODO depracticed (22/06/2023)
-        self.topol = create_initial_topol2(self.metal_name, self.metal_charge, self.unique_ligands_pattern,
-                                           self.vdw_type)
-
     def seminario(self):
         site_charge = self.metal_charge + np.sum(self.ligand_charges)
 
@@ -423,14 +403,20 @@ class new_metal_site():
         new_cage = MDAnalysis.Universe(self.filename)
         #new_cage.atoms.write(f"old_new_template.pdb")
 
-        new_cage.select_atoms(f"not index {' '.join(list(map(str, np.array(self.additional_atoms)))):s}").write(
-            out_coord)  # saving should be speartate TODO
+        print("removing additional atoms", self.additional_atoms)
+
+        if len(self.additional_atoms)>0:
+            template = new_cage.select_atoms(f"not index {' '.join(list(map(str, np.array(self.additional_atoms)))):s}")
+        else:
+            template = new_cage.atoms
+
+        template.write(out_coord)
 
         self.fp_topol_file = f"{self.directory}/{out_topol}"
         self.fp_coord_file = f"{self.directory}/{out_coord}"
 
     def check_library(self):
-        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name)  # TODO library
+        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name)
 
     def parametrize(self):
         here = os.getcwd()
@@ -441,100 +427,4 @@ class new_metal_site():
         self.partial_charge()
         self.reduce_to_template()
         os.chdir(here)
-
-
         print("Site parametrized successfully!")
-
-
-def parametrize(filename, metal_name, metal_charge, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'],
-                vdw_type="uff", mult=1, improper_metal=True, donors=['N', 'S', 'O']):
-    """
-    Combines all other scripts to extract, and parameterize metal site(s)
-    :param filename:
-    :param metal_name:
-    :param metal_charge:
-    :return:
-    """
-
-    if os.path.isfile("INFO.dat"):
-        os.remove('INFO.dat')
-
-    print("[ ] Extracting the structure")
-    extract_metal_structure(filename, metal_name, output="site")
-    print("[ ] Create initial topology")
-    topols = create_initial_topol(metal_name, metal_charge, vdw_data_name=vdw_type)
-    n_sites = len(topols)
-
-    topols = []
-    for n_site in range(n_sites):
-        topols.append(pmd.load_file(f"topol{n_site:d}.top"))
-    print(topols)
-
-    print("[ ] Performing seminario calculations")
-    bonds, angles, dummy_dihedrals = multi_seminario(metal_charge, metal_name, keywords=keywords, mult=mult,
-                                                     improper_metal=improper_metal, donors=donors)
-    print("\t[ ] Seminario finished, now coping")
-    for a, topol in enumerate(topols):
-        topols[a] = copy_bonds(topols[a], bonds[a], metal_name)
-        topols[a] = copy_angles(topols[a], angles[a], metal_name)
-        topols[a] = copy_dihedrals(topols[a], dummy_dihedrals[a], metal_name)
-    print("\t[+] Copied!")
-
-    print("[ ] Calculating charges")
-    partial_charges = calculate_charges(metal_charge, metal_name, vdw_data_name=vdw_type, mult=mult)
-
-    print("\t[ ] Copying charges")
-    for n_site, topol in enumerate(topols):
-        for idx, atom in enumerate(topol.atoms):
-            atom.charge = partial_charges[n_site][idx]
-    print("\t[+] Charges calculated !")
-
-    print("[ ] Cutting extra atoms")
-    File = open("INFO.dat")  # TODO this here is wierd
-    text = File.read()
-    File.close()
-
-    for line in text.splitlines():
-        if "extra_atoms:" in line:
-            extra_atoms = list(map(int, line[12:].split(',')))
-
-    for a, topol in enumerate(topols):
-        topol.write(f"old_new_topol{a:d}.top")
-
-        topol.strip(f"@{','.join(list(map(str, np.array(extra_atoms) + 1))):s}")
-        topol.write(f"new_topol{a:d}.top")
-        new_cage = MDAnalysis.Universe(f"site{a:d}.pdb")
-        new_cage.atoms.write(f"old_new_template{a:d}.pdb")
-
-        print(f"We use this on site{a:d}.pdb:")
-        print(f"not index {' '.join(list(map(str, np.array(extra_atoms)))):s}")
-        new_cage.select_atoms(f"not index {' '.join(list(map(str, np.array(extra_atoms)))):s}").write(
-            f"template{a:d}.pdb")
-
-    print("Hydrogens removed!")
-
-    print("Program finishess successfully!")
-
-
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", help="Metaloorganic structre (*gro, *pdb, etc. all supported by MDAnalysis)")
-    parser.add_argument("-o", help="Clean structure")
-    parser.add_argument("-metal_name", help="Name of the metal")
-    parser.add_argument("-metal_charge", help="Charge of the metal")
-    parser.add_argument("-keywords", help="keywords for QM", nargs='+')
-    parser.add_argument("-vdw_type", default='uff',
-                        help="Type of parameters for VdW (available: uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew")
-    parser.add_argument("-mult", default=1, help="multiplicity")
-    parser.add_argument("-improper_metal", action='store_true', default=False,
-                        help="Calculate improper dihedral of the metal-aromatic (default:False)")
-    parser.add_argument("-donors", nargs='+', default=['N', 'S', 'O'],
-                        help="Donors from the connected ligands, usually electronegative atom, such as N, S, O, but sometimes metal is connected to carbon", )
-    return parser.parse_args()
-
-
-if __name__ == '__main__':
-    args = get_args()
-    # print("AAAA", args.keywords)
-    parametrize(args.f, args.metal_name, int(args.metal_charge), args.keywords, vdw_type=args.vdw_type,
-                mult=int(args.mult), improper_metal=args.improper_metal, donors=args.donors)

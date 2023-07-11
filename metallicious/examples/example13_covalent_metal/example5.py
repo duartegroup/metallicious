@@ -2,8 +2,7 @@ import sys
 sys.path.insert(0, '/home/fd05/fd/chem1540/github/cgbind2pmd/')
 
 import os
-if os.path.isfile("INFO.dat"):
-    os.remove('INFO.dat')
+
 
 
 #from extract_metal_site import extract_metal_structure
@@ -11,7 +10,7 @@ if os.path.isfile("INFO.dat"):
 #from charges import calculate_charges
 #from copy_topology_params import copy_bonds, copy_angles, copy_dihedrals
 try:
-    from metallicious.main import cgbind2pmd
+    from metallicious.main import patcher
     from metallicious.extract_metal_site import extract_metal_structure
     from metallicious.initial_site import create_initial_topol
 

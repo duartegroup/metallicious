@@ -14,6 +14,7 @@ import MDAnalysis.transformations
 
 #try:
 from metallicious.log import logger
+from metallicious.utils import strip_numbers_from_atom_name
 # except:
 #     from log import logger
 
@@ -55,10 +56,10 @@ def unwrap(syst, metal_type, metal_cutoff=3):
 def int_list_to_str(lista):
     return " ".join(list(map(str, lista)))
     
-
-def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name, end_atoms=[], periodic=False): #TODO why need metal_index and metal_name (?)
-    # usually fingerprint suppose to not have the PBC, but for quesing purposes it can have
-
+# TODO check end_atoms
+#def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name, end_atoms=[]):
+def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name):
+    # usually fingerprint suppose to not have the PBC, but for standrazing purposes we unwrap it:
     syst_fingerprint_pbc = syst_fingerprint
     if syst_fingerprint.universe.dimensions is not None:
         syst_fingerprint_pbc = unwrap(syst_fingerprint, syst_fingerprint[0].type)
@@ -77,7 +78,6 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
 
     connected_cut_system_pbc_heavy_atoms = connected_cut_system_pbc.select_atoms("not name H*", sorted=False)
 
-    # no_metal_heavy_atoms = connected_cut_system_pbc_heavy_atoms.select_atoms(f"not index {metal_index:d}") # TODO remove in future
     no_metal_heavy_atoms = connected_cut_system_pbc_heavy_atoms[1:]
     
     G_site_heavy_atoms = syst_to_graph(no_metal_heavy_atoms, vdwradii={metal_name: 1.0})
@@ -96,10 +96,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
     for a, b in enumerate(connected_cut_system_pbc_heavy_atoms.indices):
         indecies2number[b] = a
 
-    # We find which atom is the metal in new site TODO remove, this is not necessary, we assume is the first one
-    # new_metal_index = np.where(connected_cut_system_pbc_heavy_atoms.indices == metal_index)[0][0]
     permutations_list = permutations(range(number_ligands_bound))
-
 
     # We check all permutation of residue number
     for perm in list(permutations_list):
@@ -135,7 +132,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
             recursive(mappings, 0, [])
             #logger.info(f"Permutations to check:{len(all_possible_mappings):}")
         
-            for mapping_idx in range(len(all_possible_mappings)): # TODO change range(len to enumerate
+            for mapping_idx, _ in enumerate(all_possible_mappings):
                 # concatenate the mapping into one dictionary
                 concatenated_mapping = {}
                 for ligand in all_possible_mappings[mapping_idx]:
@@ -154,10 +151,9 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
 
                 # MDAnalysis has sometimes problems with masses, it give carbon mass of calcium
                 # this code makes sure that the masses are correct:
-                def strip_numbers_from_atom_name(atom_name):
-                    return re.match("([a-zA-Z]+)", atom_name).group(0)
 
-                for atom in range(len(syst_fingerprint_heavy_atoms.atoms)):
+
+                for atom, _ in enumerate(syst_fingerprint_heavy_atoms.atoms):
                     if np.abs(syst_fingerprint_heavy_atoms.atoms[atom].mass - reordered_system.atoms[atom].mass) > 1:
                         if (strip_numbers_from_atom_name(
                                 syst_fingerprint_heavy_atoms.atoms[atom].name) == strip_numbers_from_atom_name(
@@ -176,17 +172,14 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
 
                 if best_rmsd < 0.01:  # if rmsd_fp is small there is no point of searching further
                     break
- 
-    upper_names = np.array([name.upper() for name in syst_fingerprint_heavy_atoms.atoms.names])
+
+    if best_mapping is None:
+        return best_mapping, best_rmsd
+
+    upper_names = np.array([strip_numbers_from_atom_name(name).upper() for name in syst_fingerprint_heavy_atoms.atoms.names])
     temp = np.where([upper_names == metal_name.upper()])[0]
 
     # Reconstruct full mapping, including hydrogen bonds
-
-    # we create full maps of all atoms:
-    # G_fingerprint = nx.Graph(
-    #    MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint.atoms[1:], syst_fingerprint.atoms[1:].positions,
-    #                                             vdwradii={metal_name: 1.0}))  # TODO assumption that first atom is the metal
-
     G_fingerprint = syst_to_graph(syst_fingerprint_pbc.atoms[1:], vdwradii={metal_name: 1.0})
 
     # no_metal = connected_cut_system_pbc.select_atoms(f"not index {metal_index:d}", sorted=False)
@@ -228,6 +221,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
     # logger.info(f"    Mapping: {best_mapping}")
     logger.info(f"    Mapping: {whole_best_mapping}")
 
+    ''' TODO remove (?) 2023/06/10
     mapping_end_atoms = []
     for index1 in whole_best_mapping:
         # logger.info(
@@ -235,12 +229,15 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
         if whole_best_mapping[index1] in end_atoms:
             mapping_end_atoms.append(index1)
             logger.info("          End atom! Will be removed")
+    '''
 
     logger.info(f"    RMSD: {best_rmsd:}")
+
+    ''' TODO remove (?) 2023/06/10
     logger.info(f"    Removing end atoms: {end_atoms:} in fingerprint nonation: {mapping_end_atoms:}")
     for end_atom in mapping_end_atoms:
         whole_best_mapping.pop(end_atom)
-
+    '''
 
 
     return whole_best_mapping, best_rmsd

@@ -1,1 +1,1 @@
-from metallicious.main import cgbind2pmd
+from metallicious.main import patcher

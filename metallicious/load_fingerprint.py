@@ -11,17 +11,16 @@ from rdkit import Chem
 from metallicious.extract_metal_site import find_bound_ligands_nx
 from metallicious.log import logger
 from metallicious.mapping import map_two_structures
-from metallicious.utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
+from metallicious.utils import strip_numbers_from_atom_names
 
 # except:
 #     from extract_metal_site import find_bound_ligands_nx
 #     from log import logger
 #     from mapping import map_two_structures
-#     from utils import mdanalysis_to_rdkit, strip_numbers_from_atom_names
 
 
 #def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
-def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style='full'):
+def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
 
     '''
     Loads topology and coordinates of the fingerprint. If fingerprint not "full", then it will be trunked to the specified fingerprint style:
@@ -37,7 +36,7 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style='full'):
     topol = pmd.load_file(filename_fp_topol)
     syst_fingerprint = MDAnalysis.Universe(filename_fp_coord)
 
-    if fp_style == 'full':
+    if fp_style is None:
         # do not truncate
         return topol, syst_fingerprint
 
@@ -152,7 +151,6 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style='full'):
 
 
 #TODO find everywehere wehere are hardcoded values and make them somehow softcoaded
-#TODO I should check if I copy LJ sites for cCN H S, I should not! what if I use diffrent force field, this should not matter much! 
 
 def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False):
     cage = MDAnalysis.Universe(cage_filename)
@@ -189,7 +187,7 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
 
     logger.info(f"     [ ] Mapping fingerprint to metal center: {metal_index:d}")
-    '''
+    ''' TODO remove (2023/04/07)
     cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
     G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
     nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
@@ -197,7 +195,6 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
     '''
 
-    #TODO this does not work for some of the cages
 
     G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff, neighbhor_cutoff=neighbhor_cutoff)
 
@@ -237,7 +234,7 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
 
             cage_sub_rdkit = mol1.atoms.convert_to("RDKIT", NoImplicit=False) # NoImplicit is use to allow implicit hydrogens (but if they are there it does not remove them!). Important side effect is that it does not bond orders etc. allowing for comparison of structures
             #Chem.MolToSmiles(cage_sub_rdkit)
-            fp_sub_rdkit = mol2.atoms.convert_to("RDKIT", NoImplicit=False) # TODO, chec that everywhere is NoImplicit
+            fp_sub_rdkit = mol2.atoms.convert_to("RDKIT", NoImplicit=False)
             #passed_conditions = cage_sub_rdkit.HasSubstructMatch(fp_sub_rdkit)
 
             #cage.select_atoms(f'index {" ".join(list(map(str, list(G_sub_cage)))):s}').write("mol1.pdb")
@@ -382,18 +379,8 @@ def find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, met
     connected_cut_system = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing)
 
     if connected_cut_system:  # the results are legit, we take them as input
-        #connected_cut_system, end_atoms = result
-        #print("Mapping: end atoms", end_atoms)
-        # TODO I THINK that I used "end atoms" becasue of the charge , and that I did not want to coppy the aromatic to something bond (but then I should have just cat that atom in template (?)
-        # TODO this is not good that I do not remember this choice
-        # best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name=self.metal_name, end_atoms=end_atoms)
-
         best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint,
                                                      metal_name=metal_name)
-
-        # def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, cutoff=9, guessing=False):
-        # def map_two_structures(self, connected_cut_system, metal_index, syst_fingerprint, end_atoms=[]):
-
 
     else:  # we are guessing, and we missed
         return None, 1e10
@@ -414,7 +401,7 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
     '''
     # Check available sites in the library directory
     all_fingerprints_names = []
-    for file in os.listdir(library_path):  # TODO this library has to be better given
+    for file in os.listdir(library_path):
         if file.endswith('.pdb'):
             all_fingerprints_names.append(file[:-4])
 
@@ -434,7 +421,7 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
                     if metal_charge == int(name.split('_')[1]):
                         if vdw_type is None:
                             fingerprints_names[
-                                name] = f"{library_path:}/{name:}.pdb"  # TODO check format of the all strings
+                                name] = f"{library_path:}/{name:}.pdb"
                         elif vdw_type in name:  # if vdw_type is specified we only search for specific files
                             fingerprints_names[name] = f"{library_path:}/{name:}.pdb"
             else:
@@ -459,30 +446,6 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
     if additional_fp_files is not None:
         fp_files = {**fp_files, **additional_fp_files}
 
-    ''' TODO, remove (9/06/2023)
-    # Check avaialble sites in the library directory
-    all_finerprints_names = []
-    for file in os.listdir(library_path): # TODO this library has to be better given
-        if file.endswith('.pdb'):
-                all_finerprints_names.append(file[:-4])
-
-    # We choose only the one which have the same name
-    finerprints_names = []
-    if fingerprint_guess_list is not None:
-        for name in fingerprint_guess_list:
-            if name not in all_finerprints_names:
-                print("Fingerprint not available")
-                raise
-            else:
-                finerprints_names.append(name)
-    else:
-        for name in all_finerprints_names:
-            if metal_name.title() in name:
-                if vdw_type is None:
-                    finerprints_names.append(name)
-                elif vdw_type.replace('/','_') in name: # if vdw_type is specified we only search for specific files
-                    finerprints_names.append(name)
-    '''
     if len(fp_files) == 0:
         logger.info(f"Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
         return False

@@ -146,7 +146,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
 
     # create reorientations of the single conformer
     molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
-    molecule_psiresp.generate_orientations()
+    molecule_psiresp.generate_orientations(True)
     # GridOptions._generate_vdw_grid(np.array([atom.atomic_symbol for atom in site.atoms]), np.array([atom.coordinate.real for atom in site.atoms]))
     conf = molecule_psiresp.conformers[0]
 
@@ -157,7 +157,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
 
         # orient_idx=0
         orient = conf.orientations[orient_idx]
-        # this does not work if already ortogonalized. it will break if at exactly 0,0,0 TODO
+        # this does not work if already ortogonalized. it will break if file is reused.... :-(
         orient.compute_grid(GridOptions)
         print(orient.grid)
 
@@ -320,8 +320,8 @@ def calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, sit
 
     return new_charges
 
-# general; TODO remove garbage files, like "ligand"
 
+''' TODO remove (2023/07/04)
 def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
     File = open("INFO.dat")
     text = File.read()
@@ -388,7 +388,7 @@ def calculate_charges(metal_charge, metal_name, vdw_data_name, mult=1):
     print("all_sites", all_sites_charges)
 
     return all_sites_charges
-
+'''
 
 # metal_name, metal_charge, filename, unique_ligands_pattern=None, link_atoms=None, additional_atoms=None, starting_index=None, indecies=None
 def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_pattern, ligand_charges_pattern, link_atoms,

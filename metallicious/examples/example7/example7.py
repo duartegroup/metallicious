@@ -3,7 +3,7 @@ sys.path.insert(0, '/home/fd05/fd/chem1540/github/cgbind2pmd/')
 
 
 try:
-    from metallicious.main import cgbind2pmd
+    from metallicious.main import patcher
     from metallicious.extract_metal_site import extract_metal_structure
 except:
     from cgbind2pmd.main import cgbind2pmd
@@ -19,7 +19,7 @@ fingerprint_style='full'
 
 #extract_metal_structure(f, metal, "out")
 
-cgbind2gmx = cgbind2pmd()
+cgbind2gmx = patcher()
 cgbind2gmx.name_of_binding_side = fingerprint
 cgbind2gmx.fingerprint_style = fingerprint_style
 cgbind2gmx.from_coords(f, linker_topol, metal, int(metal_charge))

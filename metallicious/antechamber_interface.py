@@ -8,7 +8,6 @@ import MDAnalysis
 
 # try:
 from metallicious.log import logger
-from metallicious.utils import mdanalysis_to_rdkit
 # except:
 #     from log import logger
 #     from utils import mdanalysis_to_rdkit
@@ -66,7 +65,7 @@ def antechamber(pdbfile,output, charge=None, verbose=False):
     File.close()
 
     logger.info(f"    - Charge of the molecule is {charge:}")
-    run_external(f"antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -s 2 -nc {charge:}", assertion="Errors = 0")
+    run_external(f"antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -at gaff2 -s 2 -nc {charge:}", assertion="Errors = 0")
     run_external("parmchk2 -i temp.mol2 -f mol2 -o temp.frcmod")
     run_external("tleap -f tleap.in")
 

@@ -18,7 +18,7 @@ import parmed as pmd
 #try:
 from metallicious.log import logger
 from metallicious.mapping import map_two_structures, unwrap
-from metallicious.utils import new_directory, mdanalysis_to_rdkit,strip_numbers_from_atom_names
+from metallicious.utils import new_directory, strip_numbers_from_atom_names
 #except:
 #    from log import logger
 #    from mapping import map_two_structures, unwrap
@@ -29,6 +29,7 @@ def find_metal_indices(cage, metal_name):
     if not hasattr(cage.atoms[0], 'element'):
         guessed_elements = MDAnalysis.topology.guessers.guess_types(strip_numbers_from_atom_names(cage.atoms.names))
         cage.universe.add_TopologyAttr('elements', guessed_elements)
+
     metal_indices = [idx for idx, element in enumerate(cage.atoms.elements) if
                      element.title() == metal_name.title()]
     n_metals = len(metal_indices)
@@ -39,41 +40,6 @@ def find_metal_indices(cage, metal_name):
         n_metals = len(metal_indices)    
     
     return metal_indices, n_metals
-
-# TODO find_bound_whole_ligands and find_bound_ligands_nx are the same, aren't they?
-# TODO THey are the same, and remove this after sevela weeks, if nothing breaks (19/05/2023)
-
-'''
-def find_bound_whole_ligands(metal, cage, G_sub_ligands, cutoff_covalent=3):    
-    Find ligands which are bound to the metal
-
-    metal: mdanalysis
-    
-
-    bound_ligands = []
-    closest_atoms = []
-
-    for ligand in G_sub_ligands:
-        closest_atoms_ligand = []
-
-        metal_ligand_distances = distance_array(cage[list(ligand.nodes)].positions, metal.position)
-
-        # arg_min = np.argmin(metal_ligand_distances)
-
-        for arg_min in range(len(metal_ligand_distances)):
-
-            if metal_ligand_distances[arg_min] < cutoff_covalent:
-                closest_atoms_ligand.append(cage[list(ligand.nodes)][arg_min].index)
-
-                if ligand not in bound_ligands:
-                    bound_ligands.append(ligand)
-        if len(closest_atoms_ligand) > 0:
-            closest_atoms.append(closest_atoms_ligand)
-
-    n_ligands = len(bound_ligands)
-    return bound_ligands, closest_atoms
-
-'''
 
 def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, closest_neighbhors = 3, neighbhor_cutoff=None):
     '''
@@ -173,22 +139,14 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
     return G_sub_cages_bound, closest_atoms_ligands
 
 def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closest_atoms, aromaticity):
-
-    #  # , cutoff=7, cutoff_covalent=3.0, closest_neighbhors=3)
-    # TODO THIS NEEDs to be checked for the knots/cages
-
     site_link_atoms_single = []
     site_single = []
     site_ligands_single =[]
 
-    for idx_bound_ligand in range(len(bound_ligands)):
+    for idx_bound_ligand, bound_ligand in enumerate(bound_ligands):
         close_atoms_and_in_rings = []
-        selected_bound_ligand = nx.Graph(bound_ligands[idx_bound_ligand])
+        selected_bound_ligand = nx.Graph(bound_ligand)
         ##selected_closest_atom = selected_closest_atoms[a]
-
-        # the old way, to be remove0d # TODO (19/05/2023)
-        # cut_sphere = cage[[metal_index] + list(selected_bound_ligand.nodes)].select_atoms(
-        #    f'around {cutoff:f} index {metal_index:d}')
 
         # we select neighbours of 3, which are always added
         neighbour_indices = []
@@ -263,13 +221,6 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
 
         close_atoms_plus_adj += adj_atoms
 
-        # This does not work when for example things are charged, like [O-] at the end, remove in fuuture (26/05/2023) TODO
-        # Link atoms are all atoms which are not hydrogens and which are added:
-        # link_atoms = [atom.index for atom in cage[adj_atoms] if atom.type != 'H']
-        # site_link_atoms += link_atoms
-
-        # This is how it should be done We search for link atoms, link atoms will have different node degree in
-        # subgraph of select site then whole ligand
         Gsub_extended = selected_bound_ligand.subgraph(close_atoms_plus_adj)
         degrees_subset = nx.degree(Gsub_extended)
         degrees_full = nx.degree(selected_bound_ligand)
@@ -279,12 +230,6 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
         site_single += close_atoms_plus_adj
 
         site_ligands_single.append(close_atoms_plus_adj)
-
-        '''
-        site_link_atoms += [node for node in dict(degrees_subset) if degrees_subset[node] != degrees_full[node]]
-        site += close_atoms_plus_adj
-        site_ligands.append(close_atoms_plus_adj)
-        '''
 
     return site_single, site_ligands_single, site_link_atoms_single
 
@@ -500,6 +445,7 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
         hydrogens = MDAnalysis.Universe.empty(n_atoms, trajectory=True)
         hydrogens.add_TopologyAttr('name', ['H'] * n_atoms)
         hydrogens.add_TopologyAttr('type', ['H'] * n_atoms)
+        hydrogens.add_TopologyAttr('elements', ['H'] * n_atoms)
         hydrogens.atoms.positions = positions
         new_syst = MDAnalysis.Merge(selection_site.atoms, hydrogens.atoms)
     else:
@@ -510,7 +456,9 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
     return new_syst, renumered_add_atoms_to_this_atom
 
 def find_atom_to_ligand_membership(new_syst, metal_name):
-    new_site_no_metal = new_syst.select_atoms(f"not name {metal_name.title():s} {metal_name.upper():s} {metal_name.lower():s}")
+    metal_indices, _ = find_metal_indices(new_syst, metal_name)
+    metals = new_syst.atoms[metal_indices]
+    new_site_no_metal = new_syst.atoms - metals
     
     if new_site_no_metal.universe.dimensions is not None:
         G_all_short_ligands = nx.Graph(
@@ -537,54 +485,33 @@ def find_ligand_pattern(new_syst, ligands_nodes):
     :param ligands_nodes:
     :return:
     '''
-
     #new_syst2 = new_syst.copy()
-
 
     unique_ligands = []
     unique_ligands_pattern = []
 
-    guessed_elements = guess_types(strip_numbers_from_atom_names(new_syst.atoms.names))
-    new_syst.add_TopologyAttr('elements', guessed_elements)
+    if not hasattr(new_syst.atoms[0], 'element'):
+        guessed_elements = guess_types(strip_numbers_from_atom_names(new_syst.atoms.names))
+        new_syst.add_TopologyAttr('elements', guessed_elements)
 
     for ligands_node in ligands_nodes:
         exist = False
 
         selected_ligand_1 = MDAnalysis.Merge(new_syst.atoms[ligands_node])
-        #selected_ligand_1.atoms.write("temp1.pdb")
-        #mol1 = Chem.MolFromPDBFile("temp1.pdb", removeHs=False) # remove (?) 13/06 TODO
-
-        mol1 = selected_ligand_1.atoms.convert_to("RDKIT") # TODO remove
-        #mol1 = mdanalysis_to_rdkit(selected_ligand_1)
-
-        #if mol1 != mol1b: # TODO remove
-        #    raise
-
+        mol1 = selected_ligand_1.atoms.convert_to("RDKIT")
 
         for idx, unique_lingad in enumerate(unique_ligands):
-
             selected_ligand_2 = MDAnalysis.Merge(new_syst.atoms[unique_lingad])
-            #selected_ligand_2.atoms.write("temp2.pdb")# remove (?) 13/06 TODO
-            #mol2 = Chem.MolFromPDBFile("temp2.pdb", removeHs=False)
-
-            mol2 = selected_ligand_2.atoms.convert_to("RDKIT") # TODO remove
-            #mol2 = mdanalysis_to_rdkit(selected_ligand_2)
-
-            #if mol2 !=mol2b:
-            #    raise
-
-
-
+            mol2 = selected_ligand_2.atoms.convert_to("RDKIT")
 
             if (mol1.HasSubstructMatch(mol2) and mol2.HasSubstructMatch(mol1)):
                 exist = True
                 unique_ligands_pattern.append(idx)
-
                 break
 
         if exist == False:
             unique_ligands_pattern.append(len(unique_ligands))
-            unique_ligands.append(ligands_node)
+            unique_ligands.append(np.sort(ligands_node))
 
     return unique_ligands_pattern, unique_ligands
 
@@ -600,11 +527,8 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
     new_link_atoms = []
     new_extra_atoms = []
 
-    metals = new_syst.select_atoms(f"name {metal_name.title():s} {metal_name.upper():s} {metal_name.lower():s}")
-    for metal in metals:
-        metal.element = metal_name.title()
-
-
+    metal_indices, _ = find_metal_indices(new_syst, metal_name)
+    metals = new_syst.atoms[metal_indices]
     new_ligands = [metals]
     
     n_total_atoms = len(metals)
@@ -614,38 +538,15 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
         sorted_extra_atoms = [idx for idx, a in enumerate(ligands_node) if a in extra_atoms]
         sorted_link_atoms = [idx for idx, a in enumerate(ligands_node) if a in link_atoms]
 
-        #new_syst.atoms[ligands_node].write("temp1.pdb") # TODO check why do we need this, remove (?) 13/06 TODO
-        #new_syst.atoms[ligands_node].write("temp1.xyz") # xyz has better precision then pdb, important for the strain calculations. We might even try to omit that TODO
-        #selected_ligand_1 = MDAnalysis.Universe("temp1.xyz") # atom indices are fixed and cannot be change, this is a simple way of renumbering themvremove (?) 13/06 TODO
-        #selected_ligand_1b = new_syst.atoms[ligands_node] #remove (?) 13/06 TODOremove (?) 13/06 TODO
         selected_ligand_1 = MDAnalysis.Merge(new_syst.atoms[ligands_node]) # Merge is needed to renumber things
-        #selected_ligand_1 = new_syst.atoms[ligands_node]
-        #mol1 = mdanalysis_to_rdkit(selected_ligand_1)
-        #print([atom.GetChiralTag() for atom in mol1.GetAtoms()])
-
-        #mol1 = Chem.MolFromPDBFile("temp1.pdb", removeHs=False)
-        mol1 = selected_ligand_1.atoms.convert_to("RDKIT") # TODO I probably should use openbabel to guess eleemtns
+        mol1 = selected_ligand_1.atoms.convert_to("RDKIT")
 
         G_ligand_1 = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(selected_ligand_1.atoms, selected_ligand_1.atoms.positions))
         nx.set_node_attributes(G_ligand_1, {atom.index: atom.name[0] for atom in selected_ligand_1.atoms}, "name")
         nx.set_node_attributes(G_ligand_1, {atom.GetChiralTag() for atom in mol1.GetAtoms()}, "chirality")
 
-        #mol1b = mdanalysis_to_rdkit(selected_ligand_1) # TODO remove
-        #if mol1 != mol1b:
-        #    raise
-
-        #new_syst.atoms[unique_ligands[unique_ligands_pattern[idx]]].write("temp2.pdb") remove (?) 13/06 TODO
-        #new_syst.atoms[unique_ligands[unique_ligands_pattern[idx]]].write("temp2.xyz")remove (?) 13/06 TODO
-        #selected_ligand_2 = MDAnalysis.Universe("temp2.pdb")remove (?) 13/06 TODO
-        #selected_ligand_2 = MDAnalysis.Universe("temp2.xyz")remove (?) 13/06 TODO
-
-        #selected_ligand_2 = new_syst.atoms[unique_ligands[unique_ligands_pattern[idx]]]
         selected_ligand_2 = MDAnalysis.Merge(new_syst.atoms[unique_ligands[unique_ligands_pattern[idx]]])
-
-        #mol1 = mdanalysis_to_rdkit(selected_ligand_2)
-
-        #mol1 = Chem.MolFromPDBFile("temp2.pdb", removeHs=False)
         mol1 = selected_ligand_2.atoms.convert_to("RDKIT")
         G_ligand_2 = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(selected_ligand_2.atoms, selected_ligand_2.atoms.positions))
@@ -655,12 +556,6 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
         print([atom.GetChiralTag() for atom in mol1.GetAtoms()])
 
         new_ligand = selected_ligand_2.copy()
-
-
-        #mol1b = mdanalysis_to_rdkit(selected_ligand_2)
-        #if mol1 != mol1b:
-        #    raise
-
 
         iso = isomorphism.GraphMatcher(G_ligand_1, G_ligand_2,
                                        node_match=lambda n1, n2: n1['name'] == n2['name'] and n1['chirality'] == n2[
@@ -691,8 +586,6 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
 
     return new_ligands, new_extra_atoms, new_link_atoms
 
-#TODO general: are vdw paramters definitly correct? some wierd stuff is happening with zinc and protein
-
 def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None):
     '''
     It takes a structure and tries to find structures around metals.
@@ -714,7 +607,11 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
     all_metals_indices = []
     if all_metal_names is not None:
         for additional_metal in all_metal_names:
-            all_metals_indices += find_metal_indices(syst, additional_metal)[0]
+            additional_indices = find_metal_indices(syst, additional_metal)[0]
+            all_metals_indices += additional_indices
+            # Sometimes guessed elements
+            if hasattr(cage.atoms, 'elements'):
+                cage[additional_indices].elements = [additional_metal] * len(additional_indices)
     else:
         all_metals_indices = metal_indices
 
@@ -728,8 +625,6 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
     G_all_ligands = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(all_ligands_atoms.atoms, all_ligands_atoms.atoms.positions, box=all_ligands_atoms.dimensions))
     nx.set_node_attributes(G_all_ligands, {atom.index: atom.name[0] for atom in all_ligands_atoms.atoms}, "name")
 
-    G_sub_ligands = [G_all_ligands.subgraph(a) for a in nx.connected_components(G_all_ligands)]
-
     binding_sites_graphs, site_link_atoms = find_closest_and_add_rings_iterate(metal_indices, cage, all_metals_indices)
 
     if check_uniquness:
@@ -740,8 +635,6 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
     metal_sites = []
 
-
-
     for n_site, unique_site in enumerate(unique_sites):
         new_directory(f"{output:s}{n_site:d}")
 
@@ -749,11 +642,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
         strip_atoms = [idx for idx in list(cage.indices) if idx not in unique_site]
         site_topol.strip(f"@{','.join(list(map(str, np.array(strip_atoms) + 1))):s}")
 
-
-
         selection_site = cage[unique_site]
-        #cage.atoms.write("cage.pdb") # TODO not sure why this is here
-        #selection_site.atoms.write(f"temp_temp{n_site:}.pdb") #TODO remove (?)
 
         if selection_site.universe.dimensions is not None:
             selection_site.atoms[0].type = metal_name # previously, we changed it to H (aromaticity) we change it back
@@ -763,7 +652,6 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
         #Hydrogens are added at the end of the file
         extra_atoms = new_syst.atoms[len(selection_site):].atoms.indices
-        #new_syst.atoms.write("temp.gro")
 
         # we split site, and we group atoms for diffrent ligands
         ligands_atoms_membership = find_atom_to_ligand_membership(new_syst, metal_name)
@@ -775,9 +663,6 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
         unique_ligands_charges = []
         unique_ligand_filenames = []
         unique_ligands_smiles = []
-
-
-
 
 
         unique_ligand_topols = []
@@ -792,48 +677,21 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
             unique_ligand_topols.append(ligand_topol)
 
             ligand_coord = MDAnalysis.Merge(new_syst.atoms[sorted(unique_ligand)])
-            ligand_coord.atoms.write(f"{output:s}{n_site:d}/ligand_{idx:}.pdb") # TODO do we need both (?)
             ligand_coord.atoms.write(f"{output:s}{n_site:d}/ligand_{idx:}.xyz")
             
             unique_ligand_filenames.append(f"{output:s}{n_site:d}/ligand_{idx:}.xyz")
 
-            # Guess charges of the ligand fragment, whatch out, this usually works, but sometimes gives wierd result!
             mol = ligand_coord.atoms.convert_to("RDKIT")
-
-            #mol = MDAnalysis.Merge(new_syst.atoms[ligands_node])
-
-            #mol1b = mdanalysis_to_rdkit(ligand_coord) # TODO remove (?)
-            #if mol != mol1b:
-            #    raise
-
-            #mol = mdanalysis_to_rdkit(ligand_coord)
-
             charge = rdkit.Chem.GetFormalCharge(mol)
-
             unique_ligands_charges.append(charge)
             unique_ligands_smiles.append(rdkit.Chem.MolToSmiles(mol))
 
-        # TODO rename? sorted here means categorised to the specific ligand
-        renumbered_ligands, sorted_extra_atoms, sorted_link_atoms = renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern, extra_atoms, new_link_atoms)
+        renumbered_ligands, categorized_extra_atoms, categorized_link_atoms = renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern, extra_atoms, new_link_atoms)
         
-        # Parmed needs that the same residues are grouped togheter:
+        # Parmed needs that the same residues are grouped together:
         sorted_renumbered_ligands = [renumbered_ligands[a] for a in np.append(0, np.argsort(unique_ligands_pattern) + 1)]
-        #sorted_renumbered_extra_atoms = [sorted_extra_atoms[a] for a in np.argsort(unique_ligands_pattern))]
-        #sorted_renumbered_extra_link_atoms = [sorted_link_atoms[a] for a in np.append(0, np.argsort(unique_ligands_pattern))]
 
-
-        #sorted_extra_atoms = [idx for idx, a in enumerate(
-        #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in extra_atoms]
-        #sorted_link_atoms = [idx for idx, a in enumerate(
-        #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if a in new_link_atoms]
-
-        #sorted_link_atoms = [idx for idx, a in enumerate(
-        #    np.concatenate([ligands_atoms_membership[a] for a in np.argsort(unique_ligands_pattern)])) if
-        #                      a in unique_site_link_atoms]
-
-        # Saving the files ------------------------
         new_cage = MDAnalysis.Merge(*sorted_renumbered_ligands)  # , dimensions=crystal.dimensions)
-        new_cage.atoms.write(f"{output:s}{n_site:d}/saturated_template.pdb")
         new_cage.atoms.write(f"{output:s}{n_site:d}/saturated_template.xyz")
 
         metal_topol = deepcopy(site_topol)
@@ -861,20 +719,12 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
         charge_pattern = [unique_ligands_charges[unique_ligands_pattern[a]] for a in np.argsort(unique_ligands_pattern)]
         smiles_pattern = [unique_ligands_smiles[unique_ligands_pattern[a]] for a in np.argsort(unique_ligands_pattern)]
-        sorted_renumbered_extra_atoms = [np.array(sorted_extra_atoms[a], dtype=int) for a in np.argsort(unique_ligands_pattern)]
+        sorted_renumbered_extra_atoms = [np.array(categorized_extra_atoms[a], dtype=int) for a in np.argsort(unique_ligands_pattern)]
         sorted_renumbered_extra_atoms = list(np.concatenate([starting_index[idx + 1] + extra_atoms for idx, extra_atoms in enumerate(sorted_renumbered_extra_atoms)]))
         
-        sorted_renumbered_extra_link_atoms = [np.array(sorted_link_atoms[a], dtype=int) for a in np.argsort(unique_ligands_pattern)]
+        sorted_renumbered_extra_link_atoms = [np.array(categorized_link_atoms[a], dtype=int) for a in np.argsort(unique_ligands_pattern)]
         sorted_renumbered_extra_link_atoms = list(np.concatenate([starting_index[idx + 1] + link_atoms for idx, link_atoms in
                                          enumerate(sorted_renumbered_extra_link_atoms)]))
-
-        with open("INFO.dat", "a") as File:
-            File.write(f"ligand_pattern:{','.join(list(map(str,np.sort(unique_ligands_pattern)))):}\n")
-            File.write(f"link_atoms:{','.join(list(map(str, sorted_renumbered_extra_link_atoms))):}\n")
-            File.write(f"extra_atoms:{','.join(list(map(str, sorted_renumbered_extra_atoms))):}\n")
-            File.write(f"starting_index:{','.join(list(map(str, starting_index))):}\n")
-            File.write(f"charge_pattern:{','.join(list(map(str, charge_pattern))):}\n")
-            File.write(f"smiles_pattern:{','.join(list(map(str, smiles_pattern))):}\n")
 
         selected_metal_site_list = [metal_name, 0, 1, f"{output:s}{n_site:d}", unique_ligand_filenames,
                                     np.sort(unique_ligands_pattern), sorted_renumbered_extra_link_atoms,
@@ -885,59 +735,6 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
     
     return metal_sites
     
-    
-
-
-def read_info_file(self, filename='INFO.dat'):  # TODO this should be everywhere, od subrutines should be removed
-    File = open(filename)
-    text = File.read()
-    File.close()
-
-    n_sites = text.count("ligand_pattern")
-    print("Number of sites", n_sites)
-
-    unique_ligands_pattern = []
-    link_atoms = []
-    additional_atoms = []
-    starting_indecies = []
-    charge_pattern = []
-    indecies = []
-
-    for line in text.splitlines():
-        if "ligand_pattern:" in line:
-            unique_ligands_pattern.append(list(map(int, line[15:].split(','))))
-
-        elif "link_atoms:" in line:
-            if ',' in line:
-                link_atoms.append(list(map(int, line[11:].split(','))))
-            else:
-                link_atoms.append([])
-
-        elif "extra_atoms:" in line:
-            if ',' in line:
-                additional_atoms.append(list(map(int, line[12:].split(','))))
-            else:
-                additional_atoms.append([])
-
-        elif "starting_index:" in line:
-            starting_index = list(map(int, line[15:].split(',')))
-            starting_indecies.append(starting_index)
-            indecies.append(
-                [list(range(starting_index[a - 1], starting_index[a])) for a in range(1, len(starting_index))])
-
-        elif "charge_pattern:" in line:
-            charge_pattern.append(list(map(int, line[15:].split(','))))
-
-    sites = []
-    for n_site in range(n_sites):
-        filename = f"site{n_site:d}.xyz"
-
-        sites.append(metal_site(metal_name, metal_charge, filename, unique_ligands_pattern[n_site], link_atoms[n_site],
-                                additional_atoms[n_site], starting_indecies[n_site], indecies[n_site],
-                                charge_pattern[n_site]))
-    self.unique_sites = sites
-
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="Metaloorganic structre (*gro, *pdb, etc. all supported by MDAnalysis)")

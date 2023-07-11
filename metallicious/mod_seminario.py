@@ -8,7 +8,6 @@ from operator import itemgetter
 
 def modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling = 1):
     N = len(coords)
-
     vibrational_scaling_squared = vibrational_scaling**2
 
     bond_lengths = np.zeros((N, N))

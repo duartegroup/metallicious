@@ -24,6 +24,7 @@ from metallicious.data import name_to_atomic_number
 from metallicious.mapping import map_two_structures
 from metallicious.mod_seminario import modified_seminario_method
 from metallicious.improper_torsion import find_impropers_and_values
+from metallicious.utils import strip_numbers_from_atom_name
 
 
 def read_bonds_from_orca_output(filename="site_opt_orca.out"):
@@ -83,7 +84,7 @@ def read_hessian_from_orca(filename):
 
     hessian = np.array(hessian) * (627.509391)/ (0.529**2)  #Change from Hartree/bohr to kcal/mol /ang
     return hessian
-
+'''
 
 def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"): #TODO remove
     File = open(filename)
@@ -216,7 +217,7 @@ def read_bonds(): # REMOVE TODO
         bonds[tuple(np.sort(unsorted_bond)), (striped_bond[argsorted[0]], striped_bond[argsorted[1]])] = (
             float(line.split()[2]), float(line.split()[1]))
     return bonds
-
+'''
 def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
     metal_name = metal_name.title()
     new_bonds = {}
@@ -252,12 +253,9 @@ def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, ind
     site = MDAnalysis.Universe(filename_opt)
     ligand_indecies = indecies[1:]
     
-    metal_index = 0  # TODO metal again first
+    metal_index = 0
     for unique_ligand in list(set(unique_ligands_pattern)):
         unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
-
-        #index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
-        #index_distance = index_select - index_select[0] # TODO this will not work if the ligand is symmetric and can be more than one iteractions.
 
         mappings = []
         for unique_ligand_idx in unique_ligand_indecies:
@@ -349,7 +347,7 @@ def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_op
     return bonds
 
 
-
+'''
 def read_angles(): # TODO remove
     File = open("Modified_Seminario_Angle")
     text = File.read()
@@ -366,7 +364,7 @@ def read_angles(): # TODO remove
             angles[tuple(indecies[::-1]), tuple(names[::-1])] = (float(line.split()[2]), float(line.split()[1]))
     return angles
 
-
+'''
 def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
     metal_name = metal_name.title()
     new_angles = {}
@@ -385,7 +383,7 @@ def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
             new_angles[angle[0]] = angles[angle]
     return new_angles
 
-
+'''
 #(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O"])
 def symmetrize_angles(angles, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern): # TODO this is to remove (8/6/2023)
     # TODO this is to remove
@@ -430,7 +428,8 @@ def symmetrize_angles(angles, metal_name, filename_opt, starting_index, indecies
                         # There is no simple way of symmetrizing this interaction, e.g. PdL4, some are orineted 90 deg some 180 deg
                         None
     return angles
-
+'''
+'''
 def read_and_symmetrize_angles(metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", 'S']): # TODO this is not used (?)
     angles = read_angles()
     angles = remove_non_metal_donor_angles(angles, metal_name, donors=donors)
@@ -440,7 +439,7 @@ def read_and_symmetrize_angles(metal_name, filename_opt, starting_index, indecie
                                      donors=donors)
     return angles
 
-
+'''
 def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
                                        donors=["N", "O", "S"]):
     angles = remove_non_metal_donor_angles(angles_with_names, metal_name, donors=donors)
@@ -482,15 +481,14 @@ def generate_all_dihedrals(angles, bonds, metal_index=0):
             new_dihedrals.append(dihedral)
     return new_dihedrals
 
-def create_dummy_dihedrals(angles, bonds, filename, metal_index=0):  # TODO check metal index
+def create_dummy_dihedrals(angles, bonds, filename, metal_index=0):
     syst_opt = MDAnalysis.Universe(filename)
     dihedrals_indexes = generate_all_dihedrals(angles, bonds, metal_index)
     dihedrals = {}
+
     for dihedral in dihedrals_indexes:
         dihedrals[tuple(dihedral)] = (np.rad2deg(calc_dihedrals(*syst_opt.atoms[dihedral].positions)), 0)
     return dihedrals
-
-# TODO there is something wierd about the angles, they do not much with Merz, I might solve this by accident
 
 def strip_names_from_covalent(covalent_paramters):
     new_covalent = {}
@@ -505,8 +503,7 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     names = [atom.atomic_symbol for atom in site.atoms]
     return site.name, np.array(site.coordinates), names
 
-def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1):
-
+def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1, vibrational_scaling = 1):
     here = os.getcwd()
     os.system("mkdir bonded")
     os.chdir("bonded")
@@ -518,21 +515,15 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
     bond_list, angle_list = read_bonds_from_orca_output(f"{name:s}_opt_orca.out")
     hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
 
-    bonds_with_names ,angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=1) #vibrational scalling 
+    # Scalling factor taken from https://cccbdb.nist.gov/vsfx.asp and assumed that for basis set of double zeta and higher the scalling does not change
+    if 'PBE0' in keywords:
+        vibrational_scaling = 0.96
+    elif 'wB97X-D3' in keywords:
+        vibrational_scaling = 0.955
 
-
-    #os.chdir(path_to_mod_seminario) #TODO this can be done form just python scrpit # TODO remove
-    #command = f'python modified_Seminario_method.py {here:s}/bonded/ {here:s}/bonded/ 1.000' #TODO modify the 1.000 modifier
-    #process = Popen(command.split(), stdout=DEVNULL, stderr=DEVNULL)
-    #process.wait()
-    #os.chdir(here+"/bonded")
-
-    #bonds_with_names = read_bonds()
-    #angles_with_names = read_angles()
+    bonds_with_names, angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=vibrational_scaling)
 
     dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=f"{name:s}_opt_orca.xyz")
-
-
 
     os.chdir(here)
 
@@ -582,7 +573,7 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
                                        donors=donors)
 
     if improper_metal: 
-        improper_dihedrals = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult)
+        improper_dihedrals = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult, filename=filename_opt)
         dihedrals = {**dummy_dihedrals, **improper_dihedrals}
     else:
         dihedrals = dummy_dihedrals
@@ -595,6 +586,7 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
 
 #TODO general: check if LJ paramters are changed if topology is specified
 
+''' TODO remove (2023/07/04)
 def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False, donors=['N', 'S', 'O']):
 
     File = open("INFO.dat")
@@ -642,7 +634,7 @@ def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SV
 
     return (bondss, angless, dihedralss)
 
-
+'''
 
 def save_bonded_paramters_to_file(self, n_site=0):
     File = open(f"bonds_{n_site:d}.dat", "w")
