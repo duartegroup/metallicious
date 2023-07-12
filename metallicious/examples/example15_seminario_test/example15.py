@@ -215,7 +215,7 @@ cage.parametrize()
 
 
 
-os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8906621029/gromacs")
+os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8908552491/gromacs")
 #import sys
 #home_path = '/u/fd/chem1540'
 #sys.path.insert(0,home_path + '/github/cgbind')
@@ -224,8 +224,8 @@ os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8906621029/gromacs")
 #c#age = Cage(linker, metal='Pd', metal_charge='2')
 #cage.print_xyz_file(filename='cage.xyz')
 
-cage = supramolecular_structure('cage.xyz', {'Pd': (2,1)},  vdw_type='merz-tip3p')
-cage.prepare_initial_topology(homoleptic_ligand_topol='new_linker.top')
+cage = supramolecular_structure('Guanidium_m12_l24.pdb', {'Pd': (2,1)},  vdw_type='merz-tip3p')
+cage.prepare_initial_topology(homoleptic_ligand_topol='LA1.itp')
 cage.parametrize()
 
 

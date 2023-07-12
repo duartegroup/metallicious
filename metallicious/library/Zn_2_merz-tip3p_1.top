@@ -1,17 +1,17 @@
 ;
 ;   File template.top  was generated
 ;   By user: chem1540 (20152)
-;   On host: comp0816
-;   At date: Tue. July  2 00:47:48 2023
+;   On host: comp0809
+;   At date: Wed. July  3 11:30:31 2023
 ;
 ;   This is a standalone topology file
 ;
 ;   Created by:
-;   ParmEd:       example15.py, VERSION 3.4.3
-;   Executable:   example15.py
+;   ParmEd:       example_multi.py, VERSION 3.4.3
+;   Executable:   example_multi.py
 ;   Library dir:  /usr/local/share/gromacs/top
 ;   Command line:
-;     example15.py
+;     example_multi.py
 ;
 
 [ defaults ]
@@ -98,7 +98,7 @@ system1          3
    54         h1      3    RES    H44     54 0.10646389   1.008000   ; qtot -0.107784
    55         h4      3    RES    H47     55 0.04923773   1.008000   ; qtot -0.058546
    56         hc      3    RES    H48     56 0.02927301   1.008000   ; qtot -0.029273
-   57         hc      3    RES    H49     57 0.02927301   1.008000   ; qtot 0.000000
+   57         hc      3    RES    H49     57 0.02927301   1.008000   ; qtot -0.000000
 
 [ bonds ]
 ;    ai     aj funct         c0         c1         c2         c3
