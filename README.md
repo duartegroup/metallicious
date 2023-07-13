@@ -1,4 +1,6 @@
-<center><img src="images/logo.png" width="200"/></center>
+<p align="center">
+<img src="images/logo.png" width="100"/>
+</p>
 
 # Metallicious 
 
