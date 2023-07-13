@@ -26,9 +26,12 @@ Metallicious works with minimal user input, relying heavily on educated guesses,
 
 **Limitations**: The code currently supports organometallic structures with metals separated by at least 2 non-metal atoms. Metal clusters are not supported. Additionally, metals of the same type must have the same charge and multiplicity.
 
-Installation:
-
-Simple example:
+## Installation:
+```
+pip install metallicious
+```
+## Quick start
+Parametrization of structure "ru_pd.xyz" with (nonbonded) topology "ru_pd.top": 
 
 ```
 from parametrize_new_sites import supramolecular_structure

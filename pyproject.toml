@@ -17,3 +17,6 @@ dependencies = [
 [project.scripts]
 metallicious = "metallicious.__main__:main"
 
+[tool.setuptools.packages.find]
+include = ["metallicious"]
+
