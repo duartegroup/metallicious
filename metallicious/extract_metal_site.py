@@ -108,7 +108,7 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
         
             closest_atoms_ligands.append(closest_atoms)
 
-    logger.info(closest_atoms_string)
+    logger.info(f"\t\t\t{closest_atoms_string}")
 
     G_sub_cages_bound_cutoff = []
     closest_atoms_ligands_cutoff = []

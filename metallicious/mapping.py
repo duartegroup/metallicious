@@ -231,7 +231,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
             logger.info("          End atom! Will be removed")
     '''
 
-    logger.info(f"    RMSD: {best_rmsd:}")
+    logger.info(f"\t\t\tRMSD: {best_rmsd:}")
 
     ''' TODO remove (?) 2023/06/10
     logger.info(f"    Removing end atoms: {end_atoms:} in fingerprint nonation: {mapping_end_atoms:}")

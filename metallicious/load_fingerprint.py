@@ -186,7 +186,7 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                            "name")
     G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
 
-    logger.info(f"     [ ] Mapping fingerprint to metal center: {metal_index:d}")
+    logger.info(f"\t\t\t[ ] Mapping fingerprint to metal center: {metal_index:d}")
     ''' TODO remove (2023/04/07)
     cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
     G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
@@ -203,11 +203,11 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     number_ligands_bound = len(G_sub_cages)
 
     if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
-        logger.info(f"[!] Not the same number of sites {guessing:}, structure: {number_ligands_bound:d} vs. fingerprint {len(G_fingerprint_subs):d}")
+        logger.info(f"\t\t\t[!] Not the same number of sites {guessing:}, structure: {number_ligands_bound:d} vs. fingerprint {len(G_fingerprint_subs):d}")
         return False
     elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
         logger.info(
-            f"[!] Not the same number of sites {len(G_sub_cages):}!={len(G_fingerprint_subs):} guessing={guessing:}")
+            f"\t\t\t[!] Not the same number of sites {len(G_sub_cages):}!={len(G_fingerprint_subs):} guessing={guessing:}")
         raise
 
     selected_atoms = []
@@ -421,9 +421,9 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
                     if metal_charge == int(name.split('_')[1]):
                         if vdw_type is None:
                             fingerprints_names[
-                                name] = f"{library_path:}/{name:}.pdb"
-                        elif vdw_type in name:  # if vdw_type is specified we only search for specific files
-                            fingerprints_names[name] = f"{library_path:}/{name:}.pdb"
+                                name] = f"{library_path:}/{name:}"
+                        elif vdw_type==name.split('_')[2]:  # if vdw_type is specified we only search for specific files
+                            fingerprints_names[name] = f"{library_path:}/{name:}"
             else:
                 logger.warning(f"Fingerprint file name ({name}) in incorrect format")
 
@@ -432,11 +432,12 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
 
 def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=None, fingerprint_guess_list=None,
                       m_m_cutoff=10, vdw_type=None, library_path=f"{os.path.dirname(__file__):s}/library",
-                      search_library=True, additional_fp_files=None):
+                      search_library=True, additional_fp_files=None, fp_style=None):
     '''
     Tries to guess the fingerprint but itereting through the library and find lowest rmsd.
     :return:
     '''
+    logger.info(f"Guessing template for {metal_name}{metal_charge}+[{metal_index}]")
 
     fp_files = {}
     if search_library:
@@ -447,16 +448,18 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
         fp_files = {**fp_files, **additional_fp_files}
 
     if len(fp_files) == 0:
-        logger.info(f"Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
+        logger.info(f"Not found templates with name including {metal_name:} with vdw type: {vdw_type:}")
         return False
 
-    logger.info(f"Trying to guess which site it is: {fp_files:}")
+    logger.info(f"\tSelected template files: {fp_files.keys():}")
     rmsd_best = 1e10
     name_of_binding_side = None
     for finerprint_name in fp_files:
-        logger.info(f"[ ] Guessing fingerprint {finerprint_name:s}")
+        logger.info(f"\t\t[ ] Guessing fingerprint {finerprint_name:s}")
 
-        syst_fingerprint = MDAnalysis.Universe(fp_files[finerprint_name])
+        #syst_fingerprint = MDAnalysis.Universe()
+        _, syst_fingerprint = load_fp_from_file(f'{fp_files[finerprint_name]}.pdb', f'{fp_files[finerprint_name]}.top', fp_style=fp_style)
+
         # we need to find what is smaller
 
         metal_position = syst_fingerprint.atoms[0].position
@@ -472,15 +475,15 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
             rmsd_best = rmsd
             name_of_binding_side = finerprint_name
             # self.ligand_cutoff = cutoff
-        logger.info(f"    [ ] RMSD {rmsd:f}")
+        logger.info(f"\t\t\t[ ] RMSD {rmsd:f}")
 
     if name_of_binding_side is None:
-        logger.info(f"Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
+        logger.info(f"\t[-] Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
         return False
 
-    logger.info(f"[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
+    logger.info(f"\t[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
     if rmsd_best > 2.0:
-        logger.info("[!] Rmsd is quite large, want to proceed?")  # TODO
+        logger.info("\t[!] Rmsd is quite large, want to proceed?")  # TODO
         return False
     return name_of_binding_side
 

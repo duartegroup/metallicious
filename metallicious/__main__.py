@@ -5,9 +5,10 @@ import os
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="Metaloorganic structre (*gro, *pdb, etc. all supported by MDAnalysis)")
-    parser.add_argument("-p", help="Metaloorganic topology (*top, *prmtop, etc. all supported by ParmEd)")
+    parser.add_argument("-p", help="Metaloorganic topology (*top, *prmtop, etc. all supported by ParmEd)", default=False)
 
-    #parser.add_argument("-o", help="Clean structure")
+    parser.add_argument("-of", help="Output metaloorganic structre (*gro, *pdb, etc. all supported by MDAnalysis)", default='out.pdb')
+    parser.add_argument("-op", help="Output Metaloorganic topology (*top, *prmtop, etc. all supported by ParmEd)", default='out.top')
 
     parser.add_argument("-metal_and_charges",nargs='+', help="Metal names and charges (optionally, multiplicity, when parametrization needed), example: Pd 2 1 Ru 2 1")
     parser.add_argument("-keywords", help="keywords for QM", nargs='+')
@@ -18,6 +19,8 @@ def get_args():
                         help="Calculate improper dihedral of the metal-aromatic (default:False)")
     parser.add_argument("-donors", nargs='+', default=['N', 'S', 'O'],
                         help="Donors from the connected ligands, usually electronegative atom, such as N, S, O, but sometimes metal is connected to carbon", )
+    parser.add_argument("-prepare_topol", action='store_true', default=False, help="Prepare initial topol using GAFF")
+    parser.add_argument("-linker_topol", default=None, help="Prepare initial topol using GAFF")
     return parser.parse_args()
 
 def main():
@@ -39,9 +42,8 @@ def main():
     is_metal_charges_mult = False
     if len(args.metal_and_charges) % 2==0 or len(args.metal_and_charges) % 3==0:
         if len(args.metal_and_charges)>2:
-            # if args.metal_and_charges[2] is a number: # TODO
-            is_metal_charges_mult = True
-            None
+            if args.metal_and_charges[2].isnumeric():
+                is_metal_charges_mult = True
     else:
         print("Not correct format of metal_and_charges")
         return False
@@ -79,7 +81,13 @@ def main():
                                     metal_charges=metal_charges, vdw_type=vdw_type, topol=topol, keywords=keywords,
                                     improper_metal=improper_metal, donors=donors,
                                     truncation_scheme=truncation_scheme)
-    cage.parametrize()
+
+    if args.prepare_topol:
+        cage.prepare_initial_topology(homoleptic_ligand_topol=args.linker_topol)
+
+    cage.parametrize(args.of, args.op)
+
+
 
 if __name__ == '__main__':
     main()

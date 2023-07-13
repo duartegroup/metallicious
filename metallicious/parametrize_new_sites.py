@@ -18,6 +18,8 @@ from MDAnalysis.lib.distances import distance_array
 
 import os
 
+# TODO: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
 class supramolecular_structure:
     def __init__(self, filename, metal_charge_mult=None, metal_charges=None, vdw_type=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
@@ -111,13 +113,22 @@ class supramolecular_structure:
                                         fingerprint_guess_list=self.fingerprint_guess_list,
                                         m_m_cutoff=10, vdw_type=self.vdw_type, library_path=self.library_path,
                                         search_library=self.search_library,
-                                        additional_fp_files=additional_fp_coords) #TODO what about fp style (?)
+                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme) #TODO what about fp style (?)
 
-            if guessed is not False:
+            if guessed is not False: # do not change to True...
                 site.fp_coord_file = f"{self.library_path:s}/{guessed:}.pdb"
                 site.fp_topol_file = f"{self.library_path:s}/{guessed:}.top"
                 site.load_fingerprint()
                 site.set_cutoff()
+            else:
+                print("Template for this site not found")
+                guessed = guess_fingerprint(self.filename, site.index, metal_name=site.metal_name,
+                                            metal_charge=site.metal_charge,
+                                            fingerprint_guess_list=self.fingerprint_guess_list,
+                                            m_m_cutoff=10, vdw_type=self.vdw_type, library_path=self.library_path,
+                                            search_library=self.search_library,
+                                            additional_fp_files=additional_fp_coords,
+                                            fp_style=self.truncation_scheme)  # TODO what about fp style (?)
 
     def extract_unique_metal_sites(self):
         logger.info(f"Extracting")
@@ -137,6 +148,7 @@ class supramolecular_structure:
                 site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
                 if self.metal_mult_dict is not None:
                     site_list[2] = self.metal_mult_dict[metal_name]  # we change the multiplicity
+
                 site_list += [self.autode_keywords, self.improper_metal, self.donors, self.vdw_type]
                 unique_sites += [new_metal_site(*site_list)]
 
@@ -223,7 +235,8 @@ class supramolecular_structure:
                     site.parametrize()
                     self.add_site_to_library(site)
                 else:
-                    print("Not possible to parametrize metal site (did you specify multiplicity)?")
+                    print("Template not found (try to (a) parametrize it (specify multiplicity) or (b) truncate template)")
+                    raise
 
 
     def add_site_to_library(self, site):
@@ -255,7 +268,7 @@ class supramolecular_structure:
 
 
 class metal_site():
-    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style='full'):
+    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None):
         self.metal_name = metal_name
         self.metal_charge = metal_charge
         self.index = index

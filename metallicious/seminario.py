@@ -553,7 +553,7 @@ def remove_indices_of_removed_atoms(bonds, angles, dihedrals, atoms_to_remove):
             indices = tuple([idx-sum(np.array(atoms_to_remove)<idx) for idx in param])
             new_bonded[indices] = bonded[param]
         new_params.append(new_bonded)
-    new_bonds, new_angles, new_dihedrals = new_params
+    new_bonds, new_angles, new_dihedrals = new_params # TODO I think this does not work for dummy dihedrals (? ) at least there are wierd bonds which are not dihedrals
 
     return new_bonds, new_angles, new_dihedrals
 

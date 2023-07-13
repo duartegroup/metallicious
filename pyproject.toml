@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "metallicious"
-version = "0.2.12"
+version = "0.2.16"
 
 dependencies = [
     "numpy",
@@ -16,3 +16,4 @@ dependencies = [
 
 [project.scripts]
 metallicious = "metallicious.__main__:main"
+
