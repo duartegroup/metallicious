@@ -2,7 +2,7 @@
 import MDAnalysis
 from MDAnalysis.lib.distances import calc_dihedrals
 import numpy as np
-from collections.abc import MutableMapping
+
 import os
 
 from scipy.optimize import minimize
@@ -67,15 +67,11 @@ def filter_aromatic_impropers(filename, potential_impropers, metal_name):
             aromatic_impropers.append(improper)
     return aromatic_impropers
 
-
-
-def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0, mult=1, x=np.linspace(0,30, 7)):
-    try:
-        import autode as ade
-        from autode.wrappers.ORCA import MutableMapping,logger, print_added_internals, print_distance_constraints, print_dihedral_constraints, print_cartesian_constraints, print_num_optimisation_steps, print_point_charges, print_default_params, print_coordinates
-        from autode.values import Angle
-    except:
-        raise
+def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0, mult=1, x=np.linspace(0,5, 2)):
+    import autode as ade
+    from collections.abc import MutableMapping
+    from autode.wrappers.ORCA import logger, print_added_internals, print_distance_constraints, print_cartesian_constraints, print_num_optimisation_steps, print_point_charges, print_default_params, print_coordinates
+    from autode.values import Angle
 
     class DihedralConstraints(MutableMapping):
         def __init__(self, *args, **kwargs):
@@ -126,6 +122,7 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
 
     def print_dihedral_constraints(inp_file, molecule):
         """Print the distance constraints to the input file"""
+        print("Adding dihedral to file")
         if molecule.constraints.dihedral is None:
             return
         print("%geom Constraints", file=inp_file)
@@ -135,6 +132,7 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
         return
 
     def generate_input_for_new(self, calc: "CalculationExecutor") -> None:
+        print("AUsing new input file")
         molecule = calc.molecule
         keywords = self.get_keywords(calc.input, molecule)
         # with open(calc.input.directory, "w") as inp_file: #change from 1.2.1 autode to 1.3
@@ -154,6 +152,7 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
         return None
 
     def generate_input_for(self, calc: "CalculationExecutor") -> None:
+        print("AUsing old input file")
         molecule = calc.molecule
         keywords = self.get_keywords(calc.input, molecule)
 
@@ -174,10 +173,10 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
             print_coordinates(inp_file, molecule)
         return None
 
-
-
-
     method = ade.methods.ORCA()
+    if method.is_available is False:
+        raise NameError("For parametrization of templates, QM software ORCA is required")
+
     #overwrite the autode ORCA input
     ade.wrappers.ORCA.ORCA.generate_input_for = generate_input_for_new
 
@@ -194,7 +193,7 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
     for angle in x:
         print(molecule.atoms[0], "angle", angle)
         molecule.name = name + '_' + str(angle)
-        molecule.constraints.dihedral = DihedralConstraints({tuple(improper):angle})
+        molecule.constraints.dihedral = DihedralConstraints({tuple(improper): angle})
         molecule.optimise(method=method)
         energies.append(molecule.energy.to("kcal")) #amber uses kcal/mol units
     energies = np.array(energies) - np.min(energies) # we change it to array and normalize it
@@ -204,33 +203,23 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
     # we reverse autode orca input
     ade.wrappers.ORCA.ORCA.generate_input_for = generate_input_for
     os.chdir(here)
-
     return energies
-
 
 def evaluate_angle(improper, filename='bonded/site0_optimised_orca.xyz'):
     syst = MDAnalysis.Universe(filename)
     positions = syst.atoms[improper].positions
     angle = np.rad2deg(calc_dihedrals(*positions))
     return angle
-    
-    '''
-    if np.abs(angle)<5:
-        return 0
-    else:
-        print(f"Unusall value of improper angle: {angle:}")
-        raise
-    '''
 
 def evalulate_improper_energy(energies, x=np.linspace(0,20, 5)):
     initial_force = 0
     def evaluate(k):
-        return np.sum(np.abs(k*(np.deg2rad(x))**2-energies)) # This is in AMBER format, that is why it's missing 0.5
+        return np.sum(np.abs(k*(np.deg2rad(x))**2-energies)) # in AMBER format, that is why it's missing 0.5
     result = minimize(evaluate, x0=[initial_force], options = {'eps': 1})
     return result.x[0]
 
 
-def improper_value_calculation(improper, filename='bonded/site_optimised_orca.xyz', charge=0, mult=1, angles_to_check=np.linspace(0,20, 5), angle_cutoff=5):
+def improper_value_calculation(improper, filename='bonded/site_optimised_orca.xyz', charge=0, mult=1, angles_to_check=np.linspace(0, 20, 5), angle_cutoff=5):
     angle = evaluate_angle(improper, filename=filename)
     if angle < angle_cutoff:
         angle = 0
@@ -258,7 +247,7 @@ def find_impropers_connected_to_metal(bonds, metal_name, filename='bonded/site_o
 def symmetric_improper(improper):
     return [improper[0], improper[2], improper[1], improper[3]]
 
-def find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge, mult=1, filename = 'bonded/site_opt_orca.xyz'): #TODO filename should be diffrent
+def find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge, mult=1, filename = 'bonded/site_opt_orca.xyz'):
     print("Calculating improper dihedrals")
 
     impropers = find_impropers_connected_to_metal(bonds, metal_name, filename=filename)
@@ -281,7 +270,7 @@ def find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, startin
         # calculating
         values_of_checked_impropers = []
         for improper in impropers_to_calculate:
-            value = improper_value_calculation(improper, filename=filename, charge=charge, mult=mult) #TODO we need to pass somethowe the name of optimised file
+            value = improper_value_calculation(improper, filename=filename, charge=charge, mult=mult)
 
             values_of_checked_impropers.append(value)
             new_dihedrals[tuple(improper)] = tuple(value)
@@ -298,15 +287,10 @@ def find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, startin
                 mapping, _ = map_two_structures(0, ligand2, ligand1, metal_name) # we map one of the ligands+metal on second
                 proposed_torsions = [[mapping[a] for a in improper] for improper in impropers_to_calculate] # map calcualted impropers on the mapped ligands
 
-                #index_diffrence = starting_index[1:][same_ligand]-first_start_index #TODO this does not work, if the ligand is symmetric
-                #proposed_torsions = np.array(impropers_to_calculate)+ np.array([index_diffrence, index_diffrence, index_diffrence, 0])
-                #print(proposed_torsions)
-
                 # check if found the same torsions:
                 assert sum(1 for proposed_torsion in proposed_torsions if (list(proposed_torsion) in impropers) or (symmetric_improper(proposed_torsion)) in impropers) == len(proposed_torsions)
                 for idx_tor, proposed_torsion in enumerate(proposed_torsions):
                     new_dihedrals[tuple(proposed_torsion)] = tuple(values_of_checked_impropers[idx_tor])
-                    #new_dihedrals[tuple(symmetric_improper(proposed_torsion))] = tuple(values_of_checked_impropers[idx_tor]) # initial idea assumed to make it symmetric but I don't think this is necessary
 
     return new_dihedrals
 

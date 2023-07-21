@@ -478,6 +478,21 @@ def create_dummy_dihedrals(angles, bonds, filename, metal_index=0):
         dihedrals[tuple(dihedral)] = (np.rad2deg(calc_dihedrals(*syst_opt.atoms[dihedral].positions)), 0)
     return dihedrals
 
+
+def create_pair_exclusions(dihedrals, angles):
+    pairs = []
+    for dihedral in dihedrals:
+        not_2_3_body = True
+
+        for angle in angles:
+            if dihedral[0] in angle and dihedral[-1] in angle:
+                not_2_3_body = False
+
+        if not_2_3_body:
+            pairs.append((dihedral[0], dihedral[-1]))
+
+    return pairs
+
 def strip_names_from_covalent(covalent_paramters):
     new_covalent = {}
     for covalent in covalent_paramters:
@@ -485,21 +500,19 @@ def strip_names_from_covalent(covalent_paramters):
     return new_covalent
 
 def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
-    try:
-        import autode as ade
-    except:
-        print("Autode is required for the calculations")
-        raise #TODO raise should be cleared
+    import autode as ade
 
     method = ade.methods.ORCA()
-    #TODO check if available
+
+    if method.is_available is False:
+        raise NameError("For parametrization of templates, QM software ORCA is required")
 
     site = ade.Molecule(filename, charge=charge, mult=mult)
     site.optimise(method=method, keywords=keywords)
     names = [atom.atomic_symbol for atom in site.atoms]
     return site.name, np.array(site.coordinates), names
 
-def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1, vibrational_scaling = 1):
+def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1, vibrational_scaling = None):
     here = os.getcwd()
     os.system("mkdir bonded")
     os.chdir("bonded")
@@ -512,10 +525,15 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
     hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
 
     # Scalling factor taken from https://cccbdb.nist.gov/vsfx.asp and assumed that for basis set of double zeta and higher the scalling does not change
+    if vibrational_scaling is not None:
+        vibrational_scaling=vibrational_scaling
     if 'PBE0' in keywords:
         vibrational_scaling = 0.96
     elif 'wB97X-D3' in keywords:
         vibrational_scaling = 0.955
+    else:
+        vibrational_scaling=1
+
 
     bonds_with_names, angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=vibrational_scaling)
 
@@ -525,9 +543,9 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
 
     return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{name:s}_opt_orca.xyz"
 
-def remove_atoms_from_bonded(bonds, angles, dihedrals, atoms_to_remove):
+def remove_atoms_from_bonded(bonds, angles, dihedrals, impropers, atoms_to_remove):
     new_params = []
-    for bonded in [bonds, angles, dihedrals]:
+    for bonded in [bonds, angles, dihedrals, impropers]:
         new_bonded = {}
         for param in bonded:
             remove = False
@@ -540,26 +558,26 @@ def remove_atoms_from_bonded(bonds, angles, dihedrals, atoms_to_remove):
 
         new_params.append(new_bonded)
 
-    new_bonds, new_angles, new_dihedrals = new_params
-    return new_bonds, new_angles, new_dihedrals
+    new_bonds, new_angles, new_dihedrals, new_impropers = new_params
+    return new_bonds, new_angles, new_dihedrals, new_impropers
 
 
-def remove_indices_of_removed_atoms(bonds, angles, dihedrals, atoms_to_remove):
+def remove_indices_of_removed_atoms(bonds, angles, dihedrals, impropers, atoms_to_remove):
     atoms_to_remove = sorted(atoms_to_remove)
     new_params = []
-    for bonded in [bonds, angles, dihedrals]:
+    for bonded in [bonds, angles, dihedrals, impropers]:
         new_bonded = {}
         for param in bonded:
             indices = tuple([idx-sum(np.array(atoms_to_remove)<idx) for idx in param])
             new_bonded[indices] = bonded[param]
         new_params.append(new_bonded)
-    new_bonds, new_angles, new_dihedrals = new_params # TODO I think this does not work for dummy dihedrals (? ) at least there are wierd bonds which are not dihedrals
+    new_bonds, new_angles, new_dihedrals, new_impropers = new_params
 
-    return new_bonds, new_angles, new_dihedrals
+    return new_bonds, new_angles, new_dihedrals, new_impropers
 
 
-def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O'], atoms_to_remove=None):
-    bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult)
+def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O'], atoms_to_remove=None, vibrational_scaling=None):
+    bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult, vibrational_scaling=vibrational_scaling)
 
 
     bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
@@ -568,19 +586,25 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
     angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt,  starting_index, indecies, unique_ligands_pattern,
                                        donors=donors)
 
+
+
     if improper_metal: 
-        improper_dihedrals = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult, filename=filename_opt)
-        dihedrals = {**dummy_dihedrals, **improper_dihedrals}
-    else:
-        dihedrals = dummy_dihedrals
+        impropers = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult, filename=filename_opt)
+        #dihedrals = {**dummy_dihedrals, **improper_dihedrals}
+        #dihedrals = improper_dihedrals
+
+    #dihedrals = {}
         
     if len(atoms_to_remove) is not None:
-        bonds, angles, dihedrals = remove_atoms_from_bonded(bonds, angles, dihedrals, atoms_to_remove)
-        bonds, angles, dihedrals = remove_indices_of_removed_atoms(bonds, angles, dihedrals, atoms_to_remove)
+        bonds, angles, dummy_dihedrals, impropers = remove_atoms_from_bonded(bonds, angles, dummy_dihedrals, impropers, atoms_to_remove)
+        bonds, angles, dummy_dihedrals, impropers = remove_indices_of_removed_atoms(bonds, angles, dummy_dihedrals, impropers, atoms_to_remove)
 
-    return bonds, angles, dihedrals, filename_opt
+    dihedrals = {} #dihedrals are not implemented
 
-#TODO general: check if LJ paramters are changed if topology is specified
+    pairs = create_pair_exclusions(dummy_dihedrals, angles)
+
+    return bonds, angles, dihedrals, impropers, pairs, filename_opt
+
 
 ''' TODO remove (2023/07/04)
 def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False, donors=['N', 'S', 'O']):

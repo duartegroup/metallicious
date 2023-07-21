@@ -1,19 +1,16 @@
-
-
 import warnings
-warnings.filterwarnings('ignore')
-
 import os
 import MDAnalysis
-
 import argparse
 import parmed as pmd
 import shutil
 from tempfile import mkdtemp
-
 from metallicious.log import logger
-from metallicious.load_fingerprint import load_fp_from_file, guess_fingerprint, find_mapping_of_fingerprint_on_metal_and_its_surroundings
-from metallicious.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers, adjust_charge
+from metallicious.load_fingerprint import find_mapping_of_fingerprint_on_metal_and_its_surroundings
+from metallicious.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers,\
+    adjust_charge, adjust_pair_exclusions
+
+warnings.filterwarnings('ignore')
 
 
 class patcher():
@@ -168,15 +165,17 @@ class patcher():
 
             mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_coord, site.index, site.metal_name, site.fp_syst, cutoff=site.ligand_cutoff)
 
-            self.topol_new = adjust_charge(self.topol_new, site.fp_topol,mapping_fp_to_new)
+            self.topol_new = adjust_charge(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
-            self.topol_new = adjust_bonds(self.topol_new, site.fp_topol,mapping_fp_to_new)
+            self.topol_new = adjust_bonds(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
-            self.topol_new = adjust_angles(self.topol_new, site.fp_topol,mapping_fp_to_new)
+            self.topol_new = adjust_angles(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
-            self.topol_new = adjust_dihedrals(self.topol_new, site.fp_topol,mapping_fp_to_new)
+            self.topol_new = adjust_dihedrals(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
-            self.topol_new = adjust_impropers(self.topol_new, site.fp_topol,mapping_fp_to_new)
+            self.topol_new = adjust_impropers(self.topol_new, site.fp_topol, mapping_fp_to_new)
+
+            self.topol_new = adjust_pair_exclusions(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
         logger.info('Finished')
 

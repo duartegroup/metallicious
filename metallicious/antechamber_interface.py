@@ -65,7 +65,11 @@ def antechamber(pdbfile,output, charge=None, verbose=False):
     File.close()
 
     logger.info(f"    - Charge of the molecule is {charge:}")
-    run_external(f"antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -at gaff2 -s 2 -nc {charge:}", assertion="Errors = 0")
+    #sqm_key = "grms_tol=0.005,scfconv=1.d-8,ndiis_attempts=700,maxcyc=0,"
+    #run_external(f'antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -at gaff2 -s 2 -nc {charge:} -ek "{sqm_key:}"', assertion="Errors = 0")
+    run_external(
+        f'antechamber -i temp.pdb -fi pdb -o temp.mol2 -fo mol2 -c bcc -at gaff2 -s 2 -nc {charge:}',
+        assertion="Errors = 0")
     run_external("parmchk2 -i temp.mol2 -f mol2 -o temp.frcmod")
     run_external("tleap -f tleap.in")
 
@@ -173,12 +177,10 @@ def get_args():
 
 
 def smiles_to_mol(smiles, outfile='rdkit.pdb'):
-    try:
-        from rdkit import Chem
-        from rdkit.Chem import AllChem
-    except:
-        print("You need rdkit to use smiles")
-        raise
+
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+
     mol = Chem.MolFromSmiles(smiles)
     mol = Chem.AddHs(mol)
 

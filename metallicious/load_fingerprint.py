@@ -21,7 +21,6 @@ from metallicious.utils import strip_numbers_from_atom_names
 
 #def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
 def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
-
     '''
     Loads topology and coordinates of the fingerprint. If fingerprint not "full", then it will be trunked to the specified fingerprint style:
     - dihdral (or dih) - truncated to atoms within 3 bond length from metal
@@ -146,7 +145,7 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
         '''
 
     else:
-        raise
+        raise ValueError("Incorrect value of truncation scheme")
 
 
 
@@ -206,9 +205,7 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
         logger.info(f"\t\t\t[!] Not the same number of sites {guessing:}, structure: {number_ligands_bound:d} vs. fingerprint {len(G_fingerprint_subs):d}")
         return False
     elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
-        logger.info(
-            f"\t\t\t[!] Not the same number of sites {len(G_sub_cages):}!={len(G_fingerprint_subs):} guessing={guessing:}")
-        raise
+        raise ValueError(f"[!] Not the same number of sites {len(G_sub_cages):}!={len(G_fingerprint_subs):} guessing={guessing:}")
 
     selected_atoms = []
     end_atoms = []
@@ -411,7 +408,7 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
         for name in fingerprint_guess_list:
             if name not in all_fingerprints_names:
                 print("Fingerprint not available")
-                raise
+                raise ValueError(f"Selected fingerprint ({name:}) not avaialable")
             else:
                 fingerprints_names.append(name)
     else:
@@ -421,9 +418,9 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
                     if metal_charge == int(name.split('_')[1]):
                         if vdw_type is None:
                             fingerprints_names[
-                                name] = f"{library_path:}/{name:}"
+                                name] = f"{library_path:}/{name:}.pdb"
                         elif vdw_type==name.split('_')[2]:  # if vdw_type is specified we only search for specific files
-                            fingerprints_names[name] = f"{library_path:}/{name:}"
+                            fingerprints_names[name] = f"{library_path:}/{name:}.pdb"
             else:
                 logger.warning(f"Fingerprint file name ({name}) in incorrect format")
 
@@ -432,7 +429,7 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
 
 def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=None, fingerprint_guess_list=None,
                       m_m_cutoff=10, vdw_type=None, library_path=f"{os.path.dirname(__file__):s}/library",
-                      search_library=True, additional_fp_files=None, fp_style=None):
+                      search_library=True, additional_fp_files=None, fp_style=None, rmsd_cutoff=2):
     '''
     Tries to guess the fingerprint but itereting through the library and find lowest rmsd.
     :return:
@@ -458,7 +455,7 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
         logger.info(f"\t\t[ ] Guessing fingerprint {finerprint_name:s}")
 
         #syst_fingerprint = MDAnalysis.Universe()
-        _, syst_fingerprint = load_fp_from_file(f'{fp_files[finerprint_name]}.pdb', f'{fp_files[finerprint_name]}.top', fp_style=fp_style)
+        _, syst_fingerprint = load_fp_from_file(f'{fp_files[finerprint_name]}', f'{fp_files[finerprint_name].replace(".pdb", ".top")}', fp_style=fp_style)
 
         # we need to find what is smaller
 
@@ -478,13 +475,11 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
         logger.info(f"\t\t\t[ ] RMSD {rmsd:f}")
 
     if name_of_binding_side is None:
-        logger.info(f"\t[-] Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")  # TODO
+        logger.info(f"\t[-] Not found any fingerprints for {metal_name:} with vdw type: {vdw_type:}")
         return False
 
     logger.info(f"\t[+] Best fingerprint {name_of_binding_side:s} rmsd: {rmsd_best:f}")
-    if rmsd_best > 2.0:
-        logger.info("\t[!] Rmsd is quite large, want to proceed?")  # TODO
+    if rmsd_best > rmsd_cutoff:
+        logger.info("\t[!] Rmsd of best fingerprint is above 2, figerprint not guessed")
         return False
     return name_of_binding_side
-
-# TODO assert rediculsy small ligands

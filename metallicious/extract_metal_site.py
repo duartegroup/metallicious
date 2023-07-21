@@ -407,8 +407,7 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
         vector = list(G_selection_site.edges(link_atom))
 
         if len(vector) > 1:
-            print("Error, more than one atom connected")
-            raise
+            raise Exception("Error, more than one atom connected in the linker")
 
         atom_connected = vector[0][0]
         if atom_connected == link_atom:
@@ -614,8 +613,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
         all_metals_indices = metal_indices
 
     if n_metals == 0:
-        logger.info(f"Metal {metal_name:} not found")
-        raise
+        raise Exception(f"Metal {metal_name:} not found")
 
     logger.info(f"Metal indices to check {metal_indices:} metal name:{metal_name:}")
     all_ligands_atoms = cage.select_atoms(f"not index {' '.join(map(str, all_metals_indices)):}")

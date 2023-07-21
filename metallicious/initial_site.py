@@ -21,8 +21,7 @@ def create_metal_topol(metal_name, metal_charge, vdw_data_name):
     elif metal_name in data:
         name = metal_name
     else:
-        print(f"Metal {metal_name.title():}{metal_charge:} not in the library")
-        raise
+        raise Exception(f"Metal {metal_name.title():}{metal_charge:} not in the library")
 
     if name in data:
         eps = data[name][0]

@@ -4,7 +4,7 @@ import shutil
 from metallicious.extract_metal_site import extract_metal_structure, find_metal_indices
 from metallicious.seminario import single_seminario
 from metallicious.charges import calculate_charges2
-from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals
+from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, copy_pair_exclusions
 from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
 from metallicious.data import vdw_data
 from metallicious.prepare_initial_topology import prepare_initial_topology
@@ -59,7 +59,7 @@ class supramolecular_structure:
             #self.
             self.allow_new_templates = False
         else:
-            raise  # TODO raise have to besolved
+            raise ValueError("Not correct format of metal_charge_mult/metal_charges")
 
         if vdw_type=='custom' and topol is not None:
             self.vdw_type = 'custom'
@@ -72,8 +72,7 @@ class supramolecular_structure:
         else:
             for metal_name in self.metal_names:
                 if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in vdw_data[vdw_type]:
-                    raise
-
+                    raise ValueError(f"One of the metals ({metal_name:}) not avaialble in selected LJ library")
             self.vdw_type = vdw_type
 
         self.fingerprint_guess_list = fingerprint_guess_list
@@ -144,7 +143,6 @@ class supramolecular_structure:
                                                  all_metal_names=self.metal_names)
 
             for site_list in site_lists:
-
                 site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
                 if self.metal_mult_dict is not None:
                     site_list[2] = self.metal_mult_dict[metal_name]  # we change the multiplicity
@@ -207,14 +205,8 @@ class supramolecular_structure:
             # TODO do we need metal be first ?
 
 
-
-
-        print(self.topol)
-
-
         if self.topol is None:
-            print("No topology")
-            raise
+            raise Exception("topology file not found")
 
         # check if topol and coord have the same names of atoms TODO
 
@@ -235,8 +227,7 @@ class supramolecular_structure:
                     site.parametrize()
                     self.add_site_to_library(site)
                 else:
-                    print("Template not found (try to (a) parametrize it (specify multiplicity) or (b) truncate template)")
-                    raise
+                    raise Exception("Template not found (try to (a) parametrize it (specify multiplicity) or (b) truncate template)")
 
 
     def add_site_to_library(self, site):
@@ -359,11 +350,19 @@ class new_metal_site():
         self.name = f"{metal_name:}_{metal_charge:}_{vdw_type:}"  
         self.topol = topol
 
+        self.vibrational_scaling = None
+
         if vdw_type is not None:
+
             if metal_name in vdw_data[vdw_type]:
-                self.metal_radius = (vdw_data[vdw_type][metal_name][1])*2
+                vdw_entry = metal_name
             elif f"{metal_name:}{metal_charge:}" in vdw_data[vdw_type]:
-                self.metal_radius = vdw_data[vdw_type][f"{metal_name:}{metal_charge:}"][1]*2
+                vdw_entry = f"{metal_name:}{metal_charge:}"
+            eps, r2min = vdw_data[vdw_type][vdw_entry]
+            self.metal_radius = r2min*2 # becasue radius is r2
+            # Change metal type:
+            self.topol[0].atom_type.rmin = r2min
+            self.topol[0].atom_type.epsilon = eps
         else:
             if self.topol is not None:
                 self.metal_radius = self.read_radius_from_topol()
@@ -382,7 +381,7 @@ class new_metal_site():
     def seminario(self):
         site_charge = self.metal_charge + np.sum(self.ligand_charges)
 
-        self.bonds, self.angles, self.dihedrals, self.filename = single_seminario(self.filename, site_charge,
+        self.bonds, self.angles, self.dihedrals, self.impropers, self.pairs, self.filename = single_seminario(self.filename, site_charge,
                                                                                    self.metal_name,
                                                                                    self.starting_index, self.indecies,
                                                                                    self.unique_ligands_pattern,
@@ -390,11 +389,19 @@ class new_metal_site():
                                                                                    mult=self.mult,
                                                                                    improper_metal=self.improper_metal,
                                                                                    donors=self.donors,
-                                                                                  atoms_to_remove = self.additional_atoms)
+                                                                                  atoms_to_remove = self.additional_atoms,
+                                                                                  vibrational_scaling=self.vibrational_scaling)
 
         self.topol = copy_bonds(self.topol, self.bonds, self.metal_name)
         self.topol = copy_angles(self.topol, self.angles, self.metal_name)
-        self.topol = copy_dihedrals(self.topol, self.dihedrals, self.metal_name)
+
+        if len(self.dihedrals) > 0:
+            self.topol = copy_dihedrals(self.topol, self.dihedrals, self.metal_name)
+        if len(self.impropers) > 0:
+            self.topol = copy_impropers(self.topol, self.impropers, self.metal_name)
+
+        if len(self.pairs) > 0:
+            self.topol = copy_pair_exclusions(self.topol, self.pairs)
 
     def partial_charge(self):
         # calculate_charges2(metal_name, metal_charge, filename, unique_ligands_pattern, link_atoms, additional_atoms,

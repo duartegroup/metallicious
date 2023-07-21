@@ -41,14 +41,11 @@ def perform_resp_with_multiwfn(molden_input):
 
 def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, vdw_data_name=None, n_reorientations=1, mult=1,
               extra_atoms=None):
-    try:
-        import autode as ade
-        from autode.wrappers.ORCA import work_in_tmp_dir, logger
-        import psiresp
-        import qcelemental as qcel
-    except:
-        print ("autode is required")
-        raise
+
+    import autode as ade
+    from autode.wrappers.ORCA import work_in_tmp_dir, logger
+    import psiresp
+    import qcelemental as qcel
 
     def old_execute(self, calc):
         @work_in_tmp_dir(filenames_to_copy=calc.input.filenames,
@@ -117,6 +114,9 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
         return None
 
     method = ade.methods.ORCA()
+    if method.is_available is False:
+        raise NameError("For parametrization of templates, QM software ORCA is required")
+
     site = ade.Molecule(filename, charge=charge, mult=mult)
 
     molecule_qcel = qcel.models.Molecule.from_file(filename, molecular_charge=charge)

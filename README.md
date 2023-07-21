@@ -11,23 +11,24 @@ Metallicious (a playful combination of "metal" and "delicious") is an automated 
 Metallicious works with minimal user input, relying heavily on educated guesses, which may not always yield the expected results. Therefore, it is recommended to use the tool with caution.
 
 ## Requirements:
-- rdkit
-- networkx
-- MDAnalysis
-- ParmEd
+- [rdkit](https://www.rdkit.org/)
+- [networkx](https://networkx.org/)
+- [MDAnalysis](https://www.mdanalysis.org/)
+- [ParmEd](https://parmed.github.io/ParmEd/html/index.html)
 
-(Optional) the parametrization of templates requires:
-- autode
-- ORCA
-- psiRESP
+(**Optional**) the parametrization of templates requires:
+- [autode](https://github.com/duartegroup/autodE)
+- [ORCA](https://orcaforum.kofo.mpg.de/app.php/portal)
+- [psiRESP](https://github.com/lilyminium/psiresp)
 
-(Optional) simple force-field parametrization with General Amber Force-field (GAFF) requires:
-- ambertools
+(**Optional**) simple force-field parametrization with General Amber Force-field (GAFF) requires:
+- [ambertools](https://ambermd.org/AmberTools.php)
 
 **Limitations**: The code currently supports organometallic structures with metals separated by at least 2 non-metal atoms. Metal clusters are not supported. Additionally, metals of the same type must have the same charge and multiplicity.
 
 ## Installation:
 ```
+conda install autode psiresp mdanalysis networkx --channel conda-forge
 pip install metallicious
 ```
 ## Quick start
@@ -49,6 +50,8 @@ cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, v
 cage.prepare_initial_topology()
 cage.parametrize(out_coord='out.pdb', out_topol='out.top)
 ```
+However, we do not intend to automate parametrization of the organic part of the molecule.
+Please refer to specialised tools such as gromacs, atb, ambertools and charmm-gui. 
 
 
 # Handling missing templates
@@ -56,7 +59,8 @@ cage.parametrize(out_coord='out.pdb', out_topol='out.top)
 The number of combination of possible ligands and metal results that inevitibly you will encounter metal site for which there is no template. 
 In such cases to solutions are possible:
 
-### 1. Parametrize template
+### 1. Parametrize template 
+We recommend to run template parametrization on HPC/cluster as it can take some time (our experience is ~8h on 8 CPUs per template).
 
 Specifing explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automaticly infrom metallicious to be ready to parametrize the template
 
@@ -82,7 +86,7 @@ cage.parametrize(out_coord='out.pdb', out_topol='out.top)
 ## Command line
 It is also possible to use the metallicious just form command line. For example:
 ```
-metallicious -f cage_m2l4_ob.xyz -vdw_type merz-tip3p -truncate angle -metal_and_charges Pd 2 -prepare_topol
+metallicious -f cage.xyz -vdw_type merz-tip3p -metal_and_charges Pd 2 -prepare_topol
 ```
 For details see:
 ```

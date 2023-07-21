@@ -207,14 +207,12 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
         # we copy one of the mappings, now we do not have to worry about hydrogen atoms:
         whole_best_mapping = iso.mapping
     else:
-        print("Error, not found the mapping")
-        raise
+        raise ValueError("Error, not found the mapping")
 
     if len(temp) == 1:
         whole_best_mapping[temp[0]] = metal_index
     else:
-        logger.info("ERROR, more than one metal in the site")
-        raise
+        raise ValueError("ERROR, more than one metal in the site")
 
     # Remove the end atoms from the mapping:
     logger.info(f"Best mapping:")

@@ -142,7 +142,6 @@ def adjust_angles(topol_new, topol_fp, mapping_fp_to_new):
             logger.info(f"But it is standard bond so it should be there")
             logger.info(f"And you should be worry if it is not the end of fingerprint")
             found = True
-            # raise
 
         if not found:
             # type_to_assign= angle_fp.type
@@ -216,7 +215,7 @@ def adjust_dihedrals(topol_new, topol_fp, mapping_fp_to_new):
             logger.info("But it is standard so it should be there")
             logger.info("And you should be worry if it is not the end of fingerprint")
             found = True
-            # raise
+
             '''
             for dihedral in topol_fp.dihedrals:
             if dihedral.atom1.idx==0:
@@ -287,7 +286,7 @@ def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
             logger.info("But it is standard so it should be there")
             logger.info("And you should be worry if it is not the end of fingerprint")
             found = True
-            # raise
+
             '''
             for dihedral in topol_fp.dihedrals:
             if dihedral.atom1.idx==0:
@@ -317,8 +316,87 @@ def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
     return topol_new
 
 
+def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
 
-def strip_numbers_from_atom_name(atom_name):
+    logger.info("   [ ] Adding new bonds to topology")
+
+    for bond_fp in topol_fp.bonds:
+        found = False
+
+        for bond_new in topol_new.bonds:
+            # if bond_fp.atom1.name=="ZN":
+            #    print(bond_fp.atom1.idx , bond_new)
+
+            # print(bond_new, bond_new.atom1.name)
+            # Check if atoms in mapping (that they are not the additional atoms)
+            if bond_fp.atom1.idx in mapping_fp_to_new and bond_fp.atom2.idx in mapping_fp_to_new:
+                # print("It is in the mapping")
+
+                if ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom1.idx] and bond_new.atom2.idx ==
+                     mapping_fp_to_new[bond_fp.atom2.idx]) or
+                        ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
+                          mapping_fp_to_new[bond_fp.atom1.idx]))):
+                    if (bond_fp.type != bond_new.type):
+                        logger.info(f"      [o] Diffrent bond type {bond_new.type:} {bond_fp.type:}")
+                    found = True
+            else:
+                found = True
+
+        if not found:
+            # type_to_assign= bond_fp.type
+            # type_to_assign = pmd.topologyobjects.AngleType(angle_fp.type.k, angle_fp.type.theteq)
+            # print("AAA", bond_fp.type.k, bond_fp.type.req, len(topol_new.bond_types))
+
+            type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
+                                                          list=topol_new.bond_types)
+
+
+            # if type_to_assign not in topol_new.bond_types:
+            topol_new.bond_types.append(type_to_assign)
+
+            atom1 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom1.idx]]
+            atom2 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom2.idx]]
+            topol_new.bonds.append(pmd.topologyobjects.Bond(atom1, atom2, type=type_to_assign))
+
+            logger.info(f"      [o] New bond: {mapping_fp_to_new[bond_fp.atom1.idx]:}  {type_to_assign:} {atom1.name:}-{atom2.name:} ({mapping_fp_to_new[bond_fp.atom2.idx]:})")
+
+    return topol_new
+
+
+
+def adjust_pair_exclusions(topol_new, topol_fp, mapping_fp_to_new):
+    logger.info("   [ ] Adding new pair exclusions to topology")
+    for pair_fp in topol_fp.adjusts:
+        found = False
+        for pair_new in topol_new.adjusts:
+            # Check if atoms in mapping (that they are not the additional atoms)
+            if pair_fp.atom1.idx in mapping_fp_to_new and pair_fp.atom2.idx in mapping_fp_to_new:
+                if ((pair_new.atom1.idx == mapping_fp_to_new[pair_fp.atom1.idx] and pair_new.atom2.idx ==
+                     mapping_fp_to_new[pair_fp.atom2.idx]) or
+                        ((pair_new.atom1.idx == mapping_fp_to_new[pair_fp.atom2.idx] and pair_new.atom2.idx ==
+                          mapping_fp_to_new[pair_fp.atom1.idx]))):
+                    found = True
+            else:
+                found = True
+
+        if not found:
+            atom1 = topol_new.atoms[mapping_fp_to_new[pair_fp.atom1.idx]]
+            atom2 = topol_new.atoms[mapping_fp_to_new[pair_fp.atom2.idx]]
+
+            type_to_assign = pmd.topologyobjects.NonbondedExceptionType(atom1.rmin + atom2.rmin,
+                                                                        0.5 * (atom1.epsilon + atom2.epsilon))
+
+            topol_new.adjust_types.append(type_to_assign)
+            topol_new.adjusts.append(pmd.topologyobjects.NonbondedException(atom1, atom2))
+
+            logger.info(
+                f"      [o] New pair exclusion: {mapping_fp_to_new[pair_fp.atom1.idx]:}  {type_to_assign:} {atom1.name:}-{atom2.name:} ({mapping_fp_to_new[pair_fp.atom2.idx]:})")
+    return topol_new
+
+
+
+
+def strip_numbers_from_atom_name(atom_name): #TODO remove (?)
     return re.match("([a-zA-Z]+)", atom_name).group(0)
 
 def copy_bonds(topol_new, bonds, metal_name):
@@ -420,8 +498,7 @@ def copy_dihedrals(topol_new, dihedrals, metal_name):
         find = [a for a, dihedral_o in enumerate(orginal_dihedrals) if
                 (dihedral_o == dihedral or dihedral_o == dihedral[::-1])]
         if len(find) == 1:
-            print("It found dihedral in the topology, but it should not, as they should be not present, doing noting")
-            raise Error
+            raise Exception("We suppose to add dihedral containing metal. The nonbondate template has them... it should not!")
             # This procedures are not done in reality
             # dihedral_new = topol_new.dihedrals[find[0]]
             # type_to_assign = pmd.topologyobjects.DihedralType(dihedrals[dihedral][1], dihedrals[dihedral][0],list=topol_new.angle_types)
@@ -452,3 +529,71 @@ def copy_dihedrals(topol_new, dihedrals, metal_name):
 
     return topol_new
 
+
+
+
+def copy_impropers(topol_new, dihedrals, metal_name):
+    '''
+    Copy angles into topology
+
+    :param topol_new:
+    :param angles:
+    :return:
+    '''
+    orginal_dihedrals = []
+
+    for dihedral in topol_new.impropers:
+        orginal_dihedrals.append((dihedral.atom1.idx, dihedral.atom2.idx, dihedral.atom3.idx, dihedral.atom4.idx))
+
+    for dihedral in dihedrals:
+        find = [a for a, dihedral_o in enumerate(orginal_dihedrals) if
+                (dihedral_o == dihedral or dihedral_o == dihedral[::-1])]
+        if len(find) == 1:
+            raise Exception("We suppose to add dihedral containing metal. The nonbondate template has them... it should not!")
+            # This procedures are not done in reality
+            # dihedral_new = topol_new.dihedrals[find[0]]
+            # type_to_assign = pmd.topologyobjects.DihedralType(dihedrals[dihedral][1], dihedrals[dihedral][0],list=topol_new.angle_types)
+            # topol_new.angle_types.append(type_to_assign)
+            # dihedral_new.type = type_to_assign
+        else:
+            if strip_numbers_from_atom_name(
+                    topol_new.atoms[dihedral[0]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                topol_new.atoms[dihedral[1]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                topol_new.atoms[dihedral[2]].name).title() == metal_name.title() or strip_numbers_from_atom_name(
+                topol_new.atoms[dihedral[3]].name).title() == metal_name.title():
+
+                # we do use periodicy=2 and use defualt values for scee=1.2 and scnb=2 (screening of electrostatics and noboned)
+
+
+                type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedrals[dihedral][1],
+                                                                  psi_eq=dihedrals[dihedral][0],
+                                                                  list=topol_new.improper_types)
+
+                topol_new.improper_types.append(type_to_assign)
+
+                atom1 = topol_new.atoms[dihedral[0]]
+                atom2 = topol_new.atoms[dihedral[1]]
+                atom3 = topol_new.atoms[dihedral[2]]
+                atom4 = topol_new.atoms[dihedral[3]]
+                topol_new.impropers.append(
+                    pmd.topologyobjects.Improper(atom1, atom2, atom3, atom4, type=type_to_assign))
+            else:
+                print('nope', dihedral)
+
+    return topol_new
+
+
+def copy_pair_exclusions(topol_new, pairs):
+    orginal_pairs = []
+    for pair in topol_new.adjusts:
+        orginal_pairs.append((pair.atom1.idx, pair.atom2.idx))
+
+    for pair in pairs:
+        atom1 = topol_new.atoms[pair[0]]
+        atom4 = topol_new.atoms[pair[1]]
+        if (atom1.idx, atom4.idx) not in orginal_pairs or (atom4.idx, atom1.idx) not in orginal_pairs:
+            type_to_assign = pmd.topologyobjects.NonbondedExceptionType(atom1.rmin + atom4.rmin,
+                                                                        0.5 * (atom1.epsilon + atom4.epsilon))
+            topol_new.adjust_types.append(type_to_assign)
+            topol_new.adjusts.append(pmd.topologyobjects.NonbondedException(atom1, atom4))
+    return topol_new
