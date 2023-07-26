@@ -70,7 +70,7 @@ def read_hessian_from_orca(filename):
     for line in hess_string:
         hessian.append(list(map(float, line.split())))
 
-    hessian = np.array(hessian) * (627.509391)/ (0.529**2)  #Change from Hartree/bohr to kcal/mol /ang
+    hessian = np.array(hessian) * (627.509391)/ (0.529177**2)  #Change from Hartree/bohr to kcal/mol /ang
     return hessian
 '''
 
@@ -499,9 +499,14 @@ def strip_names_from_covalent(covalent_paramters):
         new_covalent[covalent[0]] = covalent_paramters[covalent]
     return new_covalent
 
+def generate_angles_from_bonds(bond_list):
+    angle_list = []
+    for bond in bond_list:
+        angle_list += extend_angle_to_dihedral(list(bond), bond_list)
+    return angle_list
+
 def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
     import autode as ade
-
     method = ade.methods.ORCA()
 
     if method.is_available is False:
@@ -510,7 +515,18 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     site = ade.Molecule(filename, charge=charge, mult=mult)
     site.optimise(method=method, keywords=keywords)
     names = [atom.atomic_symbol for atom in site.atoms]
-    return site.name, np.array(site.coordinates), names
+    opt_filename = f"{site.name:s}_optimised.xyz"
+    site.print_xyz_file(filename=opt_filename)
+
+    site.hessian.to(ade.units.J_per_ang_sq)
+    print("Units of hessian:", site.hessian.units)
+    hessian = np.array(site.hessian)
+    hessian *= 6.022e23/4.184e3 # we convert tto kcal/mol/angs^2
+
+    bond_list = list(site.graph.edges)
+    angle_list = generate_angles_from_bonds(bond_list)
+
+    return opt_filename, np.array(site.coordinates), names, hessian, bond_list, angle_list
 
 def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1, vibrational_scaling = None):
     here = os.getcwd()
@@ -519,29 +535,31 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
 
     print("Optimising, parameters:", filename, charge)
 
-    name, coords, atom_names = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
+    opt_filename, coords, atom_names, hessian, bond_list, angle_list = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
 
-    bond_list, angle_list = read_bonds_from_orca_output(f"{name:s}_opt_orca.out")
-    hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
+    #print(f"filename for opt {name:s}_opt_orca.out")
+    print("First element hessian", hessian[0,0])
+
+    #bond_list, angle_list = read_bonds_from_orca_output(f"{name:s}_opt_orca.out")
+    #hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
 
     # Scalling factor taken from https://cccbdb.nist.gov/vsfx.asp and assumed that for basis set of double zeta and higher the scalling does not change
     if vibrational_scaling is not None:
         vibrational_scaling=vibrational_scaling
-    if 'PBE0' in keywords:
+    elif 'PBE0' in keywords:
         vibrational_scaling = 0.96
     elif 'wB97X-D3' in keywords:
         vibrational_scaling = 0.955
     else:
         vibrational_scaling=1
 
-
     bonds_with_names, angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=vibrational_scaling)
 
-    dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=f"{name:s}_opt_orca.xyz")
+    dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=opt_filename)
 
     os.chdir(here)
 
-    return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{name:s}_opt_orca.xyz"
+    return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{opt_filename:s}"
 
 def remove_atoms_from_bonded(bonds, angles, dihedrals, impropers, atoms_to_remove):
     new_params = []
@@ -592,6 +610,8 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
         impropers = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult, filename=filename_opt)
         #dihedrals = {**dummy_dihedrals, **improper_dihedrals}
         #dihedrals = improper_dihedrals
+    else:
+        impropers = {}
 
     #dihedrals = {}
         
@@ -602,6 +622,8 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
     dihedrals = {} #dihedrals are not implemented
 
     pairs = create_pair_exclusions(dummy_dihedrals, angles)
+
+    print("Filename from Seminario:", filename_opt)
 
     return bonds, angles, dihedrals, impropers, pairs, filename_opt
 

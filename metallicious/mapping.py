@@ -55,9 +55,8 @@ def unwrap(syst, metal_type, metal_cutoff=3):
 
 def int_list_to_str(lista):
     return " ".join(list(map(str, lista)))
-    
-# TODO check end_atoms
-#def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name, end_atoms=[]):
+
+
 def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name):
     # usually fingerprint suppose to not have the PBC, but for standrazing purposes we unwrap it:
     syst_fingerprint_pbc = syst_fingerprint
@@ -218,41 +217,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
     logger.info(f"Best mapping:")
     # logger.info(f"    Mapping: {best_mapping}")
     logger.info(f"    Mapping: {whole_best_mapping}")
-
-    ''' TODO remove (?) 2023/06/10
-    mapping_end_atoms = []
-    for index1 in whole_best_mapping:
-        # logger.info(
-        #    f"      Map: {index1} -> {best_mapping[index1]} ({syst_fingerprint.atoms[index1]} -> {cage.atoms[best_mapping[index1]]})")
-        if whole_best_mapping[index1] in end_atoms:
-            mapping_end_atoms.append(index1)
-            logger.info("          End atom! Will be removed")
-    '''
-
     logger.info(f"\t\t\tRMSD: {best_rmsd:}")
-
-    ''' TODO remove (?) 2023/06/10
-    logger.info(f"    Removing end atoms: {end_atoms:} in fingerprint nonation: {mapping_end_atoms:}")
-    for end_atom in mapping_end_atoms:
-        whole_best_mapping.pop(end_atom)
-    '''
-
 
     return whole_best_mapping, best_rmsd
 
-    '''
-    mapping_end_atoms = []
-    for index1 in best_mapping:
-        #logger.info(
-        #    f"      Map: {index1} -> {best_mapping[index1]} ({syst_fingerprint.atoms[index1]} -> {cage.atoms[best_mapping[index1]]})")
-        if best_mapping[index1] in end_atoms:
-            mapping_end_atoms.append(index1)
-            logger.info("          End atom! Will be removed")
-
-    logger.info(f"    RMSD: {best_rmsd:}")
-    logger.info(f"    Removing end atoms: {end_atoms:} in fingerprint nonation: {mapping_end_atoms:}")
-    for end_atom in mapping_end_atoms:
-        best_mapping.pop(end_atom)
-
-    return best_mapping, best_rmsd
-    '''

@@ -531,7 +531,6 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
     n_total_atoms = len(metals)
 
     for idx, ligands_node in enumerate(ligands_atoms_membership):
-        print(idx)
         sorted_extra_atoms = [idx for idx, a in enumerate(ligands_node) if a in extra_atoms]
         sorted_link_atoms = [idx for idx, a in enumerate(ligands_node) if a in link_atoms]
 
@@ -550,7 +549,7 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
         nx.set_node_attributes(G_ligand_2, {atom.index: atom.name[0] for atom in selected_ligand_2.atoms}, "name")
         nx.set_node_attributes(G_ligand_2, {atom.GetChiralTag() for atom in mol1.GetAtoms()}, "chirality")
 
-        print([atom.GetChiralTag() for atom in mol1.GetAtoms()])
+        #print([atom.GetChiralTag() for atom in mol1.GetAtoms()])
 
         new_ligand = selected_ligand_2.copy()
 
@@ -573,15 +572,47 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
                 extra_atoms_ligand.append(iso.mapping[extra_atom])
             new_extra_atoms.append(extra_atoms_ligand)
 
-            print(new_ligands)
+            #print(new_ligands)
             new_ligands.append(new_ligand.atoms)
 
             n_total_atoms += len(new_ligand.atoms)
-            print(new_ligands, n_total_atoms)
+            #print(new_ligands, n_total_atoms)
         else:
             logger.info(f"The graphs are not isomorphic, index: {idx:}")
 
     return new_ligands, new_extra_atoms, new_link_atoms
+
+
+def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_metal_names = None):
+    syst = MDAnalysis.Universe(filename)
+    old_topol = pmd.load_file(topol_filename)
+
+    metal_indices, n_metals = find_metal_indices(syst, metal_name)
+
+    all_metals_indices = []
+    if all_metal_names is not None:
+        for additional_metal in all_metal_names:
+            additional_indices = find_metal_indices(syst, additional_metal)[0]
+            all_metals_indices += additional_indices
+            # Sometimes guessed elements
+            if hasattr(syst.atoms, 'elements'):
+                syst.atoms[additional_indices].elements = [additional_metal] * len(additional_indices)
+    else:
+        all_metals_indices = metal_indices
+
+    metal = syst.atoms[all_metals_indices]
+    nonmetal = syst.atoms - metal
+    cage = MDAnalysis.Merge(metal, nonmetal).atoms
+
+    # we move metals to the begining:
+    topol = deepcopy(old_topol)
+    topol.strip(f"!@{','.join(list(map(str, np.array(all_metals_indices) + 1))):s}")
+    topol_nonmetal = deepcopy(old_topol)
+    topol_nonmetal.strip(f"@{','.join(list(map(str, np.array(all_metals_indices) + 1))):s}")
+    topol += topol_nonmetal
+
+    return cage, topol, list(range(len(metal_indices)))
+
 
 def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None):
     '''
@@ -594,23 +625,11 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
     additional_metals -> metals which are present in topology but removed for parametrization of small molecules
     :return:
     '''
-    syst = MDAnalysis.Universe(filename)
-    topol = pmd.load_file(topol_filename)
 
-    cage = syst.atoms
+    cage, topol, all_metals_indices = read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_metal_names)
+    metal_indices, n_metals = find_metal_indices(cage, metal_name)
 
-    metal_indices, n_metals = find_metal_indices(syst, metal_name)
 
-    all_metals_indices = []
-    if all_metal_names is not None:
-        for additional_metal in all_metal_names:
-            additional_indices = find_metal_indices(syst, additional_metal)[0]
-            all_metals_indices += additional_indices
-            # Sometimes guessed elements
-            if hasattr(cage.atoms, 'elements'):
-                cage[additional_indices].elements = [additional_metal] * len(additional_indices)
-    else:
-        all_metals_indices = metal_indices
 
     if n_metals == 0:
         raise Exception(f"Metal {metal_name:} not found")
@@ -631,12 +650,12 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
     metal_sites = []
 
-    for n_site, unique_site in enumerate(unique_sites):
+    for n_site, (unique_site, metal_index) in enumerate(zip(unique_sites, metal_indices)):
         new_directory(f"{output:s}{n_site:d}")
 
         site_topol = deepcopy(topol)
-        strip_atoms = [idx for idx in list(cage.indices) if idx not in unique_site]
-        site_topol.strip(f"@{','.join(list(map(str, np.array(strip_atoms) + 1))):s}")
+        #strip_atoms = [idx for idx in list(cage.indices) if idx not in unique_site]
+        site_topol.strip(f"!@{','.join(list(map(str, np.array(unique_site)+1))):s}")
 
         selection_site = cage[unique_site]
 
@@ -692,7 +711,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
 
         metal_topol = deepcopy(site_topol)
         # metal is the first (we renumbered them in selection site), in amber counting starts from 1
-        metal_topol.strip("!@1")
+        metal_topol.strip(f"!@1")
         new_site_topol = metal_topol
         for unique in unique_ligands_pattern:
             # renumbering of the atoms is done according to the first ligand so it should be exactly as for the coordination

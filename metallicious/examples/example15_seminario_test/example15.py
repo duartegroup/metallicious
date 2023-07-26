@@ -55,11 +55,13 @@ cage.parametrize()
 
 #cage.parametrize()
 #
-#
+# #
 # os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_Lusby/")
-# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)}, topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc')
+#
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
+#                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
 # cage.parametrize()
-#cage.prepare_initial_topology()
+
 
 
 #os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/homoleptic/14/temp/")
@@ -134,10 +136,10 @@ cage.parametrize()
 # cage = supramolecular_structure('noncovalent_complex.pdb', {'Fe': (2, 1)}, vdw_type='merz-opc')
 # cage.prepare_initial_topology(homoleptic_ligand_topol='linker0.top')
 # cage.parametrize()
-
+#
 os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_protein")
-cage = supramolecular_structure("protein.gro", topol="protein.top", metal_charge_mult={'Zn': (2, 1)}, vdw_type='merz-tip3p')
-#cage.prepare_initial_topology()
+cage = supramolecular_structure("protein.gro", topol="protein.top", metal_charge_mult={'Zn': (2, 1)}, improper_metal=False)
+# #cage.prepare_initial_topology()
 cage.parametrize()
 
 
@@ -222,21 +224,33 @@ cage.parametrize()
 # cage.parametrize()
 
 # os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Ru_Pd_cage")
-# cage = supramolecular_structure('ru_pd.xyz', {'Ru': (2, 1), 'Pd':(2, 1)}, vdw_type='uff', truncation_scheme='dihedral')
+
+
+# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_TZVPP/Ru_Pd_cage")
+# cage = supramolecular_structure('ru_pd.xyz', {'Ru': (2, 1), 'Pd':(2, 1)}, vdw_type='uff', search_library=False)
 # cage.prepare_initial_topology()
 # cage.parametrize()
 
-# os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8908552491/gromacs")
-# #import sys
-# #home_path = '/u/fd/chem1540'
-# #sys.path.insert(0,home_path + '/github/cgbind')
-# #from cgbind import Linker, Cage
-# #linker = Linker(smiles='C1=CC(=C(C(=C1)C#CC2=CC=NC=C2)OCCN!C(=N!)N!)C#CC3=CC=NC=C3', name='m4l6_linker', arch_name='m12l24')
-# #c#age = Cage(linker, metal='Pd', metal_charge='2')
-# #cage.print_xyz_file(filename='cage.xyz')
-#
-# cage = supramolecular_structure('Guanidium_m12_l24.pdb', {'Pd': (2,1)},  vdw_type='merz-tip3p')
-# cage.prepare_initial_topology(homoleptic_ligand_topol='LA1.itp')
+
+#/u/fd/chem1540/Downloads/charmm-gui-8908552491/gromacs
+#os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8908552491/gromacs")
+
+os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8983783989/gromacs")
+# import sys
+# home_path = '/u/fd/chem1540'
+# sys.path.insert(0,home_path + '/github/cgbind')
+# from cgbind import Linker, Cage, ob
+# import MDAnalysis
+# #syst = MDAnalysis.Universe("step3_input.pdb")
+# #syst.atoms.write("linker.xyz")
+# linker = Linker(smiles="C1=[N]C=CC(=C1)C2=CC(=CC(=C2)[N+]3=CC=C(C=C3)C4=CC=[N+](C=C4)C)C5=CC=[N]C=C5", name='m4l6_linker', arch_name='m12l24')
+# cage = Cage(linker, metal='Pd', metal_charge='2')
+# cage.optimise(ob)
+# cage.print_xyz_file(filename='cage.xyz')
+
+
+# cage = supramolecular_structure('cage.xyz', {'Pd': (2, 1)},  vdw_type='merz-tip3p')
+# cage.prepare_initial_topology(homoleptic_ligand_topol='LA2.top')
 # cage.parametrize()
 
 

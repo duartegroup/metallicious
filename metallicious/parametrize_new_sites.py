@@ -4,7 +4,8 @@ import shutil
 from metallicious.extract_metal_site import extract_metal_structure, find_metal_indices
 from metallicious.seminario import single_seminario
 from metallicious.charges import calculate_charges2
-from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, copy_pair_exclusions
+from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, \
+    copy_pair_exclusions
 from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
 from metallicious.data import vdw_data
 from metallicious.prepare_initial_topology import prepare_initial_topology
@@ -18,6 +19,7 @@ from MDAnalysis.lib.distances import distance_array
 
 import os
 
+
 # TODO: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
 
 class supramolecular_structure:
@@ -25,7 +27,7 @@ class supramolecular_structure:
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
-                 fingerprint_guess_list=None, truncation_scheme = None):
+                 fingerprint_guess_list=None, truncation_scheme=None):
 
         print("Liberary with templates is located:", library_path)
 
@@ -38,6 +40,10 @@ class supramolecular_structure:
         self.donors = donors
         self.improper_metal = improper_metal
         self.ff = ff
+
+
+        #if topol is not None:
+        #self.topol = self.make_metals_first(topol)
         self.topol = topol
 
         self.allow_new_templates = True
@@ -56,22 +62,26 @@ class supramolecular_structure:
         elif metal_charges is not None:
             self.metal_charge_dict = metal_charges
             self.metal_names = list(metal_charges.keys())
-            #self.
+            # self.
             self.allow_new_templates = False
         else:
             raise ValueError("Not correct format of metal_charge_mult/metal_charges")
 
-        if vdw_type=='custom' and topol is not None:
+        if vdw_type == 'custom' and topol is not None:
             self.vdw_type = 'custom'
+
         elif vdw_type is None:
             for vdw_type in vdw_data:
-                present = [metal_name in vdw_data[vdw_type] for metal_name in self.metal_names]
+                present = [(metal_name in vdw_data[vdw_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}"  in vdw_data[vdw_type]) for metal_name in self.metal_names]
+
                 if sum(present) == len(present):
                     self.vdw_type = vdw_type
-                    print(f"vdw_type not selected, will use first available for selected metals: {vdw_type:}") # TODO make first merz-opc
+                    print(
+                        f"vdw_type not selected, will use first available for selected metals: {vdw_type:}")
         else:
             for metal_name in self.metal_names:
-                if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in vdw_data[vdw_type]:
+                if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in \
+                        vdw_data[vdw_type]:
                     raise ValueError(f"One of the metals ({metal_name:}) not avaialble in selected LJ library")
             self.vdw_type = vdw_type
 
@@ -83,8 +93,8 @@ class supramolecular_structure:
         self.find_metal_sites()
 
         self.path = os.getcwd()
-        #This is placeholder for temporary direction, but ORCA often breaks, and it is easier just to restart a job
-        self.tmpdir_path = '.'  #mkdtemp()
+        # This is placeholder for temporary direction, but ORCA often breaks, and it is easier just to restart a job
+        self.tmpdir_path = '.'  # mkdtemp()
         os.chdir(self.tmpdir_path)
 
         if self.topol is None:
@@ -112,22 +122,15 @@ class supramolecular_structure:
                                         fingerprint_guess_list=self.fingerprint_guess_list,
                                         m_m_cutoff=10, vdw_type=self.vdw_type, library_path=self.library_path,
                                         search_library=self.search_library,
-                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme) #TODO what about fp style (?)
+                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme)
 
-            if guessed is not False: # do not change to True...
+            if guessed is not False:  # do not change to True...
                 site.fp_coord_file = f"{self.library_path:s}/{guessed:}.pdb"
                 site.fp_topol_file = f"{self.library_path:s}/{guessed:}.top"
                 site.load_fingerprint()
                 site.set_cutoff()
             else:
                 print("Template for this site not found")
-                guessed = guess_fingerprint(self.filename, site.index, metal_name=site.metal_name,
-                                            metal_charge=site.metal_charge,
-                                            fingerprint_guess_list=self.fingerprint_guess_list,
-                                            m_m_cutoff=10, vdw_type=self.vdw_type, library_path=self.library_path,
-                                            search_library=self.search_library,
-                                            additional_fp_files=additional_fp_coords,
-                                            fp_style=self.truncation_scheme)  # TODO what about fp style (?)
 
     def extract_unique_metal_sites(self):
         logger.info(f"Extracting")
@@ -158,7 +161,14 @@ class supramolecular_structure:
         else:
             return False
 
-    def prepare_initial_topology(self, coord_filename= 'noncovalent_complex.pdb', topol_filename = 'noncovalent_complex.top', method='gaff', homoleptic_ligand_topol=None, subdir='init_topol'):
+
+    #def make_metals_first(self, topol):
+
+
+
+    def prepare_initial_topology(self, coord_filename='noncovalent_complex.pdb',
+                                 topol_filename='noncovalent_complex.top', method='gaff', homoleptic_ligand_topol=None,
+                                 subdir='init_topol'):
         here = os.getcwd()
         new_directory(subdir)
         shutil.copyfile(self.filename, f'{subdir}/{self.filename}')
@@ -166,9 +176,10 @@ class supramolecular_structure:
             shutil.copyfile(homoleptic_ligand_topol, f'{subdir}/{homoleptic_ligand_topol}')
         os.chdir(subdir)
 
-        if method=='gaff' or homoleptic_ligand_topol is not None:
+        if method == 'gaff' or homoleptic_ligand_topol is not None:
             metal_indicies = prepare_initial_topology(self.filename, self.metal_names, self.sites[0].metal_charge,
-                                                      coord_filename, topol_filename,self.vdw_type, ligand_topol=homoleptic_ligand_topol)
+                                                      coord_filename, topol_filename, self.vdw_type,
+                                                      ligand_topol=homoleptic_ligand_topol)
             self.filename = f'{subdir}/{coord_filename}'
             self.topol = f'{subdir}/{topol_filename}'
 
@@ -190,32 +201,17 @@ class supramolecular_structure:
         print("Available!")
 
         if self.topol is None:
-            print(f"Please provide topology, or use .prepare_initial_topology()")
-            return False
-
-        else:
-            print("Checking topology") # TODO Metals needs to be at the begining of the file
-            '''
-            topol = pmd.load_file(self.topol)
-            #topol.write(f"complex.top", [list(range(len(topol.split())))])
-            new_top = topol.split()
-            (new_top[1][0]+new_top[0][0]).write("complex.top", [[1,0]])
-            self.topol = "complex.top"
-            '''
-            # TODO do we need metal be first ?
-
-
-        if self.topol is None:
             raise Exception("topology file not found")
 
         # check if topol and coord have the same names of atoms TODO
 
         parameter_copier = patcher()
-        parameter_copier.copy_site_topology_to_supramolecular(self.sites, cage_coord=self.filename, cage_topol=self.topol)
-        parameter_copier.save(f'{self.path:s}/{out_coord:s}', f'{self.path:s}/{out_topol:s}', tmpdir_path=self.tmpdir_path)
+        parameter_copier.copy_site_topology_to_supramolecular(self.sites, cage_coord=self.filename,
+                                                              cage_topol=self.topol)
+        parameter_copier.save(f'{self.path:s}/{out_coord:s}', f'{self.path:s}/{out_topol:s}',
+                              tmpdir_path=self.tmpdir_path)
         print("Finished!")
         return True
-
 
     def parametrize_metal_sites(self):
         if len(self.unique_sites) == 0:
@@ -227,8 +223,8 @@ class supramolecular_structure:
                     site.parametrize()
                     self.add_site_to_library(site)
                 else:
-                    raise Exception("Template not found (try to (a) parametrize it (specify multiplicity) or (b) truncate template)")
-
+                    raise Exception(
+                        "Template not found (try to (a) parametrize it (specify multiplicity) or (b) truncate template)")
 
     def add_site_to_library(self, site):
         # adding to the library
@@ -237,11 +233,11 @@ class supramolecular_structure:
 
             while True:
                 if os.path.isfile(f"{self.library_path:}/{site.name}_{file_idx}.top"):
-                    file_idx+=1
+                    file_idx += 1
                 else:
                     break
 
-            if self.vdw_type != 'custom': # if it custom we don't want it
+            if self.vdw_type != 'custom':  # if it custom we don't want it
                 print(f"Saving as {self.library_path:}/{site.name}_{file_idx}.top")
                 shutil.copyfile(site.fp_topol_file, f"{self.library_path:}/{site.name}_{file_idx}.top")
                 shutil.copyfile(site.fp_coord_file, f"{self.library_path:}/{site.name}_{file_idx}.pdb")
@@ -257,7 +253,6 @@ class supramolecular_structure:
             print(f"{site.metal_name}({site.metal_charge}+)")
 
 
-
 class metal_site():
     def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None):
         self.metal_name = metal_name
@@ -269,12 +264,13 @@ class metal_site():
 
     def _print(self):
         if self.fp_coord_file is not None:
-            return f"{self.index}: {self.metal_name}({self.metal_charge}+) {self.fp_coord_file.split('/')[-1]}"
+            return f"<{self.index}: {self.metal_name}({self.metal_charge}+) {self.fp_coord_file.split('/')[-1]}>"
         else:
-            return f"{self.index}: {self.metal_name}({self.metal_charge}+) None"
+            return f"<{self.index}: {self.metal_name}({self.metal_charge}+) None>"
 
     def __str__(self):
         return self._print()
+
     def __repr__(self):
         return self._print()
 
@@ -309,13 +305,14 @@ class metal_site():
             #self.m_m_cutoff=9            
         '''
 
+
 class new_metal_site():
     def __init__(self, metal_name, metal_charge, mult, directory, ligand_names=None, unique_ligands_pattern=None,
                  link_atoms=None, additional_atoms=None, starting_index=None, indecies=None, ligand_charges=None,
                  ligand_smiles=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
                  donors=['N', 'S', 'O'], vdw_type=None):
-        
+
         self.unique_ligands_pattern = unique_ligands_pattern
         self.link_atoms = link_atoms
         self.additional_atoms = additional_atoms
@@ -327,7 +324,9 @@ class new_metal_site():
         self.metal_charge = metal_charge
         self.mult = mult
         self.ligand_charges = ligand_charges
-        self.ligand_smiles = ligand_smiles  # smiles are not really used, they are just for user if hand correction needs to be done
+        # smiles are not used they are just for user if manual correction needs to be done
+        # it is easier to look at the specific ligand to change its charge etc.
+        self.ligand_smiles = ligand_smiles
 
         self.bonds = None
         self.angles = None
@@ -347,7 +346,7 @@ class new_metal_site():
         self.fp_topol_file = None
         self.fp_coord_file = None
 
-        self.name = f"{metal_name:}_{metal_charge:}_{vdw_type:}"  
+        self.name = f"{metal_name:}_{metal_charge:}_{vdw_type:}"
         self.topol = topol
 
         self.vibrational_scaling = None
@@ -359,7 +358,7 @@ class new_metal_site():
             elif f"{metal_name:}{metal_charge:}" in vdw_data[vdw_type]:
                 vdw_entry = f"{metal_name:}{metal_charge:}"
             eps, r2min = vdw_data[vdw_type][vdw_entry]
-            self.metal_radius = r2min*2 # becasue radius is r2
+            self.metal_radius = r2min * 2  # becasue radius is r2
             # Change metal type:
             self.topol[0].atom_type.rmin = r2min
             self.topol[0].atom_type.epsilon = eps
@@ -368,29 +367,31 @@ class new_metal_site():
                 self.metal_radius = self.read_radius_from_topol()
 
     def read_radius_from_topol(self):
-        self.metal_radius = self.topol[0].rmin*2
+        self.metal_radius = self.topol[0].rmin * 2
 
     def _print(self):
-        return f"{self.metal_name}({self.metal_charge}+) {self.name}"
+        return f"<{self.metal_name}({self.metal_charge}+) {self.name}>"
 
     def __str__(self):
         return self._print()
+
     def __repr__(self):
         return self._print()
 
     def seminario(self):
         site_charge = self.metal_charge + np.sum(self.ligand_charges)
 
-        self.bonds, self.angles, self.dihedrals, self.impropers, self.pairs, self.filename = single_seminario(self.filename, site_charge,
-                                                                                   self.metal_name,
-                                                                                   self.starting_index, self.indecies,
-                                                                                   self.unique_ligands_pattern,
-                                                                                   keywords=self.autode_keywords,
-                                                                                   mult=self.mult,
-                                                                                   improper_metal=self.improper_metal,
-                                                                                   donors=self.donors,
-                                                                                  atoms_to_remove = self.additional_atoms,
-                                                                                  vibrational_scaling=self.vibrational_scaling)
+        self.bonds, self.angles, self.dihedrals, self.impropers, self.pairs, self.filename = single_seminario(
+            self.filename, site_charge,
+            self.metal_name,
+            self.starting_index, self.indecies,
+            self.unique_ligands_pattern,
+            keywords=self.autode_keywords,
+            mult=self.mult,
+            improper_metal=self.improper_metal,
+            donors=self.donors,
+            atoms_to_remove=self.additional_atoms,
+            vibrational_scaling=self.vibrational_scaling)
 
         self.topol = copy_bonds(self.topol, self.bonds, self.metal_name)
         self.topol = copy_angles(self.topol, self.angles, self.metal_name)
@@ -412,26 +413,27 @@ class new_metal_site():
                                              self.starting_index,
                                              metal_radius=self.metal_radius, mult=self.mult)
 
-        #Removing additional atoms:
-        partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if idx not in self.additional_atoms]
-        
+        # Removing additional atoms:
+        partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if
+                           idx not in self.additional_atoms]
+
         print("\t[ ] Copying charges")
         for idx, atom in enumerate(self.topol.atoms):
             atom.charge = partial_charges[idx]
         print("\t[+] Charges calculated !")
 
     def reduce_to_template(self, out_topol='template.top', out_coord='template.pdb'):
-        #self.topol.write(f"old_new_topol.top")
+        # self.topol.write(f"old_new_topol.top")
 
-        #self.topol.strip(f"@{','.join(list(map(str, np.array(self.additional_atoms) + 1))):s}")
+        # self.topol.strip(f"@{','.join(list(map(str, np.array(self.additional_atoms) + 1))):s}")
         self.topol.save(out_topol, overwrite=True)
 
         new_cage = MDAnalysis.Universe(self.filename)
-        #new_cage.atoms.write(f"old_new_template.pdb")
+        # new_cage.atoms.write(f"old_new_template.pdb")
 
         print("removing additional atoms", self.additional_atoms)
 
-        if len(self.additional_atoms)>0:
+        if len(self.additional_atoms) > 0:
             template = new_cage.select_atoms(f"not index {' '.join(list(map(str, np.array(self.additional_atoms)))):s}")
         else:
             template = new_cage.atoms
@@ -448,7 +450,7 @@ class new_metal_site():
         here = os.getcwd()
         os.chdir(self.directory)
 
-        #self.create_initial_topol()
+        # self.create_initial_topol()
         self.seminario()
         self.partial_charge()
         self.reduce_to_template()

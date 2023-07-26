@@ -100,11 +100,7 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
     ligand_tops = [] # parmed topologies
 
     for idx, nodes in enumerate(ligand_library):
-        #ligand_coords_mda = crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}") # TODO remove (2023/07/10)
-
-        #ligand_coords_mda.write(f"temp.pdb")
         ligand_coords_mda = MDAnalysis.Merge(crystal.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}"))
-        #    Universe("temp.pdb").atoms
 
         is_iso, ligand, topology, Gtop = mapping_itp_coords(ligand_coords_mda, ligand_topol) # what if there are more then one topologies (?)
         if not is_iso: # if not isomorphic we paramterize with antechamber:
