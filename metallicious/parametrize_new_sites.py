@@ -125,8 +125,8 @@ class supramolecular_structure:
                                         additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme)
 
             if guessed is not False:  # do not change to True...
-                site.fp_coord_file = f"{self.library_path:s}/{guessed:}.pdb"
-                site.fp_topol_file = f"{self.library_path:s}/{guessed:}.top"
+                site.fp_coord_file = f"{guessed:}.pdb"
+                site.fp_topol_file = f"{guessed:}.top"
                 site.load_fingerprint()
                 site.set_cutoff()
             else:
@@ -160,11 +160,6 @@ class supramolecular_structure:
             return True
         else:
             return False
-
-
-    #def make_metals_first(self, topol):
-
-
 
     def prepare_initial_topology(self, coord_filename='noncovalent_complex.pdb',
                                  topol_filename='noncovalent_complex.top', method='gaff', homoleptic_ligand_topol=None,
@@ -283,7 +278,6 @@ class metal_site():
         '''
 
         self.fp_topol, self.fp_syst = load_fp_from_file(self.fp_coord_file, self.fp_topol_file, self.fp_style)
-
         return True
 
     def set_cutoff(self):
@@ -293,17 +287,6 @@ class metal_site():
         self.ligand_cutoff = np.max(distance_array(metal_position, nometal_position)) + 2.0
 
         return True
-
-        '''
-        # In past I used this one, which should be working, but I think, I could solved the issue with ligands on the way. So, checked it and delete after testes:
-        
-        if self.n_metals > 1:
-            mm_distances = distance_array(self.cage.atoms[self.metal_indices].positions, self.cage.atoms[self.metal_indices].positions)
-            self.m_m_cutoff = np.min(mm_distances[mm_distances>0.1])-0.1 #this acctually does not make it better TODO
-        else:
-            self.m_m_cutoff = 1e10
-            #self.m_m_cutoff=9            
-        '''
 
 
 class new_metal_site():
@@ -442,6 +425,10 @@ class new_metal_site():
 
         self.fp_topol_file = f"{self.directory}/{out_topol}"
         self.fp_coord_file = f"{self.directory}/{out_coord}"
+
+
+        print(self.fp_topol_file)
+        print(self.fp_coord_file)
 
     def check_library(self):
         return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name)

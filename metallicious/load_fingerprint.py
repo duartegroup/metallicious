@@ -470,7 +470,7 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
 
         if rmsd < rmsd_best:
             rmsd_best = rmsd
-            name_of_binding_side = finerprint_name
+            name_of_binding_side = fp_files[finerprint_name].replace(".pdb", "")
             # self.ligand_cutoff = cutoff
         logger.info(f"\t\t\t[ ] RMSD {rmsd:f}")
 
