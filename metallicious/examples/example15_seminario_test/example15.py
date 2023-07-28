@@ -55,12 +55,12 @@ cage.parametrize()
 
 #cage.parametrize()
 #
-# #
-# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_Lusby/")
 #
-# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
-#                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
-# cage.parametrize()
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_Lusby/")
+
+cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
+                                topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
+cage.parametrize()
 
 
 
@@ -105,8 +105,8 @@ cage.parametrize()
 
 #
 # os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_fujita/")
-# # cage = supramolecular_structure('fujita.xyz', {'Pd': (2, 1)}, vdw_type='merz-opc')
-# # cage.prepare_initial_topology()
+# cage = supramolecular_structure('fujita.xyz', {'Pd': (2, 1)}, vdw_type='merz-opc')
+# cage.prepare_initial_topology()
 # cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Pd': (2, 1)}, topol = 'init_topol/noncovalent_complex.top', vdw_type='merz-opc')
 # cage.parametrize()
 
@@ -114,11 +114,11 @@ cage.parametrize()
 # cage = supramolecular_structure('Co8L16.xyz', {'Co': (2, 4)}, vdw_type='merz-opc')
 # cage.prepare_initial_topology()
 # cage.parametrize()
-
-os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Ru_Pd_cage")
-cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Ru': (2,1), 'Pd':(2,1)},
-                                topol='init_topol/noncovalent_complex.top', vdw_type='uff', search_library=False)
-cage.parametrize()
+#
+# os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Ru_Pd_cage")
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Ru': (2,1), 'Pd':(2,1)},
+#                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
+# cage.parametrize()
 #
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Zn_knot')
 # cage = supramolecular_structure('knot.gro', {'Zn': (2,1)}, vdw_type='merz-opc', improper_metal=False)

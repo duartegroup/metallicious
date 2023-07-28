@@ -171,10 +171,10 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
         site.coordinates = orient.coordinates
         site.name = name + "_orient" + str(orient_idx)
 
-        method_keywords = ['B3LYP', '6-31G*', 'keepdens']
-        if metal_name is not None:
-            if name_to_atomic_number[metal_name] > 30:
-                method_keywords = ['PBE0', 'def2-SVP', 'keepdens']
+        #method_keywords = ['B3LYP', '6-31G*', 'keepdens']
+        #if metal_name is not None:
+        #    if name_to_atomic_number[metal_name] > 30:
+        method_keywords = ['PBE0', 'def2-SVP', 'keepdens']
 
         site.single_point(method=method, keywords=method_keywords)
 
