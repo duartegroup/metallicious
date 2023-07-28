@@ -469,13 +469,13 @@ def generate_all_dihedrals(angles, bonds, metal_index=0):
             new_dihedrals.append(dihedral)
     return new_dihedrals
 
-def create_dummy_dihedrals(angles, bonds, filename, metal_index=0):
-    syst_opt = MDAnalysis.Universe(filename)
+def create_dummy_dihedrals(angles, bonds, metal_index=0):
+
     dihedrals_indexes = generate_all_dihedrals(angles, bonds, metal_index)
     dihedrals = {}
 
     for dihedral in dihedrals_indexes:
-        dihedrals[tuple(dihedral)] = (np.rad2deg(calc_dihedrals(*syst_opt.atoms[dihedral].positions)), 0)
+        dihedrals[tuple(dihedral)] = (0, 0)
     return dihedrals
 
 
@@ -493,7 +493,7 @@ def create_pair_exclusions(dihedrals, angles):
 
     return pairs
 
-def strip_names_from_covalent(covalent_paramters):
+def strip_names_from_covalent(covalent_paramters): # TODO remove
     new_covalent = {}
     for covalent in covalent_paramters:
         new_covalent[covalent[0]] = covalent_paramters[covalent]
@@ -555,15 +555,16 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
 
     bonds_with_names, angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=vibrational_scaling)
 
-    dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=opt_filename)
+    #dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=opt_filename)
 
     os.chdir(here)
 
-    return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{opt_filename:s}"
+    #return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{opt_filename:s}"
+    return bonds_with_names, angles_with_names, f"bonded/{opt_filename:s}"
 
-def remove_atoms_from_bonded(bonds, angles, dihedrals, impropers, atoms_to_remove):
+def remove_atoms_from_bonded(bonds, angles, impropers, atoms_to_remove):
     new_params = []
-    for bonded in [bonds, angles, dihedrals, impropers]:
+    for bonded in [bonds, angles, impropers]:
         new_bonded = {}
         for param in bonded:
             remove = False
@@ -576,26 +577,30 @@ def remove_atoms_from_bonded(bonds, angles, dihedrals, impropers, atoms_to_remov
 
         new_params.append(new_bonded)
 
-    new_bonds, new_angles, new_dihedrals, new_impropers = new_params
-    return new_bonds, new_angles, new_dihedrals, new_impropers
+    new_bonds, new_angles, new_impropers = new_params
+    return new_bonds, new_angles, new_impropers
 
 
-def remove_indices_of_removed_atoms(bonds, angles, dihedrals, impropers, atoms_to_remove):
+def remove_indices_of_removed_atoms(bonds, angles, impropers, atoms_to_remove):
     atoms_to_remove = sorted(atoms_to_remove)
     new_params = []
-    for bonded in [bonds, angles, dihedrals, impropers]:
+    for bonded in [bonds, angles, impropers]:
         new_bonded = {}
         for param in bonded:
             indices = tuple([idx-sum(np.array(atoms_to_remove)<idx) for idx in param])
             new_bonded[indices] = bonded[param]
         new_params.append(new_bonded)
-    new_bonds, new_angles, new_dihedrals, new_impropers = new_params
+    new_bonds, new_angles, new_impropers = new_params
 
-    return new_bonds, new_angles, new_dihedrals, new_impropers
+    return new_bonds, new_angles, new_impropers
 
 
 def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O'], atoms_to_remove=None, vibrational_scaling=None):
-    bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult, vibrational_scaling=vibrational_scaling)
+    #bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult, vibrational_scaling=vibrational_scaling)
+    bonds_with_names, angles_with_names, filename_opt = simple_seminario(filename, keywords=keywords,
+                                                                                          charge=metal_charge,
+                                                                                          mult=mult,
+                                                                                          vibrational_scaling=vibrational_scaling)
 
 
     bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
@@ -610,8 +615,10 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
         impropers = {}
         
     if len(atoms_to_remove) is not None:
-        bonds, angles, dummy_dihedrals, impropers = remove_atoms_from_bonded(bonds, angles, dummy_dihedrals, impropers, atoms_to_remove)
-        bonds, angles, dummy_dihedrals, impropers = remove_indices_of_removed_atoms(bonds, angles, dummy_dihedrals, impropers, atoms_to_remove)
+        bonds, angles, impropers = remove_atoms_from_bonded(bonds, angles, impropers, atoms_to_remove)
+        bonds, angles, impropers = remove_indices_of_removed_atoms(bonds, angles, impropers, atoms_to_remove)
+
+    dummy_dihedrals= create_dummy_dihedrals(angles, bonds, metal_index=0)
 
     dihedrals = {} #dihedrals are not implemented
 

@@ -114,22 +114,22 @@ cage.parametrize()
 # cage = supramolecular_structure('Co8L16.xyz', {'Co': (2, 4)}, vdw_type='merz-opc')
 # cage.prepare_initial_topology()
 # cage.parametrize()
-#
-# os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Ru_Pd_cage")
-# cage = supramolecular_structure('ru_pd.xyz', {'Ru': (2,1), 'Pd':(2,1)}, vdw_type='uff')
-# cage.prepare_initial_topology()
-# cage.parametrize()
+
+os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Ru_Pd_cage")
+cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Ru': (2,1), 'Pd':(2,1)},
+                                topol='init_topol/noncovalent_complex.top', vdw_type='uff', search_library=False)
+cage.parametrize()
 #
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Zn_knot')
 # cage = supramolecular_structure('knot.gro', {'Zn': (2,1)}, vdw_type='merz-opc', improper_metal=False)
 # cage.prepare_initial_topology()
 # #cage.parametrize()
 #
-
-os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Fe_cage')
-cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',{'Fe': (2, 1)},
-                                topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
-cage.parametrize()
+#
+# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Fe_cage')
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',{'Fe': (2, 1)},
+#                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
+# cage.parametrize()
 
 
 
