@@ -1,29 +1,20 @@
 import argparse
-import MDAnalysis
-import networkx as nx
+from copy import deepcopy
 
 import numpy as np
 
-from MDAnalysis.lib.distances import distance_array
-from copy import deepcopy
-
-import rdkit
 from rdkit import Chem
+import MDAnalysis
 from MDAnalysis.topology.guessers import guess_types
+from MDAnalysis.lib.distances import distance_array
 
+import networkx as nx
 from networkx import isomorphism
 import parmed as pmd
 
-
-#try:
 from metallicious.log import logger
 from metallicious.mapping import map_two_structures, unwrap
 from metallicious.utils import new_directory, strip_numbers_from_atom_names
-#except:
-#    from log import logger
-#    from mapping import map_two_structures, unwrap
-#    from utils import new_directory, mdanalysis_to_rdkit, strip_numbers_from_atom_names
-
 
 def find_metal_indices(cage, metal_name):
     if not hasattr(cage.atoms[0], 'element'):
@@ -611,7 +602,7 @@ def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_me
     topol_nonmetal.strip(f"@{','.join(list(map(str, np.array(all_metals_indices) + 1))):s}")
     topol += topol_nonmetal
 
-    return cage, topol, list(range(len(metal_indices)))
+    return cage, topol, list(range(len(all_metals_indices)))
 
 
 def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None):
@@ -697,9 +688,9 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
             unique_ligand_filenames.append(f"{output:s}{n_site:d}/ligand_{idx:}.xyz")
 
             mol = ligand_coord.atoms.convert_to("RDKIT")
-            charge = rdkit.Chem.GetFormalCharge(mol)
+            charge = Chem.GetFormalCharge(mol)
             unique_ligands_charges.append(charge)
-            unique_ligands_smiles.append(rdkit.Chem.MolToSmiles(mol))
+            unique_ligands_smiles.append(Chem.MolToSmiles(mol))
 
         renumbered_ligands, categorized_extra_atoms, categorized_link_atoms = renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligands, unique_ligands_pattern, extra_atoms, new_link_atoms)
         

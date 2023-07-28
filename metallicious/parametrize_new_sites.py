@@ -5,7 +5,7 @@ from metallicious.extract_metal_site import extract_metal_structure, find_metal_
 from metallicious.seminario import single_seminario
 from metallicious.charges import calculate_charges2
 from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, \
-    copy_pair_exclusions
+    copy_pair_exclusions, update_pairs
 from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
 from metallicious.data import vdw_data
 from metallicious.prepare_initial_topology import prepare_initial_topology
@@ -386,6 +386,13 @@ class new_metal_site():
 
         if len(self.pairs) > 0:
             self.topol = copy_pair_exclusions(self.topol, self.pairs)
+
+        # we need to remove pair exclusions, for atoms which are connected through angle containing metal
+        self.topol = update_pairs(self.topol)
+
+
+
+
 
     def partial_charge(self):
         # calculate_charges2(metal_name, metal_charge, filename, unique_ligands_pattern, link_atoms, additional_atoms,

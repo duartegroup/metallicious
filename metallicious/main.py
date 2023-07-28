@@ -8,7 +8,7 @@ from tempfile import mkdtemp
 from metallicious.log import logger
 from metallicious.load_fingerprint import find_mapping_of_fingerprint_on_metal_and_its_surroundings
 from metallicious.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers,\
-    adjust_charge, adjust_pair_exclusions
+    adjust_charge, adjust_pair_exclusions, update_pairs
 
 warnings.filterwarnings('ignore')
 
@@ -176,6 +176,10 @@ class patcher():
             self.topol_new = adjust_impropers(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
             self.topol_new = adjust_pair_exclusions(self.topol_new, site.fp_topol, mapping_fp_to_new)
+
+
+        # we need to remove pair exclusions, for atoms which are connected through angle containing metal
+        self.topol_new = update_pairs(self.topol_new)
 
         logger.info('Finished')
 

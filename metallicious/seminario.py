@@ -604,16 +604,10 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
     angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt,  starting_index, indecies, unique_ligands_pattern,
                                        donors=donors)
 
-
-
     if improper_metal: 
         impropers = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult, filename=filename_opt)
-        #dihedrals = {**dummy_dihedrals, **improper_dihedrals}
-        #dihedrals = improper_dihedrals
     else:
         impropers = {}
-
-    #dihedrals = {}
         
     if len(atoms_to_remove) is not None:
         bonds, angles, dummy_dihedrals, impropers = remove_atoms_from_bonded(bonds, angles, dummy_dihedrals, impropers, atoms_to_remove)
@@ -622,61 +616,10 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
     dihedrals = {} #dihedrals are not implemented
 
     pairs = create_pair_exclusions(dummy_dihedrals, angles)
-
     print("Filename from Seminario:", filename_opt)
 
     return bonds, angles, dihedrals, impropers, pairs, filename_opt
 
-
-''' TODO remove (2023/07/04)
-def multi_seminario(metal_charge, metal_name, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False, donors=['N', 'S', 'O']):
-
-    File = open("INFO.dat")
-    text = File.read()
-    File.close()
-
-    n_sites = text.count("ligand_pattern")
-    print("Number of sites", n_sites)
-
-    n_site = 0
-    bondss = []
-    angless = []
-    dihedralss = []
-
-    for line in text.splitlines():
-        if "ligand_pattern:" in line:
-            unique_ligands_pattern = list(map(int, line[15:].split(',')))
-
-        if "starting_index:" in line:
-            starting_index = list(map(int, line[15:].split(',')))
-            indecies = [list(range(starting_index[a - 1], starting_index[a])) for a in range(1, len(starting_index))]
-
-
-            bonds, angles, dihedrals = single_seminario(f"site{n_site:d}.xyz", metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=keywords, mult=mult, improper_metal=improper_metal, donors=donors)
-
-            print(dihedrals)
-
-            File = open(f"bonds_{n_site:d}.dat", "w")
-            for bond in bonds:
-                File.write(f'{"-".join(list(map(str, bond))):}:{",".join(list(map(str, bonds[bond]))):}')
-            File.close()
-            bondss.append(bonds)
-
-            File = open(f"angles_{n_site:d}.dat", "w")
-            for angle in angles:
-                File.write(f'{"-".join(list(map(str, angle))):}:{",".join(list(map(str, angles[angle]))):}')
-            File.close()
-            angless.append(angles)
-
-            File = open(f"dihedrals_{n_site:d}.dat", "w")
-            for dihedral in dihedrals:
-                File.write(f'{"-".join(list(map(str, dihedral))):}:{",".join(list(map(str, dihedrals[dihedral]))):}')
-            File.close()
-            dihedralss.append(dihedrals)
-
-    return (bondss, angless, dihedralss)
-
-'''
 
 def save_bonded_paramters_to_file(self, n_site=0):
     File = open(f"bonds_{n_site:d}.dat", "w")
