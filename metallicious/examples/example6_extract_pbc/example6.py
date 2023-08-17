@@ -14,16 +14,14 @@ metal='Zn'
 extract_metal_structure(f, metal, "out")
 
 '''
-import sys
-sys.path.insert(0, '/home/fd05/fd/chem1540/github/cgbind2pmd/')
-
 
 from metallicious.parametrize_new_sites import supramolecular_structure
 
 
 import os
 
-cage = supramolecular_structure('Co_tet.pdb', {'Co': (2, 1)}, vdw_type='merz-tip3p')
+cage = supramolecular_structure('noncovalent_complex.pdb', {'Co': (2, 1)}, topol='noncovalent_complex.pdb', vdw_type='merz-opc')
+
 cage.extract_unique_metal_sites()
 
 site = cage.unique_sites[0]

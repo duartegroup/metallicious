@@ -114,8 +114,10 @@ class supramolecular_structure:
         additional_fp_coords = {}
         for unique_site in self.unique_sites:
             if unique_site.fp_coord_file is not None:
-                additional_fp_coords[unique_site.name] = unique_site.fp_coord_file
+                suffix = '_' + unique_site.directory.split('_')[1]
+                additional_fp_coords[unique_site.name+suffix] = unique_site.fp_coord_file
 
+        print("Fingerprint to choose from:",additional_fp_coords)
         for site in self.sites:
             guessed = guess_fingerprint(self.filename, site.index, metal_name=site.metal_name,
                                         metal_charge=site.metal_charge,
@@ -166,13 +168,17 @@ class supramolecular_structure:
                                  subdir='init_topol'):
         here = os.getcwd()
         new_directory(subdir)
-        shutil.copyfile(self.filename, f'{subdir}/{self.filename}')
+
+        old_filename = self.filename
+        new_filename = self.filename[self.filename.rfind('/')+1:]
+
+        shutil.copyfile(old_filename, f'{subdir}/{new_filename}')
         if homoleptic_ligand_topol is not None:
             shutil.copyfile(homoleptic_ligand_topol, f'{subdir}/{homoleptic_ligand_topol}')
         os.chdir(subdir)
 
         if method == 'gaff' or homoleptic_ligand_topol is not None:
-            metal_indicies = prepare_initial_topology(self.filename, self.metal_names, self.sites[0].metal_charge,
+            metal_indicies = prepare_initial_topology(new_filename, self.metal_names, self.sites[0].metal_charge,
                                                       coord_filename, topol_filename, self.vdw_type,
                                                       ligand_topol=homoleptic_ligand_topol)
             self.filename = f'{subdir}/{coord_filename}'
@@ -441,7 +447,6 @@ class new_metal_site():
         here = os.getcwd()
         os.chdir(self.directory)
 
-        # self.create_initial_topol()
         self.seminario()
         self.partial_charge()
         self.reduce_to_template()

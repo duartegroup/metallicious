@@ -221,6 +221,10 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
 
 
             mol1 = MDAnalysis.Merge(cage.select_atoms(f'index {" ".join(list(map(str, list(G_sub_cage)))):s}'))
+            if cage.dimensions is not None: # this is only for cage neccessary, as templates should not be crossing pbc
+                mol1.dimensions = cage.dimensions
+
+
             #mol1 = cage.select_atoms(f'index {" ".join(list(map(str, list(G_sub_cage)))):s}')
             if not hasattr(mol1.atoms[0], 'element'):
                 guessed_elements = MDAnalysis.topology.guessers.guess_types(strip_numbers_from_atom_names(mol1.atoms.names))
@@ -345,10 +349,14 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
         else:
             # Check if the subgraph is the same size as fingerprint,
             # print(largest_common_subgraph)
-            # if len(largest_common_subgraph) > 0:
-            #    print("aaa")
-            # if len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph):
-            #    print("bbb")
+            if len(largest_common_subgraph) > 0:
+                print("aaa")
+            else:
+                print("nope")
+            if len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph):
+                print("bbb")
+            else:
+                print("nope")
 
             assert len(largest_common_subgraph) > 0
             assert len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph)
@@ -442,7 +450,7 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
                     **search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fingerprint_guess_list)}
 
     if additional_fp_files is not None:
-        fp_files = {**fp_files, **additional_fp_files}
+        fp_files = {**additional_fp_files, **fp_files}
 
     if len(fp_files) == 0:
         logger.info(f"Not found templates with name including {metal_name:} with vdw type: {vdw_type:}")

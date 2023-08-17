@@ -55,6 +55,7 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
 
     metal = cage.atoms[metal_index]
 
+
     G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions, box=cage.dimensions, vdwradii=additional_atom_types))
     nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
     G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
@@ -594,6 +595,8 @@ def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_me
     metal = syst.atoms[all_metals_indices]
     nonmetal = syst.atoms - metal
     cage = MDAnalysis.Merge(metal, nonmetal).atoms
+    if syst.dimensions is not None:
+        cage.dimensions = syst.dimensions
 
     # we move metals to the begining:
     topol = deepcopy(old_topol)
