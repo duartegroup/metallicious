@@ -11,7 +11,7 @@ uff_folders = ['Ga_cage', 'Ru_Pd_cage' ]
 for idx, _  in enumerate(folder_names):
     #idx=0
     folder_name = folder_names[idx]
-    os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_wb97/{folder_name}/")
+    os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/{folder_name}/")
 
     name = f"site_{folder_name[:2].title():}0"
     metal_name = folder_name[:2].title()
@@ -20,8 +20,12 @@ for idx, _  in enumerate(folder_names):
     if folder_name in uff_folders:
         library_name = 'uff'
 
+    #cage = supramolecular_structure(f'{name:}/saturated_template.xyz',  metal_charges={metal_name: 2}, vdw_type = library_name,
+    #                                    search_library=False, truncation_scheme='dihedral')
     cage = supramolecular_structure(f'{name:}/saturated_template.xyz',  metal_charges={metal_name: 2}, vdw_type = library_name,
-                                    search_library=False)
+                                    search_library=False, truncation_scheme='dihedral')
+
+
     cage.prepare_initial_topology()
     cage.extract_unique_metal_sites()
     cage.sites[0].fp_coord_file = f'{name:}/template.pdb'
@@ -29,6 +33,7 @@ for idx, _  in enumerate(folder_names):
     cage.sites[0].load_fingerprint()
     cage.sites[0].set_cutoff()
     cage.unique_sites = []
+    #cage.parametrize(out_coord='saturated_template_dihedral.pdb', out_topol='saturated_template_dihedral.top')
     cage.parametrize(out_coord='saturated_template.pdb', out_topol='saturated_template.top')
 
 

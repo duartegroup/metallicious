@@ -332,7 +332,7 @@ def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
 
     return topol_new
 
-
+'''
 def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
     logger.info("   [ ] Adding new bonds to topology")
 
@@ -378,7 +378,7 @@ def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
 
     return topol_new
 
-
+'''
 def adjust_pair_exclusions(topol_new, topol_fp, mapping_fp_to_new):
     logger.info("   [ ] Adding new pair exclusions to topology")
     for pair_fp in topol_fp.adjusts:

@@ -12,6 +12,7 @@ from metallicious.extract_metal_site import find_bound_ligands_nx
 from metallicious.log import logger
 from metallicious.mapping import map_two_structures
 from metallicious.utils import strip_numbers_from_atom_names
+from metallicious.seminario import extend_angle_to_dihedral
 
 # except:
 #     from extract_metal_site import find_bound_ligands_nx
@@ -40,19 +41,24 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
         return topol, syst_fingerprint
 
     elif fp_style in ['dihedral', 'dih', 'angle', 'ang', 'bond']:
-        metal_topology = topol.atoms[0]  # As it is now, the topologies are save with first atom as metal
+        bonds = [(bond.atom1.idx, bond.atom2.idx) for bond in topol.bonds]
+        G = nx.Graph(bonds)
 
+        metal_topology = topol.atoms[0]  # As it is now, the topologies are save with first atom as metal
         if fp_style == 'dihedral' or fp_style == 'dih':
-            atoms_bound_to_metal_by_bonded = list(set(
-                np.concatenate([[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx, angle.atom4.idx] for angle in
-                                metal_topology.dihedrals])))
+            atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=3).nodes)
+            # atoms_bound_to_metal_by_bonded = list(set(
+            #     np.concatenate([[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx, angle.atom4.idx] for angle in
+            #                     metal_topology.dihedrals])))
         elif fp_style == 'angle' or fp_style == 'ang':
-            atoms_bound_to_metal_by_bonded = list(set(
-                np.concatenate(
-                    [[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx] for angle in metal_topology.angles])))
+            atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=2).nodes)
+            # atoms_bound_to_metal_by_bonded = list(set(
+            #     np.concatenate(
+            #         [[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx] for angle in metal_topology.angles])))
         elif fp_style == 'bond':
-            atoms_bound_to_metal_by_bonded = list(
-                set(np.concatenate([[bond.atom1.idx, bond.atom2.idx] for bond in metal_topology.bonds])))
+            atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=1).nodes)
+            # atoms_bound_to_metal_by_bonded = list(
+            #     set(np.concatenate([[bond.atom1.idx, bond.atom2.idx] for bond in metal_topology.bonds])))
 
         atoms_to_strip = []
         residual_charge = 0.0
