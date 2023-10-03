@@ -94,7 +94,7 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
             #temp_atom = clusters_of_atoms.atoms[np.argmin(all_metal_cluster_distances)]
             for atom in close_atoms:
                 temp_atom = clusters_of_atoms.atoms[atom]
-                closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {np.min(all_metal_cluster_distances):f} A"
+                closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {all_metal_cluster_distances[atom][0]:f} A"
                 closest_atoms.append(temp_atom.index)
                 
         
@@ -226,7 +226,7 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
     return site_single, site_ligands_single, site_link_atoms_single
 
 
-def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies):
+def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies, covalent_cutoff=3.0):
     '''
     Select closest atoms connected to metal.
 
@@ -270,7 +270,7 @@ def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies):
         #metal = cage.atoms[metal_index]
         #bound_ligands2, selected_closest_atoms2 = find_bound_whole_ligands(metal, cage, G_sub_ligands)
 
-        bound_ligands, selected_closest_atoms = find_bound_ligands_nx(cage, metal_index,cutoff=None)
+        bound_ligands, selected_closest_atoms = find_bound_ligands_nx(cage, metal_index,cutoff=None, cutoff_covalent=covalent_cutoff)
         site_single, _ , site_link_atoms_single = find_closest_and_add_rings(metal_index, cage,bound_ligands, selected_closest_atoms, aromaticity)
         site+= site_single
         #site_ligands += site_ligands_single
@@ -302,16 +302,15 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
     unique_site_link_atoms = []
 
     logger.info(f"Uniqueness check: Number of binding sites to check: {len(binding_sites_graphs):}")
-    print(f"Uniqueness check: Number of binding sites to check: {len(binding_sites_graphs):}")
     
 
     for site, site_link_atom in zip(binding_sites_graphs, site_link_atoms):
         exist = False
-        print("next site, already unique sites:", len(unique_sites))
+        #print("next site, already unique sites:", len(unique_sites))
 
         for site_fingerprint in unique_sites:
             logger.info(f"\tChecking uniqueness of site and fingerprint with atoms:{len(site):}, {len(site_fingerprint):}")
-            print(f"\tChecking uniqueness of site:{len(site):}, {len(site_fingerprint):}")
+            #print(f"\tChecking uniqueness of site:{len(site):}, {len(site_fingerprint):}")
 
             # the structures are sorted because MDAnalysis selection atoms sorts them
             #_, rmsd = map_two_structures(site[0], structure[np.sort(site)], structure[np.sort(site_fingerprint)], metal_name)
@@ -323,14 +322,14 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
 
 
             logger.info(f"RMSD between current structure and already check structures: {rmsd:}")
-            print(f"RMSD between current structure and already check structures: {rmsd:}")
+            #print(f"RMSD between current structure and already check structures: {rmsd:}")
             if rmsd < rmsd_cutoff:
-                print("yep!")
+                #print("yep!")
                 exist = True
                 break
 
         if exist == False:
-            print("Adding unique site")
+            #print("Adding unique site")
             unique_sites.append(site)
             unique_site_link_atoms.append(site_link_atom)
 
@@ -608,7 +607,7 @@ def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_me
     return cage, topol, list(range(len(all_metals_indices)))
 
 
-def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None):
+def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None, covalent_cutoff=3.0):
     '''
     It takes a structure and tries to find structures around metals.
 
@@ -634,7 +633,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
     G_all_ligands = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(all_ligands_atoms.atoms, all_ligands_atoms.atoms.positions, box=all_ligands_atoms.dimensions))
     nx.set_node_attributes(G_all_ligands, {atom.index: atom.name[0] for atom in all_ligands_atoms.atoms}, "name")
 
-    binding_sites_graphs, site_link_atoms = find_closest_and_add_rings_iterate(metal_indices, cage, all_metals_indices)
+    binding_sites_graphs, site_link_atoms = find_closest_and_add_rings_iterate(metal_indices, cage, all_metals_indices, covalent_cutoff)
 
     if check_uniquness:
         unique_sites, unique_site_link_atoms = check_uniqueness(binding_sites_graphs, site_link_atoms,  cage, metal_name)

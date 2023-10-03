@@ -13,7 +13,7 @@ from metallicious.mapping import map_two_structures
 from metallicious.mod_seminario import modified_seminario_method
 from metallicious.improper_torsion import find_impropers_and_values
 
-
+'''
 
 def read_bonds_from_orca_output(filename="site_opt_orca.out"):
     File = open(filename)
@@ -72,7 +72,6 @@ def read_hessian_from_orca(filename):
 
     hessian = np.array(hessian) * (627.509391)/ (0.529177**2)  #Change from Hartree/bohr to kcal/mol /ang
     return hessian
-'''
 
 def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"): #TODO remove
     File = open(filename)
@@ -514,6 +513,36 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
 
     site = ade.Molecule(filename, charge=charge, mult=mult)
     site.optimise(method=method, keywords=keywords)
+
+    if site.imaginary_frequencies is not None:
+        if len(site.imaginary_frequencies) > 0:
+            # Sometimes it does not converge, then we use tighter criterium
+            if 'TIGHTOPT' in [keyword.upper() for keyword in keywords] or 'OPT' in [keyword.upper() for keyword in keywords]:
+                print("Performing new opt")
+
+                # This is very reboust, it is pitty that auto_de does not use hessian and we have to repeat this
+                # heavy calculations
+
+                new_keywords = []
+                for keyword in keywords:
+                    if keyword.upper() == 'TIGHTOPT' or  keyword.upper() == 'OPT':
+                        new_keywords.append("tightOPT")
+                    else:
+                        new_keywords.append(keyword)
+
+                rerun_hessian = "\n%geom\nCalc_Hess true\nRecalc_Hess 10\nend"
+                #read_hessian = f"%geom\nInHess Read\nInHessName {site.name :}\end"
+
+                site.optimise(method=method, keywords=new_keywords + [rerun_hessian])
+                print(new_keywords + [rerun_hessian])
+
+                if site.imaginary_frequencies is not None:
+                    print("Imaginery:", os.getcwd(), site.name, site.imaginary_frequencies)
+                    #if len(site.imaginary_frequencies) > 0:
+                    #    raise RuntimeError("Even after Tight creteria there are imaginery frequencies; Probably manual modification will be necessary") # TODO, try the hessian
+        else:
+            raise RuntimeError("Cannot perform optimization")
+
     names = [atom.atomic_symbol for atom in site.atoms]
     opt_filename = f"{site.name:s}_optimised.xyz"
     site.print_xyz_file(filename=opt_filename)

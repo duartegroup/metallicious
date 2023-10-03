@@ -12,7 +12,6 @@ import os
 def get_log_level():
     try:
         log_level_str = os.environ['METALLICIOUS_LOG_LEVEL']
-        print("yep",log_level_str)
     except KeyError:
         log_level_str = ''
     if log_level_str == 'DEBUG':

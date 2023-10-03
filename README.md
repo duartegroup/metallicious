@@ -32,11 +32,11 @@ conda install autode psiresp mdanalysis networkx --channel conda-forge
 pip install metallicious
 ```
 ## Quick start
-Parametrization of structure "ru_pd.xyz" with (nonbonded) topology "ru_pd.top": 
+Parametrization of structure wih coordinates saved in `ru_pd.gro` with (nonbonded) topology `ru_pd.top` (of the whole structure): 
 
 ```
 from parametrize_new_sites import supramolecular_structure
-cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
+cage = supramolecular_structure('ru_pd.gro', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
 cage.parametrize(out_coord='out.pdb', out_topol='out.top)
 ```
 The `supramolecular_structure` function takes a coordination file (*.xyz, *.pdb, *.gro, etc. supported by MDAnalysis), topolog file (*top, *prmtop, supported by ParmEd), dictionary of metal ions along with their charge (and in case template parametrization is needed multiplicity) and type of Van der Waals metal paramters as input.

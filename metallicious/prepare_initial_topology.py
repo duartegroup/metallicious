@@ -1,4 +1,4 @@
-
+import logging
 
 import MDAnalysis
 import networkx as nx
@@ -8,19 +8,12 @@ from networkx.algorithms import isomorphism
 import parmed as pmd
 from copy import deepcopy
 
-# try:
-#     from antechamber_interface import antechamber
-#     from data import name2mass
-#
-#     from extract_metal_site import find_metal_indices
-# except:
 from metallicious.antechamber_interface import antechamber
-from metallicious.data import name2mass
 from metallicious.extract_metal_site import find_metal_indices
 from metallicious.initial_site import create_metal_topol
 from metallicious.mapping import unwrap
+from metallicious.log import logger
 
-import os
 
 
 def mapping_itp_coords(syst, ligand_file):
@@ -141,7 +134,7 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
 
             # Sometimes guesser will not guess right the bonds, decreasing fudge factor might help...
             if len(Gsub) == len(Gtop) and len(Gsub.edges()) != len(Gtop.edges()):
-                print("The number of atoms agree... but not the number of bonds, probably bonds are not guessed right")
+                logger.info("The number of atoms agree... but not the number of bonds, probably bonds are not guessed right")
                 fudge_factor = 0.55
                 while fudge_factor > 0 and len(Gsub.edges()) != len(Gtop.edges()):
                     Gsub = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(crystal.atoms[Gsub.nodes()],
@@ -153,7 +146,8 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
                                            "name")
                     fudge_factor -= 0.01
                 if fudge_factor < 0.45:
-                    print("error, cannot find the guess for bonds")
+
+                    raise ValueError("error, cannot guess the bonds")
 
             iso = isomorphism.GraphMatcher(Gsub, Gtop, node_match=lambda n1, n2: n1['name'] == n2['name'])
             if iso.is_isomorphic():

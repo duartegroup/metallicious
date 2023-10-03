@@ -5,7 +5,7 @@ import os
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="Metaloorganic structure (*.gro, *.pdb, etc. all supported by MDAnalysis)")
-    parser.add_argument("-p", help="Metaloorganic topology (*.top, *.prmtop, etc. all supported by ParmEd)", default=False)
+    parser.add_argument("-p", help="Metaloorganic topology of the whole structure (*.top, *.prmtop, etc. all supported by ParmEd)", default=False)
 
     parser.add_argument("-of", help="Output metaloorganic structure (*.gro, *.pdb, etc. supported by MDAnalysis)", default='out.pdb')
     parser.add_argument("-op", help="Output metaloorganic topology (*.top, *.prmtop, etc. supported by ParmEd)", default='out.top')

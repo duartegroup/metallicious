@@ -102,14 +102,14 @@ cage.parametrize()
 # cage.prepare_initial_topology()
 # cage.extract_unique_metal_sites()
 # print("A")
-
+#
 #
 # os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_fujita/")
-# cage = supramolecular_structure('fujita.xyz', {'Pd': (2, 1)}, vdw_type='merz-opc')
-# cage.prepare_initial_topology()
+# # cage = supramolecular_structure('fujita.xyz', {'Pd': (2, 1)}, vdw_type='merz-opc')
+# # cage.prepare_initial_topology()
 # cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Pd': (2, 1)}, topol = 'init_topol/noncovalent_complex.top', vdw_type='merz-opc')
 # cage.parametrize()
-#
+
 # os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_cage/")
 # cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Co': (2, 4)},
 #                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-tip3p')
@@ -137,6 +137,14 @@ cage.parametrize()
 #                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
 # cage.parametrize()
 
+# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_wb97/Fe_cage')
+# #cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',{'Fe': (2, 1)}, topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Fe': (2,1)},
+#                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc',
+#                                 keywords=['wB97X-D3', 'def2-TZVPP', 'tightOPT', 'freq'], search_library=False)
+#
+# cage.parametrize()
+
 
 
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Fe_knot')
@@ -156,6 +164,23 @@ cage.parametrize()
 # # #cage.prepare_initial_topology()
 # cage.parametrize()
 
+os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof")
+name = "site_Co0"
+metal_name = "Co"
+library_name = "merz-opc"
+
+cage = supramolecular_structure(f'{name:}/saturated_template.xyz', metal_charges={metal_name: 2}, vdw_type=library_name,
+                                search_library=False, truncation_scheme='bond', covalent_cutoff=2.5)
+
+cage.prepare_initial_topology()
+cage.extract_unique_metal_sites()
+cage.sites[0].fp_coord_file = f'{name:}/template.pdb'
+cage.sites[0].fp_topol_file = f'{name:}/template.top'
+cage.sites[0].load_fingerprint()
+cage.sites[0].set_cutoff()
+cage.unique_sites = []
+cage.parametrize(out_coord='saturated_template_bond.pdb', out_topol='saturated_template_bond.top')
+
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
 # cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', vdw_type='merz-opc')
 # cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
@@ -163,13 +188,13 @@ cage.parametrize()
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof')
 # cage = supramolecular_structure('topol/enormous.gro', {'Co': (2,4)}, topol='topol/enormous.top', vdw_type='merz-opc')
 # cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
-
 #
-os.chdir('/u/fd/chem1540/Research/DA/pd2l4_6+/mix_cn/3_3/MD')
-cage = supramolecular_structure('reopt.xyz', {'Pd': (2,1)}, vdw_type='merz-opc', truncation_scheme='angle')
-#cage.prepare_initial_topology(homoleptic_ligand_topol='linker_top/topol.top') # TODO
-cage.prepare_initial_topology(homoleptic_ligand_topol='new_linker.top')
-cage.parametrize()
+# #
+# os.chdir('/u/fd/chem1540/Research/DA/pd2l4_6+/mix_cn/3_3/MD')
+# cage = supramolecular_structure('reopt.xyz', {'Pd': (2,1)}, vdw_type='merz-opc', truncation_scheme='angle')
+# #cage.prepare_initial_topology(homoleptic_ligand_topol='linker_top/topol.top') # TODO
+# cage.prepare_initial_topology(homoleptic_ligand_topol='new_linker.top')
+# cage.parametrize()
 # print("A")
 
 
@@ -256,7 +281,7 @@ cage.parametrize()
 #/u/fd/chem1540/Downloads/charmm-gui-8908552491/gromacs
 #os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8908552491/gromacs")
 
-os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8983783989/gromacs")
+#os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8983783989/gromacs")
 # import sys
 # home_path = '/u/fd/chem1540'
 # sys.path.insert(0,home_path + '/github/cgbind')
@@ -268,6 +293,15 @@ os.chdir("/u/fd/chem1540/Downloads/charmm-gui-8983783989/gromacs")
 # cage = Cage(linker, metal='Pd', metal_charge='2')
 # cage.optimise(ob)
 # cage.print_xyz_file(filename='cage.xyz')
+
+
+
+#
+# os.chdir("/u/fd/chem1540/Research/flexiblity/")
+# cage = supramolecular_structure(filename='init_topol_weirdo/noncovalent_complex.pdb',
+#                                 topol='init_topol_weirdo/noncovalent_complex.top',
+#                                 metal_charges={'Pd': 2}, vdw_type='merz-opc', truncation_scheme='angle')
+# cage.parametrize()
 
 
 # cage = supramolecular_structure('cage.xyz', {'Pd': (2, 1)},  vdw_type='merz-tip3p')

@@ -24,12 +24,12 @@ import os
 
 class supramolecular_structure:
     def __init__(self, filename, metal_charge_mult=None, metal_charges=None, vdw_type=None, topol=None,
-                 keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
+                 keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=False,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
-                 fingerprint_guess_list=None, truncation_scheme=None):
+                 fingerprint_guess_list=None, truncation_scheme=None, covalent_cutoff=3):
 
-        print("Liberary with templates is located:", library_path)
+        logger.info("Liberary with templates is located:", library_path)
 
         self.unique_sites = []
         self.sites = []
@@ -40,6 +40,8 @@ class supramolecular_structure:
         self.donors = donors
         self.improper_metal = improper_metal
         self.ff = ff
+
+        self.covalent_cutoff = covalent_cutoff
 
 
         #if topol is not None:
@@ -76,7 +78,7 @@ class supramolecular_structure:
 
                 if sum(present) == len(present):
                     self.vdw_type = vdw_type
-                    print(
+                    logger.info(
                         f"vdw_type not selected, will use first available for selected metals: {vdw_type:}")
         else:
             for metal_name in self.metal_names:
@@ -98,14 +100,14 @@ class supramolecular_structure:
         os.chdir(self.tmpdir_path)
 
         if self.topol is None:
-            print(f"Please provide topology, or use .prepare_initial_topology()")
+            logger.info(f"Please provide topology, or use .prepare_initial_topology()")
 
     def find_metal_sites(self):
         syst = MDAnalysis.Universe(self.filename)
         for name in self.metal_names:
             indices, _ = find_metal_indices(syst, name)
             for index in indices:
-                site = metal_site(name.title(), self.metal_charge_dict[name], index, fp_style=self.truncation_scheme)
+                site = metal_site(name.title(), self.metal_charge_dict[name], index, fp_style=self.truncation_scheme, covalent_cutoff=self.covalent_cutoff)
                 self.sites.append(site)
 
         self.assign_fingerprints()
@@ -117,7 +119,7 @@ class supramolecular_structure:
                 suffix = '_' + unique_site.directory.split('_')[1]
                 additional_fp_coords[unique_site.name+suffix] = unique_site.fp_coord_file
 
-        print("Fingerprint to choose from:",additional_fp_coords)
+        logger.info(f"Fingerprint to choose from: {additional_fp_coords:}")
         for site in self.sites:
             guessed = guess_fingerprint(self.filename, site.index, metal_name=site.metal_name,
                                         metal_charge=site.metal_charge,
@@ -132,20 +134,16 @@ class supramolecular_structure:
                 site.load_fingerprint()
                 site.set_cutoff()
             else:
-                print("Template for this site not found")
+                logger.info("Template for this site not found")
 
     def extract_unique_metal_sites(self):
         logger.info(f"Extracting")
         unique_sites = []
 
-        if self.topol is None:
-            print("please provide topology or use .prepare_initial_topol()")
-            return False
-
         # extract metal sites:
         for metal_name in self.metal_names:
             site_lists = extract_metal_structure(self.filename, self.topol, metal_name, output=f"site_{metal_name:}",
-                                                 all_metal_names=self.metal_names)
+                                                 all_metal_names=self.metal_names, covalent_cutoff=self.covalent_cutoff)
 
             for site_list in site_lists:
                 site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
@@ -187,19 +185,18 @@ class supramolecular_structure:
             for metal_index, site in zip(metal_indicies, self.sites):
                 site.index = metal_index
         else:
-            print("Only gaff supported")
+            raise ValueError("Only gaff supported")
 
         os.chdir(here)
 
     def parametrize(self, out_coord='out.pdb', out_topol='out.top'):
-        print("Parametrizing")
         if self.check_if_parameters_available() is False:
-            print("[ ] Extracting the structure")
+            logger.info("[ ] Extracting the structure")
             self.parametrize_metal_sites()
             self.assign_fingerprints()
 
-        self.summary()
-        print("Available!")
+        logger.info(self.summary())
+        logger.info("The templates available!")
 
         if self.topol is None:
             raise Exception("topology file not found")
@@ -211,7 +208,7 @@ class supramolecular_structure:
                                                               cage_topol=self.topol)
         parameter_copier.save(f'{self.path:s}/{out_coord:s}', f'{self.path:s}/{out_topol:s}',
                               tmpdir_path=self.tmpdir_path)
-        print("Finished!")
+        logger.info("[+] Finished!")
         return True
 
     def parametrize_metal_sites(self):
@@ -239,7 +236,7 @@ class supramolecular_structure:
                     break
 
             if self.vdw_type != 'custom':  # if it custom we don't want it
-                print(f"Saving as {self.library_path:}/{site.name}_{file_idx}.top")
+                logger.infor(f"[+] Saving as {self.library_path:}/{site.name}_{file_idx}.top")
                 shutil.copyfile(site.fp_topol_file, f"{self.library_path:}/{site.name}_{file_idx}.top")
                 shutil.copyfile(site.fp_coord_file, f"{self.library_path:}/{site.name}_{file_idx}.pdb")
                 file_idx += 1
@@ -255,13 +252,14 @@ class supramolecular_structure:
 
 
 class metal_site():
-    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None):
+    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None, covalent_cutoff=3.0):
         self.metal_name = metal_name
         self.metal_charge = metal_charge
         self.index = index
         self.fp_topol_file = fp_topol
         self.fp_coord_file = fp_coord
         self.fp_style = fp_style
+        self.covalent_cutoff= covalent_cutoff
 
     def _print(self):
         if self.fp_coord_file is not None:
@@ -410,10 +408,10 @@ class new_metal_site():
         partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if
                            idx not in self.additional_atoms]
 
-        print("\t[ ] Copying charges")
+        logger.info("\t[ ] Copying charges")
         for idx, atom in enumerate(self.topol.atoms):
             atom.charge = partial_charges[idx]
-        print("\t[+] Charges calculated !")
+        logger.info("\t[+] Charges calculated !")
 
     def reduce_to_template(self, out_topol='template.top', out_coord='template.pdb'):
         # self.topol.write(f"old_new_topol.top")
@@ -424,7 +422,7 @@ class new_metal_site():
         new_cage = MDAnalysis.Universe(self.filename)
         # new_cage.atoms.write(f"old_new_template.pdb")
 
-        print("removing additional atoms", self.additional_atoms)
+        logger.info("removing additional atoms", self.additional_atoms)
 
         if len(self.additional_atoms) > 0:
             template = new_cage.select_atoms(f"not index {' '.join(list(map(str, np.array(self.additional_atoms)))):s}")
@@ -437,8 +435,8 @@ class new_metal_site():
         self.fp_coord_file = f"{self.directory}/{out_coord}"
 
 
-        print(self.fp_topol_file)
-        print(self.fp_coord_file)
+        logger.info(f"Topology file: {self.fp_topol_file:}")
+        logger.info(f"Coordination file: {self.fp_coord_file:}")
 
     def check_library(self):
         return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name)
@@ -451,4 +449,4 @@ class new_metal_site():
         self.partial_charge()
         self.reduce_to_template()
         os.chdir(here)
-        print("Site parametrized successfully!")
+        logger.info("Site parametrized successfully!")

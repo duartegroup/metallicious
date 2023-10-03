@@ -157,7 +157,7 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
 
 #TODO find everywehere wehere are hardcoded values and make them somehow softcoaded
 
-def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False):
+def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False, covalent_cutoff=3.0):
     cage = MDAnalysis.Universe(cage_filename)
 
 
@@ -190,19 +190,9 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     nx.set_node_attributes(G_fingerprint, {atom.index: atom.name[0] for atom in syst_fingerprint_no_metal.atoms},
                            "name")
     G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
-
     logger.info(f"\t\t\t[ ] Mapping fingerprint to metal center: {metal_index:d}")
-    ''' TODO remove (2023/04/07)
-    cut_sphere = self.cage.select_atoms(f'index {metal_index:d} or around {cutoff:f} index {metal_index:d}')
-    G_cage = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(cut_sphere.atoms, cut_sphere.atoms.positions))
-    nx.set_node_attributes(G_cage, {atom.index: atom.name[0] for atom in cut_sphere.atoms}, "name")
-    G_sub_cages = [G_cage.subgraph(a) for a in nx.connected_components(G_cage)]
-    G_sub_cages = sorted(G_sub_cages, key=len, reverse=True) # we assume that the largerst group are  ligands, is this reasonable? TODO
-    '''
 
-
-    G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff, neighbhor_cutoff=neighbhor_cutoff)
-
+    G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff, neighbhor_cutoff=neighbhor_cutoff, cutoff_covalent=covalent_cutoff)
 
     closest_atoms = np.concatenate(closest_atoms)
     number_ligands_bound = len(G_sub_cages)
@@ -211,6 +201,10 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
         logger.info(f"\t\t\t[!] Not the same number of sites {guessing:}, structure: {number_ligands_bound:d} vs. fingerprint {len(G_fingerprint_subs):d}")
         return False
     elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
+        if len(G_sub_cages)>len(G_fingerprint_subs):
+            raise ValueError(
+                f"[!] Not the same number of sites {len(G_sub_cages):}!={len(G_fingerprint_subs):} guessing={guessing:}. Probably, some of the hydrogen/carbons are too close. Try increasing cutoff")
+
         raise ValueError(f"[!] Not the same number of sites {len(G_sub_cages):}!={len(G_fingerprint_subs):} guessing={guessing:}")
 
     selected_atoms = []
@@ -258,49 +252,6 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
             #fp_sub_rdkit = mdanalysis_to_rdkit(mol2)
             passed_conditions = cage_sub_rdkit.HasSubstructMatch(fp_sub_rdkit)
 
-
-
-
-            
-            #print(passed_conditions)
-
-            '''
-            # ISMAGS is a slow algorithm, so we want to makes sure that we match correct substructure, we make simple assesments:
-            # 1) Mismatch of size, i.e., fingerprint is larger then ligand
-            if len(G_fingerprint_sub) <= len(G_sub_cage):
-
-                # 2) Fingerprint has more rings than the ligand
-                rings_sub_cage = nx.cycle_basis(G_sub_cage)
-                rings_sub_fp = nx.cycle_basis(G_fingerprint_sub)
-
-                passed_conditions=False
-                if len(rings_sub_fp) == len(rings_sub_cage):
-                    # If fingering has the same number of rings we can check the sidechans, otherwise we have to go with ISMAGS
-                    # becasue fingerprint can be just cutted ring, [we could go with all permutation of rings, but might be too complex)
-
-
-                    # 3) Fingerprint has (a) more sidechains than the ligand, and they are (b) longer than ligand
-                    sidechains_nodes_sub_cage = [node for node in G_sub_cage.nodes if node not in np.concatenate(rings_sub_cage)]
-                    sidechains_sub_cage = np.sort([len(G_sidechain_sub) for G_sidechain_sub in
-                     nx.connected_components(G_sub_cage.subgraph(sidechains_nodes_sub_cage))])
-
-                    sidechains_nodes_sub_fp = [node for node in G_fingerprint_sub.nodes if node not in np.concatenate(rings_sub_fp)]
-                    sidechains_sub_fp = np.sort([len(G_sidechain_sub) for G_sidechain_sub in
-                                           nx.connected_components(G_fingerprint_sub.subgraph(sidechains_nodes_sub_fp))])
-
-                    if len(sidechains_sub_fp) <= len(sidechains_sub_cage): # condition (a)
-                        if (sidechains_sub_cage[-len(sidechains_sub_fp):] - sidechains_sub_fp[:] >= 0).all(): # condition (b)
-                            passed_conditions =True
-                        #else:
-                        #    print("Mismatch by size of sidechains")
-                    #else:
-                    #    print("Mismatch by number of sidechains")
-
-                elif len(rings_sub_fp) < len(rings_sub_cage):
-                    passed_conditions = True
-                #else:
-                #    print("Mismatch by rings")
-            '''
             if passed_conditions:
                 ismags = nx.isomorphism.ISMAGS(G_sub_cage, G_fingerprint_sub,
                                                node_match=lambda n1, n2: n1['name'] == n2['name'])
@@ -334,20 +285,21 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                             # logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
                             break
 
-            # else:
-            #    print("Mismatch by size")
-            # else:
-            if finerprint_idx is None:
-                trial += 1
-                # we make sure that we find the maching ligannd
+        print(finerprint_idx, trial)
+        # else:
+        #    print("Mismatch by size")
+        # else:
+        if finerprint_idx is None:
+            trial += 1
+            # we make sure that we find the matching ligand
 
-                if trial == len(G_fingerprint_sub):
-                    if guessing:
-                        return False
-                    else:
-                        assert trial < len(G_fingerprint_sub)
+            if trial == len(G_fingerprint_sub):
+                if guessing:
+                    return False
+                else:
+                    assert trial < len(G_fingerprint_sub)
 
-        if guessing:  # if we want to guess site, that might be not fulfiled, and that means it is not the corret site
+        if guessing:  # if we want to guess site, that might be not fulfilled, and that means it is not the correct site
             if len(largest_common_subgraph) == 0:
                 return False
             elif not len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph):
@@ -355,14 +307,6 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
         else:
             # Check if the subgraph is the same size as fingerprint,
             # print(largest_common_subgraph)
-            if len(largest_common_subgraph) > 0:
-                print("aaa")
-            else:
-                print("nope")
-            if len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph):
-                print("bbb")
-            else:
-                print("nope")
 
             assert len(largest_common_subgraph) > 0
             assert len(G_fingerprint_subs[finerprint_idx]) == len(largest_common_subgraph)
@@ -385,9 +329,9 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
 
 
 def find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index, metal_name, syst_fingerprint,
-                                                              cutoff=9, guessing=False):
+                                                              cutoff=9, guessing=False, covalent_cutoff=3.0):
 
-    connected_cut_system = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing)
+    connected_cut_system = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing, covalent_cutoff=covalent_cutoff)
 
     if connected_cut_system:  # the results are legit, we take them as input
         best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint,
@@ -472,7 +416,6 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
         _, syst_fingerprint = load_fp_from_file(f'{fp_files[finerprint_name]}', f'{fp_files[finerprint_name].replace(".pdb", ".top")}', fp_style=fp_style)
 
         # we need to find what is smaller
-
         metal_position = syst_fingerprint.atoms[0].position
         nometal_position = syst_fingerprint.atoms[1:].positions
         cutoff = np.min([np.max(distance_array(metal_position, nometal_position)) + 2.0, m_m_cutoff])
