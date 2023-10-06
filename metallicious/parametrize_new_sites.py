@@ -112,6 +112,7 @@ class supramolecular_structure:
 
         self.assign_fingerprints()
 
+
     def assign_fingerprints(self):
         additional_fp_coords = {}
         for unique_site in self.unique_sites:
@@ -190,10 +191,13 @@ class supramolecular_structure:
         os.chdir(here)
 
     def parametrize(self, out_coord='out.pdb', out_topol='out.top'):
+
         if self.check_if_parameters_available() is False:
             logger.info("[ ] Extracting the structure")
             self.parametrize_metal_sites()
             self.assign_fingerprints()
+
+
 
         logger.info(self.summary())
         logger.info("The templates available!")
@@ -242,13 +246,14 @@ class supramolecular_structure:
                 file_idx += 1
 
     def summary(self):
-        print("Sites:")
-        for site in self.sites:
-            print(site)
+        string = "Sites:\n"
 
-        print("\nUnique sites:")
+        for site in self.sites:
+            string += site._print() + '\n'
+
+        string +=  "\nUnique sites:"
         for site in self.unique_sites:
-            print(f"{site.metal_name}({site.metal_charge}+)")
+            string += f"{site.metal_name}({site.metal_charge}+)"
 
 
 class metal_site():
@@ -439,7 +444,7 @@ class new_metal_site():
         logger.info(f"Coordination file: {self.fp_coord_file:}")
 
     def check_library(self):
-        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name)
+        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name, metal_charge=self.metal_charge, vdw_type=self.vdw_type)
 
     def parametrize(self):
         here = os.getcwd()

@@ -285,7 +285,7 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                             # logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
                             break
 
-        print(finerprint_idx, trial)
+
         # else:
         #    print("Mismatch by size")
         # else:

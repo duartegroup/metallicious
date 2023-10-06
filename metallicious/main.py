@@ -89,7 +89,7 @@ class patcher():
         else:
             topol = pmd.load_file(f'temp_topol.top')
             topol.save(f'{output_topol:s}', overwrite=True)
-        print("directory", os.getcwd())
+
         os.remove(f"temp_topol.top")
 
     def close(self):
@@ -186,22 +186,35 @@ class patcher():
     #def prepare_new_topology(self, cage_coord, cage_topol, metal_name, metal_charge, ligand_file=None):
     def prepare_new_topology(self, cage_coord, cage_topol):
 
-        #self.n_ligands, self.metal_indices, self.n_metals = prepare_initial_topology(cage_file, metal_name, metal_charge, "cage.gro", "test_cage.top", ligand_topol=ligand_file) # TODO can this output be nicer?
-
         self.cage = MDAnalysis.Universe(cage_coord)
-        #logger.info(f"[ ] Created initial topol with {self.n_ligands:} ligands, {self.n_metals} metals (indecies: {self.metal_indices:})")
 
-        self.topol_new = pmd.load_file(cage_topol, parametrize=False)  # , skip_bonds=True)
-        # we need to copy paramters back, for some reasons if paramtrize is False
-        # parmed is sometimes wierd :-(
+        # parametrize=False is needed to modify the parameters and save. However it does not load parameters from itp files
+        # therfore we need to read it with parametrize=True and copy types of parameters
+        self.topol_new = pmd.load_file(cage_topol, parametrize=False)
 
         topol_new2 = pmd.load_file(cage_topol)
-        for a, _ in enumerate(self.topol_new.atoms):
-            self.topol_new.atoms[a].type = topol_new2.atoms[a].type
-            self.topol_new.atoms[a].epsilon = topol_new2.atoms[a].epsilon
-            self.topol_new.atoms[a].sigma = topol_new2.atoms[a].sigma
-            self.topol_new.atoms[a].rmin = topol_new2.atoms[a].rmin
-            self.topol_new.atoms[a].charge = topol_new2.atoms[a].charge
+        for idx, _ in enumerate(self.topol_new.atoms):
+            self.topol_new.atoms[idx].type = topol_new2.atoms[idx].type
+            self.topol_new.atoms[idx].epsilon = topol_new2.atoms[idx].epsilon
+            self.topol_new.atoms[idx].sigma = topol_new2.atoms[idx].sigma
+            self.topol_new.atoms[idx].rmin = topol_new2.atoms[idx].rmin
+            self.topol_new.atoms[idx].charge = topol_new2.atoms[idx].charge
+
+        for idx, _ in enumerate(self.topol_new.bonds):
+            self.topol_new.bonds[idx].type = topol_new2.bonds[idx].type
+        self.topol_new.bond_types = topol_new2.bond_types
+
+        for idx, _ in enumerate(self.topol_new.angles):
+            self.topol_new.angles[idx].type = topol_new2.angles[idx].type
+        self.topol_new.angle_types = topol_new2.angle_types
+
+        for idx, _ in enumerate(self.topol_new.dihedrals):
+            self.topol_new.dihedrals[idx].type = topol_new2.dihedrals[idx].type
+        self.topol_new.dihedral_types = topol_new2.dihedral_types
+
+        for idx, _ in enumerate(self.topol_new.impropers):
+            self.topol_new.impropers[idx].type = topol_new2.impropers[idx].type
+        self.topol_new.improper_types = topol_new2.improper_types
 
 
 def get_args():

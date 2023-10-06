@@ -210,9 +210,6 @@ def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
     new_bonds = {}
     for bond in bonds:
         if metal_name.title() in bond[1]:
-            print(bond[1], metal_name.title())
-            print(bond[1][0], bond[1][1] )
-            print(donors)
             if (bond[1][0] == metal_name and bond[1][1] in donors) or (
                     bond[1][1] == metal_name and bond[1][0] in donors):
                 new_bonds[bond[0]] = bonds[bond]
@@ -334,24 +331,6 @@ def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_op
     return bonds
 
 
-'''
-def read_angles(): # TODO remove
-    File = open("Modified_Seminario_Angle")
-    text = File.read()
-    File.close()
-
-    angles = {}
-    for line in text.splitlines():
-        names = [strip_numbers_from_atom_name(name).title() for name in line.split()[0].split('-')]
-        indecies = [int(line.split()[3]) - 1, int(line.split()[4]) - 1, int(line.split()[5]) - 1]
-
-        if indecies[0] < indecies[2]:  # we have indecies from smaler to larger in the angles
-            angles[tuple(indecies), tuple(names)] = (float(line.split()[2]), float(line.split()[1]))
-        else:
-            angles[tuple(indecies[::-1]), tuple(names[::-1])] = (float(line.split()[2]), float(line.split()[1]))
-    return angles
-
-'''
 def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
     metal_name = metal_name.title()
     new_angles = {}
@@ -518,7 +497,6 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
         if len(site.imaginary_frequencies) > 0:
             # Sometimes it does not converge, then we use tighter criterium
             if 'TIGHTOPT' in [keyword.upper() for keyword in keywords] or 'OPT' in [keyword.upper() for keyword in keywords]:
-                print("Performing new opt")
 
                 # This is very reboust, it is pitty that auto_de does not use hessian and we have to repeat this
                 # heavy calculations
@@ -531,15 +509,7 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
                         new_keywords.append(keyword)
 
                 rerun_hessian = "\n%geom\nCalc_Hess true\nRecalc_Hess 10\nend"
-                #read_hessian = f"%geom\nInHess Read\nInHessName {site.name :}\end"
-
                 site.optimise(method=method, keywords=new_keywords + [rerun_hessian])
-                print(new_keywords + [rerun_hessian])
-
-                if site.imaginary_frequencies is not None:
-                    print("Imaginery:", os.getcwd(), site.name, site.imaginary_frequencies)
-                    #if len(site.imaginary_frequencies) > 0:
-                    #    raise RuntimeError("Even after Tight creteria there are imaginery frequencies; Probably manual modification will be necessary") # TODO, try the hessian
         else:
             raise RuntimeError("Cannot perform optimization")
 
@@ -548,7 +518,6 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     site.print_xyz_file(filename=opt_filename)
 
     site.hessian.to(ade.units.J_per_ang_sq)
-    print("Units of hessian:", site.hessian.units)
     hessian = np.array(site.hessian)
     hessian *= 6.022e23/4.184e3 # we convert tto kcal/mol/angs^2
 
@@ -562,12 +531,7 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
     os.system("mkdir bonded")
     os.chdir("bonded")
 
-    print("Optimising, parameters:", filename, charge)
-
     opt_filename, coords, atom_names, hessian, bond_list, angle_list = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
-
-    #print(f"filename for opt {name:s}_opt_orca.out")
-    print("First element hessian", hessian[0,0])
 
     #bond_list, angle_list = read_bonds_from_orca_output(f"{name:s}_opt_orca.out")
     #hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
@@ -652,7 +616,6 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
     dihedrals = {} #dihedrals are not implemented
 
     pairs = create_pair_exclusions(dummy_dihedrals, angles)
-    print("Filename from Seminario:", filename_opt)
 
     return bonds, angles, dihedrals, impropers, pairs, filename_opt
 

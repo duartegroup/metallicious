@@ -1,7 +1,0 @@
-source leaprc.gaff
-TEMP = loadmol2 temp.mol2
-check TEMP 
-loadamberparams temp.frcmod
-saveoff TEMP sus.lib 
-saveamberparm TEMP temp.prmtop temp.inpcrd
-quit

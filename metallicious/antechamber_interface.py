@@ -23,7 +23,6 @@ def antechamber(pdbfile,output, charge=None, verbose=False):
         with open("output.txt", 'w') as output_file:
             process = Popen(command.split(), stdout=output_file, stderr=DEVNULL)
             process.wait()
-        logger.info("COMMAND")
         logger.info(command)
 
         if assertion is not None:
@@ -98,7 +97,7 @@ def neutralize_charge(file_name, output, charge=0):
     moleculetype = ""
 
     if text.count("[ moleculetype ]") > 1:
-        print("ERROR: More than one moleculetype")
+        logger.info("ERROR: More than one moleculetype")
     elif ("[ system ]" in text):
         moleculetype = text[text.find(r"[ moleculetype ]"):text.find("[ system ]")]
     else:
@@ -117,7 +116,6 @@ def neutralize_charge(file_name, output, charge=0):
 
     for line in moleculetype.splitlines():
         if in_atoms and len(line) > 0 and line[0] != ";":
-            # print(line)
             if len(line.split()) > 7:
                 sum_of_charge += float(line.split()[6])
                 number_of_atoms += 1
@@ -132,8 +130,8 @@ def neutralize_charge(file_name, output, charge=0):
         fract_rest = sum_of_charge - number_of_atoms * np.round(fract, 6)
         every_nth = int(number_of_atoms / (np.abs(fract_rest) / 0.000001))
         qtot = 0.0
-        print("   [ ] Rounding up charges to make molecule neutral, every atom gets additional", -fract)
-        print("       ,every atom will be assigned 0.000001 each ", fract_rest)
+        logger.info("   [ ] Rounding up charges to make molecule neutral, every atom gets additional", -fract)
+        logger.info("       ,every atom will be assigned 0.000001 each ", fract_rest)
         atom_nr = 0
         for line in moleculetype.splitlines():
             # print(np.round(fract + 0.000001*np.random.random(),6)) #
