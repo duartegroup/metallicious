@@ -29,7 +29,7 @@ class supramolecular_structure:
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
                  fingerprint_guess_list=None, truncation_scheme=None, covalent_cutoff=3):
 
-        logger.info("Liberary with templates is located:", library_path)
+        logger.info(f"Library with templates is located: {library_path:}")
 
         self.unique_sites = []
         self.sites = []
@@ -220,7 +220,8 @@ class supramolecular_structure:
             self.extract_unique_metal_sites()
 
         for site in self.unique_sites:
-            if site.check_library() is False:
+            #if site.check_library() is False:
+            if site.fp_topol_file is None:
                 if self.allow_new_templates is True:
                     site.parametrize()
                     self.add_site_to_library(site)
@@ -240,7 +241,7 @@ class supramolecular_structure:
                     break
 
             if self.vdw_type != 'custom':  # if it custom we don't want it
-                logger.infor(f"[+] Saving as {self.library_path:}/{site.name}_{file_idx}.top")
+                logger.info(f"[+] Saving as {self.library_path:}/{site.name}_{file_idx}.top")
                 shutil.copyfile(site.fp_topol_file, f"{self.library_path:}/{site.name}_{file_idx}.top")
                 shutil.copyfile(site.fp_coord_file, f"{self.library_path:}/{site.name}_{file_idx}.pdb")
                 file_idx += 1
