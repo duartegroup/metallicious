@@ -309,9 +309,14 @@ cage.parametrize()
 # cage.prepare_initial_topology(homoleptic_ligand_topol='LA2.top')
 # cage.parametrize()
 
-os.chdir("/home/fd05/fd/chem1540/test/test6/zn_test_1")
-protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)},topol="topol.top", vdw_type="uff", search_library=False)
-protein.parametrize(out_coord="test.gro", out_topol="test.top")
+#os.chdir("/home/fd05/fd/chem1540/test/test6/zn_test_1")
+#protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)},topol="topol.top", vdw_type="uff", search_library=False)
+#protein.parametrize(out_coord="test.gro", out_topol="test.top")
+
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_lewis")
+protein = supramolecular_structure("noncovalent_complex.pdb", metal_charge_mult={"Pd": (2,1)},
+                                   topol="noncovalent_complex.top", vdw_type="merz-opc", search_library=False, improper_metal=True)
+protein.parametrize(out_coord="test.pdb", out_topol="test.top")
 
 
 #os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_o")

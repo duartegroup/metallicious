@@ -28,7 +28,7 @@ Metallicious works with minimal user input, relying heavily on educated guesses,
 
 ## Installation:
 ```
-conda install autode psiresp mdanalysis networkx --channel conda-forge
+conda install autode psiresp mdanalysis networkx qcelemental==0.25.1 ambertools --channel conda-forge
 pip install metallicious
 ```
 ## Quick start

@@ -9,3 +9,4 @@ from metallicious import supramolecular_structure
 cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
 cage.prepare_initial_topology()
 cage.parametrize(out_coord='out.pdb', out_topol='out.top')
+

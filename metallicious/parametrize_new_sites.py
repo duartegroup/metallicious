@@ -428,7 +428,7 @@ class new_metal_site():
         new_cage = MDAnalysis.Universe(self.filename)
         # new_cage.atoms.write(f"old_new_template.pdb")
 
-        logger.info("removing additional atoms", self.additional_atoms)
+        logger.info(f"removing additional atoms {self.additional_atoms:}")
 
         if len(self.additional_atoms) > 0:
             template = new_cage.select_atoms(f"not index {' '.join(list(map(str, np.array(self.additional_atoms)))):s}")

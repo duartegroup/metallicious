@@ -706,7 +706,10 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
         # metal is the first (we renumbered them in selection site), in amber counting starts from 1
         metal_topol.strip(f"!@1")
         new_site_topol = metal_topol
-        for unique in unique_ligands_pattern:
+
+
+        # we sort the ligands that they are next too each other with the same type
+        for unique in np.sort(unique_ligands_pattern):
             # renumbering of the atoms is done according to the first ligand so it should be exactly as for the coordination
             new_site_topol+=unique_ligand_topols[unique]
 
