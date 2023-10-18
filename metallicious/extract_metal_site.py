@@ -544,9 +544,12 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
 
         new_ligand = selected_ligand_2.copy()
 
+
         iso = isomorphism.GraphMatcher(G_ligand_1, G_ligand_2,
-                                       node_match=lambda n1, n2: n1['name'] == n2['name'] and n1['chirality'] == n2[
-                                           'chirality'])
+                                       node_match=lambda n1, n2: n1['name'] == n2['name'])
+        # in past there was chirality tag passed, but rdkit makes mistakes
+        #and n1['chirality'] == n2['chirality'])
+
         if iso.is_isomorphic():
             for node in iso.mapping:
                 new_ligand.atoms[iso.mapping[node]].position = selected_ligand_1.atoms[node].position
