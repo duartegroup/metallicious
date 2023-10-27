@@ -206,8 +206,6 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
     n_metals = len(np.concatenate(metal_indecies))
     cage_topol.write(output_top, [list(range(n_ligands + n_metals))])
 
-    #metal_indices = [a for a, name in enumerate(new_cage.atoms.names) if
-    #                      name[:len(metal_name)].title() == metal_name]
 
     #n_metals = len(metal_indices)
 

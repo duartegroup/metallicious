@@ -317,11 +317,10 @@ cage.parametrize()
 #protein.parametrize(out_coord="test.pdb", out_topol="test.top")
 
 
-#os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_o")
-
-#cage = supramolecular_structure('out.pdb', {'Pd': (2, 1)}, vdw_type='merz-opc', topol='temp.top')
-#cage.prepare_initial_topology( homoleptic_ligand_topol='ligand.itp')
-#cage.parametrize()
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_o")
+cage = supramolecular_structure('out.pdb', {'Pd': (2, 1)}, vdw_type='merz-opc', topol='temp.top')
+cage.prepare_initial_topology( homoleptic_ligand_topol='ligand.itp')
+cage.parametrize()
 
 
 # -------------------- Bernie -----------------------------
@@ -330,9 +329,9 @@ cage.parametrize()
 #protein.parametrize(out_coord="test.gro", out_topol="test.top")
 
 
-
-os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/trim24_apo")
-from metallicious import supramolecular_structure
-protein = supramolecular_structure("complex_trim24.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff")
-protein.parametrize(out_coord="trim24_out.pdb", out_topol="out.top")
+#
+# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/trim24_apo")
+# from metallicious import supramolecular_structure
+# protein = supramolecular_structure("complex_trim24.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff")
+# protein.parametrize(out_coord="trim24_out.pdb", out_topol="out.top")
 

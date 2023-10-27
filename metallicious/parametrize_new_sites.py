@@ -352,6 +352,9 @@ class new_metal_site():
                 vdw_entry = f"{metal_name:}{metal_charge:}"
             eps, r2min = vdw_data[vdw_type][vdw_entry]
             self.metal_radius = r2min * 2  # becasue radius is r2
+
+
+
             # Change metal type:
             self.topol[0].atom_type.rmin = r2min
             self.topol[0].atom_type.epsilon = eps

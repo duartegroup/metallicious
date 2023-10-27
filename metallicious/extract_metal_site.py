@@ -534,16 +534,15 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
         nx.set_node_attributes(G_ligand_1, {atom.GetChiralTag() for atom in mol1.GetAtoms()}, "chirality")
 
         selected_ligand_2 = MDAnalysis.Merge(new_syst.atoms[unique_ligands[unique_ligands_pattern[idx]]])
+        selected_ligand_2.atoms.write("selected2.pdb")
         mol1 = selected_ligand_2.atoms.convert_to("RDKIT")
         G_ligand_2 = nx.Graph(
             MDAnalysis.topology.guessers.guess_bonds(selected_ligand_2.atoms, selected_ligand_2.atoms.positions))
         nx.set_node_attributes(G_ligand_2, {atom.index: atom.name[0] for atom in selected_ligand_2.atoms}, "name")
         nx.set_node_attributes(G_ligand_2, {atom.GetChiralTag() for atom in mol1.GetAtoms()}, "chirality")
 
-        #print([atom.GetChiralTag() for atom in mol1.GetAtoms()])
 
         new_ligand = selected_ligand_2.copy()
-
 
         iso = isomorphism.GraphMatcher(G_ligand_1, G_ligand_2,
                                        node_match=lambda n1, n2: n1['name'] == n2['name'])

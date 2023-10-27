@@ -39,7 +39,11 @@ def create_metal_topol(metal_name, metal_charge, vdw_data_name):
         # I don't know how to convert struct to GromacsTopol, easiest is to save and load it ...
         struct.save(f"{name:s}.top", overwrite=True)
         metal_topol = pmd.load_file(f"{name:s}.top")
+        metal_topol.defaults.fudgeLJ = 0.5
+        metal_topol.defaults.fudgeQQ = 0.833333
+
         os.remove(f"{name:s}.top")
+
 
         ''' I have several attemps how to make it without file but did not manage to figure out:
         metal_topol = pmd.gromacs.GromacsTopologyFile()
