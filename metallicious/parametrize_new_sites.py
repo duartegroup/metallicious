@@ -351,7 +351,7 @@ class new_metal_site():
             elif f"{metal_name:}{metal_charge:}" in vdw_data[vdw_type]:
                 vdw_entry = f"{metal_name:}{metal_charge:}"
             eps, r2min = vdw_data[vdw_type][vdw_entry]
-            self.metal_radius = r2min * 2  # becasue radius is r2
+            self.metal_radius = r2min # *2 radius
 
 
 
@@ -363,7 +363,7 @@ class new_metal_site():
                 self.metal_radius = self.read_radius_from_topol()
 
     def read_radius_from_topol(self):
-        self.metal_radius = self.topol[0].rmin * 2
+        self.metal_radius = self.topol[0].rmin
 
     def _print(self):
         return f"<{self.metal_name}({self.metal_charge}+) {self.name}>"
