@@ -211,6 +211,7 @@ class supramolecular_structure:
         parameter_copier = patcher()
         parameter_copier.copy_site_topology_to_supramolecular(self.sites, cage_coord=self.filename,
                                                               cage_topol=self.topol)
+
         parameter_copier.save(f'{self.path:s}/{out_coord:s}', f'{self.path:s}/{out_topol:s}',
                               tmpdir_path=self.tmpdir_path)
         logger.info("[+] Finished!")

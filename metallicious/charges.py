@@ -9,9 +9,10 @@ from metallicious.utils import new_directory
 import MDAnalysis
 def connectivity_for_qcel(filename, metal_name):
     atoms = MDAnalysis.Universe(filename).atoms
-    types = atoms.types
-    types[0] = metal_name
-    atoms.types = types
+    if metal_name is not None:
+        types = atoms.types
+        types[0] = metal_name
+        atoms.types = types
     bonds = MDAnalysis.topology.guessers.guess_bonds(atoms, atoms.positions, vdwradii={metal_name: 0.1})
     new_bonds = [(bond[0], bond[1], 1) for bond in bonds]
     return new_bonds
@@ -275,7 +276,7 @@ def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_patter
     ligand_charges = []
     for lig_idx in list(set(unique_ligands_pattern)):
         ligand_formal_charge = ligand_charges_pattern[list(unique_ligands_pattern).index(lig_idx)]
-        charges = resp_orca(f"ligand_{lig_idx:d}.xyz", charge=ligand_formal_charge, opt=False, metal_name=metal_name,
+        charges = resp_orca(f"ligand_{lig_idx:d}.xyz", charge=ligand_formal_charge, opt=False, metal_name=None,
                             metal_radius=metal_radius, extra_atoms=unique_ligands_constraints[lig_idx])
         ligand_charges.append(charges)
 
