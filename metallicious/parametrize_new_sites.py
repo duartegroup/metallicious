@@ -5,7 +5,7 @@ from metallicious.extract_metal_site import extract_metal_structure, find_metal_
 from metallicious.seminario import single_seminario
 from metallicious.charges import calculate_charges2
 from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, \
-    copy_pair_exclusions, update_pairs
+    copy_pair_exclusions, update_pairs, add_1_4_metal_pairs
 from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
 from metallicious.data import vdw_data
 from metallicious.prepare_initial_topology import prepare_initial_topology
@@ -157,6 +157,7 @@ class supramolecular_structure:
         self.unique_sites = unique_sites
 
     def check_if_parameters_available(self):
+        #if len([1 for site in self.sites if site.fp_topol_file is not None]) == len(self.sites):
         if len([1 for site in self.sites if site.fp_topol_file is not None]) == len(self.sites):
             return True
         else:
@@ -186,7 +187,7 @@ class supramolecular_structure:
             for metal_index, site in zip(metal_indicies, self.sites):
                 site.index = metal_index
         else:
-            raise ValueError("Only gaff supported")
+            raise ValueError("Only GAFF supported")
 
         os.chdir(here)
 
@@ -229,6 +230,7 @@ class supramolecular_structure:
                     raise Exception(
                         "Template not found (try to (a) parametrize it (specify multiplicity) or (b) truncate template)")
 
+
     def add_site_to_library(self, site):
         # adding to the library
         if os.path.isfile(site.fp_topol_file) and os.path.isfile(site.fp_coord_file):
@@ -266,6 +268,7 @@ class metal_site():
         self.fp_coord_file = fp_coord
         self.fp_style = fp_style
         self.covalent_cutoff= covalent_cutoff
+        self.ignore_truncation_warning = True
 
     def _print(self):
         if self.fp_coord_file is not None:
@@ -287,7 +290,7 @@ class metal_site():
         :return:
         '''
 
-        self.fp_topol, self.fp_syst = load_fp_from_file(self.fp_coord_file, self.fp_topol_file, self.fp_style)
+        self.fp_topol, self.fp_syst = load_fp_from_file(self.fp_coord_file, self.fp_topol_file, self.fp_style, self.ignore_truncation_warning)
         return True
 
     def set_cutoff(self):
@@ -400,7 +403,8 @@ class new_metal_site():
         if len(self.pairs) > 0:
             self.topol = copy_pair_exclusions(self.topol, self.pairs)
 
-        # we need to remove pair exclusions, for atoms which are connected through angle containing metal
+
+
         self.topol = update_pairs(self.topol)
 
 

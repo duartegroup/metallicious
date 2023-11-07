@@ -89,13 +89,13 @@ cage.parametrize()
 #cage.prepare_initial_topology()
 # cage.parametrize()
 #
-# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_04/Ga_cage')
-# # # cage = supramolecular_structure('cage.xyz', {'Ga': (3,1)}, vdw_type='uff')
-# # # cage.prepare_initial_topology(method='gaff', homoleptic_ligand_topol='ligand.top')
-# cage = supramolecular_structure('nonbonded.pdb', {'Ga': (3, 1)}, topol = 'noncovalent_complex.top', vdw_type='uff')
-# cage.extract_unique_metal_sites()
-# cage.unique_sites[0].ligand_charges = [-2, -2, -2]
-# cage.parametrize()
+# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Ga_cage')
+# cage = supramolecular_structure('crystal3.pdb', {'Ga': (3,1)}, vdw_type='uff')
+# cage.prepare_initial_topology(method='gaff', homoleptic_ligand_topol='ligand.top')
+#cage = supramolecular_structure('nonbonded.pdb', {'Ga': (3, 1)}, topol = 'noncovalent_complex.top', vdw_type='uff')
+#cage.extract_unique_metal_sites()
+#cage.unique_sites[0].ligand_charges = [-2, -2, -2]
+#cage.parametrize()
 #
 # os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/wierdo")
 # cage = supramolecular_structure('wierdo.pdb', {'Pd': (2, 1)}, vdw_type='uff')
@@ -109,7 +109,7 @@ cage.parametrize()
 # # cage.prepare_initial_topology()
 # cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Pd': (2, 1)}, topol = 'init_topol/noncovalent_complex.top', vdw_type='merz-opc')
 # cage.parametrize()
-
+#
 # os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_cage/")
 # cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', {'Co': (2, 4)},
 #                                 topol='init_topol/noncovalent_complex.top', vdw_type='merz-tip3p')
@@ -211,14 +211,14 @@ cage = supramolecular_structure('protein.pdb', {'Cu': (2,2), 'Co':(2,1)}, vdw_ty
 cage.parametrize()
 '''
 
-#
-# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_06_07/Ga_cage')
-# # cage = supramolecular_structure('cage.xyz', {'Ga': (3,1)}, vdw_type='uff')
-# # cage.prepare_initial_topology(method='gaff', homoleptic_ligand_topol='ligand.top')
-# cage = supramolecular_structure('nonbonded.pdb', {'Ga': (3, 1)}, topol = 'noncovalent_complex.top', vdw_type='uff')
-# cage.extract_unique_metal_sites()
-# cage.unique_sites[0].ligand_charges = [-2, -2, -2]
-# cage.parametrize()
+
+os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Ga_cage')
+# cage = supramolecular_structure('cage.xyz', {'Ga': (3,1)}, vdw_type='uff')
+# cage.prepare_initial_topology(method='gaff', homoleptic_ligand_topol='ligand.top')
+cage = supramolecular_structure('nonbonded.pdb', {'Ga': (3, 1)}, topol = 'noncovalent_complex.top', vdw_type='uff', search_library=False)
+cage.extract_unique_metal_sites()
+cage.unique_sites[0].ligand_charges = [-2, -2, -2]
+cage.parametrize()
 
 #0.25105526
 #0.0720066
@@ -316,22 +316,33 @@ cage.parametrize()
 #                                   topol="noncovalent_complex.top", vdw_type="merz-opc", search_library=False, improper_metal=True)
 #protein.parametrize(out_coord="test.pdb", out_topol="test.top")
 
-
+'''
 os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_o")
 cage = supramolecular_structure('out.pdb', {'Pd': (2, 1)}, vdw_type='merz-opc', topol='temp.top')
 cage.prepare_initial_topology( homoleptic_ligand_topol='ligand.itp')
 cage.parametrize()
-
+'''
 
 # -------------------- Bernie -----------------------------
 #os.chdir("/home/fd05/fd/chem1540/test/test6/zn_test_1")
 #protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)},topol="topol.top", vdw_type="uff", search_library=False)
-#protein.parametrize(out_coord="test.gro", out_topol="test.top")
-
-
+# #protein.parametrize(out_coord="test.gro", out_topol="test.top")
 #
 # os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/trim24_apo")
 # from metallicious import supramolecular_structure
 # protein = supramolecular_structure("complex_trim24.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff")
+# protein.extract_unique_metal_sites()
+#
+# protein.sites[0].fp_coord_file = 'site_Zn0/template.pdb'
+# protein.sites[0].fp_topol_file = 'site_Zn0/template.top'
+# protein.sites[1].fp_coord_file = 'site_Zn1/template.pdb'
+# protein.sites[1].fp_topol_file = 'site_Zn1/template.top'
+#
+# protein.assign_fingerprints()
+#
+#
+# #cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
+# #cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
+#
 # protein.parametrize(out_coord="trim24_out.pdb", out_topol="out.top")
-
+#

@@ -152,7 +152,6 @@ def scan_improper(improper, filename='bonded/site0_optimised_orca.xyz', charge=0
         return None
 
     def generate_input_for(self, calc: "CalculationExecutor") -> None:
-        print("AUsing old input file")
         molecule = calc.molecule
         keywords = self.get_keywords(calc.input, molecule)
 

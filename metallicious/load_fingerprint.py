@@ -21,7 +21,7 @@ from metallicious.seminario import extend_angle_to_dihedral
 
 
 #def load_fingerprint_from_file(name_of_binding_side, fingerprint_style='full'):
-def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
+def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None, ignore_truncation_warning=True):
     '''
     Loads topology and coordinates of the fingerprint. If fingerprint not "full", then it will be trunked to the specified fingerprint style:
     - dihdral (or dih) - truncated to atoms within 3 bond length from metal
@@ -36,6 +36,8 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
     topol = pmd.load_file(filename_fp_topol)
     syst_fingerprint = MDAnalysis.Universe(filename_fp_coord)
 
+    residual_charges = np.array([np.sum([atom.charge for atom in residue]) for residue in topol.residues])
+
     if fp_style is None:
         # do not truncate
         return topol, syst_fingerprint
@@ -47,14 +49,11 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
         metal_topology = topol.atoms[0]  # As it is now, the topologies are save with first atom as metal
         if fp_style == 'dihedral' or fp_style == 'dih':
             atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=3).nodes)
-            # atoms_bound_to_metal_by_bonded = list(set(
-            #     np.concatenate([[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx, angle.atom4.idx] for angle in
-            #                     metal_topology.dihedrals])))
+
+
         elif fp_style == 'angle' or fp_style == 'ang':
             atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=2).nodes)
-            # atoms_bound_to_metal_by_bonded = list(set(
-            #     np.concatenate(
-            #         [[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx] for angle in metal_topology.angles])))
+
         elif fp_style == 'bond':
             atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=1).nodes)
             # atoms_bound_to_metal_by_bonded = list(
@@ -73,83 +72,23 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None):
             topol.atoms[idx].charge += residual_charge
 
         topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
+
+        residual_charges_cut = np.array([np.sum([atom.charge for atom in residue]) for residue in topol.residues])
+        std = np.std(residual_charges_cut - residual_charges)
+        logger.info(f"The truncation resulted in error of partial charges: {std:.02f}")
+
+        if std > 0.3 and ignore_truncation_warning==False:
+            raise ValueError(f"WARNING the truncation results in large overall change of charge of residues: changing truncation scheme might help; std: {std:}")
+
+
         new_syst_fingerprint = syst_fingerprint.select_atoms(
             f"not index {' '.join(list(map(str, np.array(atoms_to_strip)))):s}")
         new_syst_fingerprint.write("temp.pdb")
         new_syst_fingerprint = MDAnalysis.Universe("temp.pdb")
 
+
+
         return topol, new_syst_fingerprint.atoms
-
-        '''
-        elif fingerprint_style=='angle' or fingerprint_style=='ang':
-            metal_topology = topol.atoms[0]
-    
-            atoms_bound_to_metal_by_angle = list(set(
-                np.concatenate([[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx] for angle in metal_topology.angles])))
-            #atoms_bound_to_metal_by_bond = list(
-            #    set(np.concatenate([[bond.atom1.idx, bond.atom2.idx] for bond in metal_topology.bonds])))
-    
-            atoms_to_strip = []
-            residual_charge = 0.0
-            for atom in topol.atoms:
-                if atom.idx not in atoms_bound_to_metal_by_angle:
-                    atoms_to_strip.append(atom.idx)
-                    residual_charge += atom.charge
-    
-    
-            residual_charge /= len(atoms_bound_to_metal_by_angle)
-    
-            #residual_charge = 0.0
-            #for atom in topol.atoms:
-            #    if atom.idx not in atoms_bound_to_metal_by_bond:
-            #        residual_charge += atom.charge
-            #residual_charge /= len(atoms_bound_to_metal_by_bond)
-    
-            for idx in atoms_bound_to_metal_by_angle:
-                    #if idx in atoms_bound_to_metal_by_bond:
-                    topol.atoms[idx].charge += residual_charge
-                    #else:
-                    #topol.atoms[idx].charge = 0.0
-    
-            topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
-            new_syst_fingerprint = syst_fingerprint.select_atoms(f"not index {' '.join(list(map(str, np.array(atoms_to_strip)))):s}")
-            new_syst_fingerprint.write("temp.pdb")
-            print(os.getcwd())
-            new_syst_fingerprint = MDAnalysis.Universe("temp.pdb")
-            return topol, new_syst_fingerprint.atoms
-    
-        elif fingerprint_style=='bond':
-            metal_topology = topol.atoms[0]
-            atoms_bound_to_metal_by_bond = list(
-                set(np.concatenate([[bond.atom1.idx, bond.atom2.idx] for bond in metal_topology.bonds])))
-            atoms_to_strip = []
-    
-            residual_charge = 0.0
-            for atom in topol.atoms:
-                if atom.idx not in atoms_bound_to_metal_by_bond:
-                    atoms_to_strip.append(atom.idx)
-                    residual_charge += atom.charge
-    
-            #topol.atoms[0].charge = residual_charge
-            residual_charge /= len(atoms_bound_to_metal_by_bond)
-    
-    
-            for idx in atoms_bound_to_metal_by_bond:
-                    #if idx in atoms_bound_to_metal_by_bond:
-                    topol.atoms[idx].charge += residual_charge
-                    #else:
-                    #topol.atoms[idx].charge = 0.0
-    
-            #for atom in topol.atoms:
-            #    atom.charge = 0.0
-    
-            topol.strip(f"@{','.join(list(map(str, np.array(atoms_to_strip) + 1))):s}")
-            new_syst_fingerprint = syst_fingerprint.select_atoms(f"not index {' '.join(list(map(str, np.array(atoms_to_strip)))):s}")
-            new_syst_fingerprint.write("temp.pdb") #TODO this probably can be rediex in a nicer way...
-            new_syst_fingerprint = MDAnalysis.Universe("temp.pdb")
-            return topol, new_syst_fingerprint.atoms
-        '''
-
     else:
         raise ValueError("Incorrect value of truncation scheme")
 

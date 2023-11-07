@@ -1,7 +1,7 @@
-mdanalysis~=2.4.2
-parmed~=3.4.4
-numpy~=1.22.4
-rdkit~=2022.09.1
-networkx~=3.0
-scipy~=1.7.3
-setuptools~=67.7.2
+mdanalysis>=2.4.2
+parmed>=3.4.4
+numpy>=1.22.4
+rdkit>=2022.09.1
+networkx>=3.0
+scipy>=1.7.3
+setuptools>=67.7.2

@@ -11,8 +11,6 @@ def new_directory(directory):
     if not os.path.isdir(directory):
         os.mkdir(directory)
 
-
-
 def strip_numbers_from_atom_name(atom_name):
     return re.match("([a-zA-Z]+)", atom_name).group(0)
 

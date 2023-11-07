@@ -1,211 +1,21 @@
-
-
-
-
-
 import os
-import re
 import numpy as np
 
-from MDAnalysis.lib.distances import calc_dihedrals
 import MDAnalysis
 from metallicious.mapping import map_two_structures
 from metallicious.mod_seminario import modified_seminario_method
 from metallicious.improper_torsion import find_impropers_and_values
 
-'''
 
-def read_bonds_from_orca_output(filename="site_opt_orca.out"):
-    File = open(filename)
-    text = File.read()
-    File.close()
-
-    start_line = text.find("        Definition                    Value    dE/dq     Step     New-Value")
-
-    bonds = []
-    angles = []
-
-    for line in text[start_line:].splitlines()[2:]:
-        if line == "    ----------------------------------------------------------------------------":
-            break
-
-        if line[8] == 'B':
-
-            match = re.search("\([a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+)\)", line)
-            idx1 = int(match.group(1))
-            idx2 = int(match.group(2))
-            bonds.append([idx1, idx2])
-
-        elif line[8] == 'A':
-            match = re.search("A\([a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+)\)", line)
-            idx1 = int(match.group(1))
-            idx2 = int(match.group(2))
-            idx3 = int(match.group(3))
-            angles.append([idx1, idx2, idx3])
-
-    return bonds, angles
-
-def read_hessian_from_orca(filename):
-    File = open(filename)
-    text = File.read()
-    File.close()
-
-    temp = text[text.find('$atoms'):text.find("$actual_temperature")]
-    N_atoms = int(temp.splitlines()[1])
-
-    gaussian_coord_string = ''
-    gaussian_atomic_number_string = ''
-
-    temp = text[text.find('$hessian'):text.find("$vibrational_frequencies")]
-    N = int(temp.splitlines()[1])
-
-    hess_string = ['' for a in range(N)]
-
-    for a in range(np.ceil(N / 5).astype(int)):
-        temp2 = temp.splitlines()[3 + (1 + N) * (a):2 + (1 + N) * (a + 1)]
-        for b in range(N):
-            hess_string[b] += temp2[b][6:]
-
-    hessian = []
-    for line in hess_string:
-        hessian.append(list(map(float, line.split())))
-
-    hessian = np.array(hessian) * (627.509391)/ (0.529177**2)  #Change from Hartree/bohr to kcal/mol /ang
-    return hessian
-
-def orca_to_fchk(filename="site_opt_orca.hess", output_fchk="lig.fchk"): #TODO remove
-    File = open(filename)
-    text = File.read()
-    File.close()
-
-    temp = text[text.find('$atoms'):text.find("$actual_temperature")]
-    N_atoms = int(temp.splitlines()[1])
-
-    gaussian_coord_string = ''
-    gaussian_atomic_number_string = ''
-
-    c = 0
-    d = 0
-    for line in temp.splitlines()[2:]:
-        if len(line.split()) > 0:
-            for a in [2, 3, 4]:
-
-                gaussian_coord_string += f" {float(line.split()[a]): .8e}"
-                c += 1
-                if c % 5 == 0:
-                    gaussian_coord_string += '\n'
-                    c = 0
-            gaussian_atomic_number_string += f" {name_to_atomic_number[line.split()[0].title()]: 11d}"
-            d += 1
-
-            if d % 5 == 0:
-                gaussian_atomic_number_string += '\n'
-                d = 0
-
-    temp = text[text.find('$hessian'):text.find("$vibrational_frequencies")]
-    N = int(temp.splitlines()[1])
-
-    hess_string = ['' for a in range(N)]
-
-    for a in range(np.ceil(N / 5).astype(int)):
-        temp2 = temp.splitlines()[3 + (1 + N) * (a):2 + (1 + N) * (a + 1)]
-        for b in range(N):
-            hess_string[b] += temp2[b][6:]
-
-    gaussian_hess_string = ''
-
-    c = 0
-    for a in range(N):
-        for b in range(a + 1):
-            gaussian_hess_string += f" {float(hess_string[b].split()[a]): .8e}"
-            c += 1
-            if c % 5 == 0:
-                gaussian_hess_string += '\n'
-                c = 0
-
-    File = open(output_fchk, "w")
-    print(f"Atomic numbers                             I   N={N_atoms:12d}", file=File)
-    print(gaussian_atomic_number_string, file=File)
-    print("Nuclear charges        \n", file=File)
-    print(f"Current cartesian coordinates              R   N={N:12d}", file=File)
-    print(gaussian_coord_string, file=File)
-    print("Force Field            \n", file=File)
-    print(f"Cartesian Force Constants                  R   N={N:12d}", file=File)
-    print(gaussian_hess_string, file=File)
-    print("Dipole Moment          \n", file=File)
-    File.close()
-
-
-def orca_to_log(filename="site_opt_orca.out", log_output="lig.log"): #TODO remove
-    File = open(filename)
-    text = File.read()
-    File.close()
-
-    start_line = text.find("        Definition                    Value    dE/dq     Step     New-Value")
-    n_bonds = 1
-    n_angles = 1
-
-    File = open(log_output, "w")
-
-    print(" --------------------------                            --------------------------", file=File)
-    print(" ! Name  Definition              Value          Derivative Info.                !", file=File)
-    print(" --------------------------------------------------------------------------------", file=File)
-
-    for line in text[start_line:].splitlines()[2:]:
-        if line == "    ----------------------------------------------------------------------------":
-            break
-
-        if line[8] == 'B':
-
-            match = re.search("\([a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+)\)", line)
-            idx1 = int(match.group(1)) + 1
-            idx2 = int(match.group(2)) + 1
-
-            number_of_spaces = 22 - len(f"R({idx1:d},{idx2:d})")
-            value = float(line[line.find(")"):].split()[1])
-
-            print(
-                f" ! R{n_bonds:<4d} R({idx1:d},{idx2:d}){number_of_spaces * ' ':s}{0.0: 8.4f}         -DE/DX =    0.0                 !",
-                file=File)
-            n_bonds += 1
-
-        elif line[8] == 'A':
-            match = re.search("A\([a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+),[a-zA-Z]+\s*(\d+)\)", line)
-            idx1 = int(match.group(1)) + 1
-            idx2 = int(match.group(2)) + 1
-            idx3 = int(match.group(3)) + 1
-
-            number_of_spaces = 22 - len(f"A({idx1:d},{idx2:d},{idx3:d})")
-
-            value = float(line[line.find(")"):].split()[1])
-
-            print(
-                f" ! A{n_angles:<4d} A({idx1:d},{idx2:d},{idx3:d}){number_of_spaces * ' ':s}{value:8.4f}         -DE/DX =    0.0                 !",
-                file=File)
-
-            n_angles += 1
-    print(" ! D1    D(1,2,3,4)              0.0000         -DE/DX =    0.0                 !", file=File)
-    print(" --------------------------------------------------------------------------------\n", file=File)
-    File.close()
-
-def strip_numbers_from_atom_name(atom_name): # TODO remove/ or unify
-    return re.match("([a-zA-Z]+)", atom_name).group(0)
-
-def read_bonds(): # REMOVE TODO
-    File = open("Modified_Seminario_Bonds")
-    text = File.read()
-    File.close()
-    bonds = {}
-    for line in text.splitlines():
-        striped_bond = [strip_numbers_from_atom_name(name).title() for name in line.split()[0].split('-')]
-        unsorted_bond = (int(line.split()[3]) - 1, int(line.split()[4]) - 1)
-        argsorted = np.argsort(unsorted_bond)
-
-        bonds[tuple(np.sort(unsorted_bond)), (striped_bond[argsorted[0]], striped_bond[argsorted[1]])] = (
-            float(line.split()[2]), float(line.split()[1]))
-    return bonds
-'''
 def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
+    '''
+    Removes bonds which are not connected to donors (by default N, O, S). This is to remove bonds such as Metal-C or Metal-H
+
+    :param bonds: (list) list of pairs of atoms which form bond (names)
+    :param metal_name: (string) name of metal
+    :param donors: (list) list of elements which metal can form a bond
+    :return: (list) new list of pairs of atoms which form bond
+    '''
     metal_name = metal_name.title()
     new_bonds = {}
     for bond in bonds:
@@ -214,7 +24,7 @@ def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
                     bond[1][1] == metal_name and bond[1][0] in donors):
                 new_bonds[bond[0]] = bonds[bond]
             else:
-                print(f"Not valid bond: Seminario method detect bond {bond[1]}, but metal not connected to donor ({donors:}), so removing it")
+                print(f"Seminario method detect bond {bond[1]}, but non-metal atom is not a donor (donors={donors:}), so removing it")
 
         else:
             new_bonds[bond[0]] = bonds[bond]
@@ -222,7 +32,7 @@ def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
 
 def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
     '''
-    This is simetrization of bond and angles (the name bonds stays for the first one)
+    This is symetrization of bond and angles
 
     :param bonds:
     :param metal_name:
@@ -276,52 +86,6 @@ def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, ind
                 elif mapping_idx[::-1] in bonds:
                     bonds[mapping_idx[::-1]] = (np.round(length, 3), np.round(k, 3))
 
-
-
-         
-        #for atom_indeces in (indecies[unique_ligand + 1]):
-        # select first ligand from the unique ligands, and merge with other unique ligands iwthin group
-
-        '''
-        syst = MDAnalysis.Universe(filename)
-        ligand1 = syst.atoms[[0] + indecies[1:][same_ligands[0]]]  # ligand + metal (metal is necessery for symmetry)
-        ligand2 = syst.atoms[[0] + indecies[1:][same_ligand]]
-
-        mapping, _ = map_two_structures(0, ligand2, ligand1, metal_name)  # we map one of the ligands+metal on second
-        '''
-
-        '''
-        for atom_indeces in (indecies[unique_ligand_indecies[0] + 1]):
-            for bond in bonds:
-                if atom_indeces in bond:
-                    if metal_index not in bond:
-                        length = 0
-                        k = 0
-                        for distance in index_distance:
-                            temp = bonds[bond[0] + distance, bond[1] + distance]
-                            length += temp[0]
-                            k += temp[1]
-
-                        length /= len(index_distance)
-                        k /= len(index_distance)
-
-                        for distance in index_distance:
-                            bonds[bond[0] + distance, bond[1] + distance] = (np.round(length, 3), np.round(k, 3))
-                    else:
-                        length = 0
-                        k = 0
-                        for distance in index_distance:
-                            temp = bonds[bond[0], bond[1] + distance]
-                            length += temp[0]
-                            k += temp[1]
-
-                        length /= len(index_distance)
-                        k /= len(index_distance)
-
-                        for distance in index_distance:
-                            bonds[bond[0], bond[1] + distance] = (np.round(length, 3), np.round(k, 3))
-                            
-        '''
     return bonds
 
 def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
@@ -349,67 +113,10 @@ def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
             new_angles[angle[0]] = angles[angle]
     return new_angles
 
-'''
-#(metal_name, starting_index, indecies, unique_ligands_pattern, donors = ["N", "O"])
-def symmetrize_angles(angles, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern): # TODO this is to remove (8/6/2023)
-    # TODO this is to remove
-    metal_index = 0
 
-    for unique_ligand in list(set(unique_ligands_pattern)):
-        unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
-
-        index_select = np.array(starting_index)[np.array(unique_ligand_indecies) + 1]
-        index_distance = index_select - index_select[0]
-
-        #for atom_indeces in (indecies[unique_ligand + 1]): # TODO remove, left for clarity 31/05/2023
-        for atom_indeces in (indecies[unique_ligand_indecies[0] + 1]):
-            # print(atom_indeces)
-            for angle in angles:
-                if atom_indeces in angle:
-                    metal0 = 1
-                    metal2 = 1
-
-                    if metal_index == angle[0]:
-                        metal0 = 0
-                    elif metal_index == angle[1]:
-                        metal2 = 0
-
-                    if not metal_index == angle[1]:
-
-                        length = 0
-                        k = 0
-                        for distance in index_distance:
-                            temp = angles[angle[0] + distance * metal0, angle[1] + distance, angle[2] + distance * metal2]
-                            length += temp[0]
-                            k += temp[1]
-
-                        length /= len(index_distance)
-                        k /= len(index_distance)
-
-                        for distance in index_distance:
-                            angles[angle[0] + distance * metal0, angle[1] + distance, angle[2] + distance * metal2] = (
-                            np.round(length, 3), np.round(k, 3))
-
-                    elif angle[1] == metal_index:
-                        # There is no simple way of symmetrizing this interaction, e.g. PdL4, some are orineted 90 deg some 180 deg
-                        None
-    return angles
-'''
-'''
-def read_and_symmetrize_angles(metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", 'S']): # TODO this is not used (?)
-    angles = read_angles()
-    angles = remove_non_metal_donor_angles(angles, metal_name, donors=donors)
-    #angles = symmetrize_angles(angles, metal_name, starting_index, indecies, unique_ligands_pattern)
-    angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, starting_index, indecies,
-                                     unique_ligands_pattern,
-                                     donors=donors)
-    return angles
-
-'''
 def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
                                        donors=["N", "O", "S"]):
     angles = remove_non_metal_donor_angles(angles_with_names, metal_name, donors=donors)
-    #angles = symmetrize_angles(angles, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern)
     angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, starting_index, indecies,
                                      unique_ligands_pattern,
                                      donors=donors)
@@ -497,10 +204,6 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
         if len(site.imaginary_frequencies) > 0:
             # Sometimes it does not converge, then we use tighter criterium
             if 'TIGHTOPT' in [keyword.upper() for keyword in keywords] or 'OPT' in [keyword.upper() for keyword in keywords]:
-
-                # This is very reboust, it is pitty that auto_de does not use hessian and we have to repeat this
-                # heavy calculations
-
                 new_keywords = []
                 for keyword in keywords:
                     if keyword.upper() == 'TIGHTOPT' or  keyword.upper() == 'OPT':
@@ -511,7 +214,7 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
                 rerun_hessian = "\n%geom\nCalc_Hess true\nRecalc_Hess 10\nend"
                 site.optimise(method=method, keywords=new_keywords + [rerun_hessian])
         else:
-            raise RuntimeError("Cannot perform optimization")
+            raise RuntimeError("Optimization fails")
 
     names = [atom.atomic_symbol for atom in site.atoms]
     opt_filename = f"{site.name:s}_optimised.xyz"
@@ -532,9 +235,6 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
     os.chdir("bonded")
 
     opt_filename, coords, atom_names, hessian, bond_list, angle_list = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
-
-    #bond_list, angle_list = read_bonds_from_orca_output(f"{name:s}_opt_orca.out")
-    #hessian = read_hessian_from_orca(f"{name:s}_opt_orca.hess")
 
     # Scalling factor taken from https://cccbdb.nist.gov/vsfx.asp and assumed that for basis set of double zeta and higher the scalling does not change
     if vibrational_scaling is not None:

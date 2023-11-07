@@ -577,7 +577,12 @@ def renumer_ligands(new_syst, metal_name, ligands_atoms_membership, unique_ligan
 
 
 def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_metal_names = None):
+    if topol_filename is None:
+        raise ValueError("[!] Topology file missing!")
+
     syst = MDAnalysis.Universe(filename)
+
+
     old_topol = pmd.load_file(topol_filename)
 
     metal_indices, n_metals = find_metal_indices(syst, metal_name)

@@ -164,6 +164,7 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
                 # print(len(new_ligands),new_ligands )
 
             else:
+                #raise ValueError("Error, cannot match the structures. You need to create topology with nonboned metal manually (or you might try to optimize structure by for example xtb)")
                 '''
                 print(os.getcwd())
                 print(list(nodes))

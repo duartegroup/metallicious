@@ -6,11 +6,13 @@ import re
 # except:
 from metallicious.log import logger
 from metallicious.utils import strip_numbers_from_atom_name
+import networkx as nx
 
 
+'''
 def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
     logger.info("   [ ] Changing charges and atomtypes")
-    sum_of_charge_diffrences = 0
+    #sum_of_charge_diffrences = 0
 
     for a in mapping_fp_to_new:
         logger.info(f"          {topol_new.atoms[mapping_fp_to_new[a]].type:s} "
@@ -31,7 +33,24 @@ def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
         topol_new.atoms[mapping_fp_to_new[a]].rmin = fp_topol.atoms[a].rmin
         topol_new.atoms[mapping_fp_to_new[a]].charge += fp_topol.atoms[a].charge  # topol_fp.atoms[a].charge
 
-        sum_of_charge_diffrences += fp_topol.atoms[a].charge
+        #sum_of_charge_diffrences += fp_topol.atoms[a].charge
+
+    return topol_new
+'''
+def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
+    logger.info("   [ ] Changing charges ")
+    sum_of_charge_diffrences = 0
+
+    for a in mapping_fp_to_new:
+        logger.info(f"          {topol_new.atoms[mapping_fp_to_new[a]].type:s} "
+                    f"{topol_new.atoms[mapping_fp_to_new[a]].name:s} "
+                    f"{topol_new.atoms[mapping_fp_to_new[a]].charge:} --> "
+                    f"{fp_topol.atoms[a].type, fp_topol.atoms[a].name:} {topol_new.atoms[mapping_fp_to_new[a]].charge + fp_topol.atoms[a].charge:}")
+
+        atom = fp_topol.atoms[a]
+
+        topol_new.atoms[mapping_fp_to_new[a]].charge += fp_topol.atoms[a].charge  # topol_fp.atoms[a].charge
+
 
     return topol_new
 
@@ -121,7 +140,7 @@ def adjust_angles(topol_new, topol_fp, mapping_fp_to_new):
                           mapping_fp_to_new[angle_fp.atom2.idx] and angle_new.atom3.idx == mapping_fp_to_new[
                               angle_fp.atom1.idx]))):
                     if (angle_fp.type != angle_new.type):
-                        logger.info("      [o] Diffrent angle type {angle_new.type:} -> {angle_fp.type:}")
+                        logger.info(f"      [o] Diffrent angle type {angle_new.type:} -> {angle_fp.type:}")
                         # angle_new.funct = angle_fp.funct
                         # angle_new.type.k = angle_fp.type.k
                         # angle_new.type.theteq = angle_fp.type.theteq
@@ -409,6 +428,41 @@ def adjust_pair_exclusions(topol_new, topol_fp, mapping_fp_to_new):
     return topol_new
 
 
+def add_1_4_metal_pairs(topol_new, metal_index):
+    '''
+    We add all the 1-4 interaction which are around the metal
+    :param topol_new: (parmed topology) contains topology of the site
+    :return: (parmed topology) modified topology
+    '''
+    orginal_pairs = []
+    for pair in topol_new.adjusts:
+        orginal_pairs.append((pair.atom1.idx, pair.atom2.idx))
+
+    # We include also all the pairs
+    G = nx.Graph([(bond.atom1.idx, bond.atom2.idx) for bond in topol_new.bonds])
+    pairs_1_4 = []
+    all_pairs_1_4 = list(nx.generators.ego_graph(G, metal_index, radius=3).nodes)
+    G_cut = G.subgraph(all_pairs_1_4)
+
+    for idx, node1 in enumerate(all_pairs_1_4):
+        for node2 in all_pairs_1_4[idx+1:]:
+            paths = list(nx.all_simple_paths(G_cut, node1, node2))
+            if sum([1 for path in paths if len(set(path)) == 4 and metal_index in path ])>0:
+                pairs_1_4.append([node1, node2])
+
+    for pair in pairs_1_4:
+        atom1 = topol_new.atoms[pair[0]]
+        atom4 = topol_new.atoms[pair[1]]
+        if (atom1.idx, atom4.idx) not in orginal_pairs or (atom4.idx, atom1.idx) not in orginal_pairs:
+            type_to_assign = pmd.topologyobjects.NonbondedExceptionType(atom1.rmin + atom4.rmin,
+                                                                        0.5 * (atom1.epsilon + atom4.epsilon))
+            topol_new.adjust_types.append(type_to_assign)
+            topol_new.adjusts.append(pmd.topologyobjects.NonbondedException(atom1, atom4))
+    return topol_new
+
+
+
+
 def copy_bonds(topol_new, bonds, metal_name):
     '''
     Copies bonds into topology
@@ -587,6 +641,12 @@ def copy_impropers(topol_new, dihedrals, metal_name):
 
 
 def copy_pair_exclusions(topol_new, pairs):
+    '''
+    Copy pairs exclusions to the topology
+    :param topol_new: (parmed topology) contains topology of the site
+    :param pairs: (list) list of pairs of atoms for pair exclusion
+    :return: (parmed topology) modified topology
+    '''
     orginal_pairs = []
     for pair in topol_new.adjusts:
         orginal_pairs.append((pair.atom1.idx, pair.atom2.idx))
@@ -602,7 +662,13 @@ def copy_pair_exclusions(topol_new, pairs):
     return topol_new
 
 
+
 def update_pairs(topol):
+    '''
+    Removes the exclusion pairs which are 2 bonds away
+    :param topol: (parmed topology)
+    :return: (parmed topology) modified topology
+    '''
     new_pairs = []
     angles = [[angle.atom1.idx, angle.atom2.idx, angle.atom3.idx] for angle in topol.angles]
     for pair in topol.adjusts:
@@ -612,6 +678,7 @@ def update_pairs(topol):
                 found = True
                 break
 
+        # If the atoms belonging to pair are not part of angles then save this
         if found == False:
             new_pairs.append(pair)
 

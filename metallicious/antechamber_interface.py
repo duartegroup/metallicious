@@ -130,8 +130,8 @@ def neutralize_charge(file_name, output, charge=0):
         fract_rest = sum_of_charge - number_of_atoms * np.round(fract, 6)
         every_nth = int(number_of_atoms / (np.abs(fract_rest) / 0.000001))
         qtot = 0.0
-        logger.info("   [ ] Rounding up charges to make molecule neutral, every atom gets additional", -fract)
-        logger.info("       ,every atom will be assigned 0.000001 each ", fract_rest)
+        logger.info(f"   [ ] Rounding up charges to make molecule neutral, every atom gets additional {-fract:}")
+        logger.info(f"       ,every atom will be assigned 0.000001 each {fract_rest:}")
         atom_nr = 0
         for line in moleculetype.splitlines():
             # print(np.round(fract + 0.000001*np.random.random(),6)) #
@@ -181,12 +181,6 @@ def smiles_to_mol(smiles, outfile='rdkit.pdb'):
 
     mol = Chem.MolFromSmiles(smiles)
     mol = Chem.AddHs(mol)
-
-    # This might be a way, but maybe someting more general:
-    # if mol.GetNumHeavyAtoms() < 100: # if there is a lot of heavy atoms it does not work. For now I put 100, but it is arbitraty for now
-    #    AllChem.EmbedMolecule(mol)
-    # else:
-    #    AllChem.EmbedMolecule(mol, useRandomCoords=True)
 
     embeded = AllChem.EmbedMolecule(mol)
     if embeded == -1:  # if does not work use just random coords
