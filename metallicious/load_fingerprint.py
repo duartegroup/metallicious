@@ -13,7 +13,7 @@ from metallicious.log import logger
 from metallicious.mapping import map_two_structures
 from metallicious.utils import strip_numbers_from_atom_names
 from metallicious.seminario import extend_angle_to_dihedral
-
+from metallicious.extract_metal_site import find_closest_and_add_rings
 # except:
 #     from extract_metal_site import find_bound_ligands_nx
 #     from log import logger
@@ -46,10 +46,8 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None, ignor
         bonds = [(bond.atom1.idx, bond.atom2.idx) for bond in topol.bonds]
         G = nx.Graph(bonds)
 
-        metal_topology = topol.atoms[0]  # As it is now, the topologies are save with first atom as metal
         if fp_style == 'dihedral' or fp_style == 'dih':
             atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=3).nodes)
-
 
         elif fp_style == 'angle' or fp_style == 'ang':
             atoms_bound_to_metal_by_bonded = list(nx.generators.ego_graph(G, 0, radius=2).nodes)
@@ -96,7 +94,7 @@ def load_fp_from_file(filename_fp_coord, filename_fp_topol, fp_style=None, ignor
 
 #TODO find everywehere wehere are hardcoded values and make them somehow softcoaded
 
-def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False, covalent_cutoff=3.0):
+def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=9, guessing=False, covalent_cutoff=3.0, donors=None):
     cage = MDAnalysis.Universe(cage_filename)
 
 
@@ -110,10 +108,10 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     metal_type = syst_fingerprint.atoms[0].type
     bonds_with_metal = MDAnalysis.topology.guessers.guess_bonds(syst_fingerprint.atoms,
                                                                 syst_fingerprint.atoms.positions,
-                                                                vdwradii={metal_type: 3})
+                                                                vdwradii={metal_type: covalent_cutoff})
+
     G_fingerprint_with_metal = nx.Graph(bonds_with_metal)
     neighbhor_cutoff = nx.eccentricity(G_fingerprint_with_metal, v=0)
-
 
     syst_fingerprint_no_metal = syst_fingerprint.atoms[1:]
 
@@ -131,7 +129,14 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     G_fingerprint_subs = [G_fingerprint.subgraph(a) for a in nx.connected_components(G_fingerprint)]
     logger.info(f"\t\t\t[ ] Mapping fingerprint to metal center: {metal_index:d}")
 
-    G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff, neighbhor_cutoff=neighbhor_cutoff, cutoff_covalent=covalent_cutoff)
+    #TODO TUTAJ1 the problem is with neighbhor_cutoff
+
+
+    G_sub_cages, closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=cutoff, neighbhor_cutoff=neighbhor_cutoff, cutoff_covalent=covalent_cutoff, donors=donors)
+
+
+
+    #-------------
 
     closest_atoms = np.concatenate(closest_atoms)
     number_ligands_bound = len(G_sub_cages)
@@ -139,6 +144,7 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
     if len(G_sub_cages) != len(G_fingerprint_subs) and guessing:
         logger.info(f"\t\t\t[!] Not the same number of sites {guessing:}, structure: {number_ligands_bound:d} vs. fingerprint {len(G_fingerprint_subs):d}")
         return False
+
     elif len(G_sub_cages) != len(G_fingerprint_subs) and not guessing:
         if len(G_sub_cages)>len(G_fingerprint_subs):
             raise ValueError(
@@ -148,6 +154,8 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
 
     selected_atoms = []
     end_atoms = []
+
+    fingerprint_ids = []
 
     for G_sub_cage in G_sub_cages:
         largest_common_subgraph = []
@@ -221,10 +229,8 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                         if len(largest_common_subgraph_iter) > len(largest_common_subgraph):
                             largest_common_subgraph = largest_common_subgraph_iter
                             finerprint_idx = G_idx
-                            # logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
+                            logger.info(f"Found pattern which has all donor atoms {largest_common_subgraph:}")
                             break
-
-
         # else:
         #    print("Mismatch by size")
         # else:
@@ -237,6 +243,9 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
                     return False
                 else:
                     assert trial < len(G_fingerprint_sub)
+
+        else:
+            fingerprint_ids.append(finerprint_idx)
 
         if guessing:  # if we want to guess site, that might be not fulfilled, and that means it is not the correct site
             if len(largest_common_subgraph) == 0:
@@ -268,9 +277,9 @@ def reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cut
 
 
 def find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index, metal_name, syst_fingerprint,
-                                                              cutoff=9, guessing=False, covalent_cutoff=3.0):
+                                                              cutoff=9, guessing=False, covalent_cutoff=3.0, donors=None):
 
-    connected_cut_system = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing, covalent_cutoff=covalent_cutoff)
+    connected_cut_system = reduce_site_to_fingerprint(cage_filename, metal_index, syst_fingerprint, cutoff=cutoff, guessing=guessing, covalent_cutoff=covalent_cutoff, donors=donors)
 
     if connected_cut_system:  # the results are legit, we take them as input
         best_mapping, best_rmsd = map_two_structures(metal_index, connected_cut_system, syst_fingerprint,
@@ -326,7 +335,7 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
 
 def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=None, fingerprint_guess_list=None,
                       m_m_cutoff=10, vdw_type=None, library_path=f"{os.path.dirname(__file__):s}/library",
-                      search_library=True, additional_fp_files=None, fp_style=None, rmsd_cutoff=2):
+                      search_library=True, additional_fp_files=None, fp_style=None, rmsd_cutoff=2, donors=None):
     '''
     Tries to guess the fingerprint but itereting through the library and find lowest rmsd.
     :return:
@@ -362,7 +371,7 @@ def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=
 
         _, rmsd = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_filename, metal_index, metal_name,
                                                                             syst_fingerprint, guessing=True,
-                                                                            cutoff=cutoff)
+                                                                            cutoff=cutoff, donors=donors)
 
         if rmsd < rmsd_best:
             rmsd_best = rmsd

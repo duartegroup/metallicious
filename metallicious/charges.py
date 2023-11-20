@@ -117,10 +117,12 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
     # Becasue how autode works, it will try to load the files, but becasue we modified how autode is executed here
     # t might load incorrect grid
     # we need to remove folder with previous calculations if they exist:
+
     if os.path.isdir("resp"):
         shutil.rmtree("resp")
     new_directory("resp")
     os.chdir("resp")
+
 
     if opt:
         ade.wrappers.ORCA.ORCA.execute = old_execute

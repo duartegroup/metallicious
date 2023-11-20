@@ -1,3 +1,5 @@
+import shutil
+
 from metallicious.parametrize_new_sites import supramolecular_structure
 import os
 
@@ -7,65 +9,66 @@ uff_folders = ['Ga_cage', 'Ru_Pd_cage' ]
 metal_charges_dic = {'Pd_Lusby':2,'Co_cage':2, 'Co_mof':2,  'Fe_cage':2,  'Fe_knot':2,   'Ga_cage':3,
                      'Pd_fujita':2, 'Pd_o':2, 'Ru_Pd_cage':2,   'Zn_knot':2,  'Zn_mof':2,  'Zn_protein':2}
 
-folder_name = 'Pd_Lusby'
-basis_folder = '10'
-'''
-os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
 
-name = f"site_{folder_name[:2].title():}0"
-metal_name = folder_name[:2].title()
+# #for basis_folder in ['10', 'TZVPP', 'wb97']:
+#     for idx, _ in list(enumerate(folder_names)):
+#         if not (basis_folder=='TZVPP' and folder_names[idx]=='Ru_Pd_cage'):
+#             folder_name = folder_names[idx]
+#             #os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
+#             os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
+#
+#             name = f"site_{folder_name[:2].title():}0"
+#             metal_name = folder_name[:2].title()
+#
+#             library_name = 'merz-opc'
+#             if folder_name in uff_folders:
+#                 library_name = 'uff'
+#
+#             cage = supramolecular_structure(f'{name:}/bonded/saturated_template_optimised.xyz',
+#                                             metal_charges={metal_name: metal_charges_dic[folder_name]},
+#                                             vdw_type = library_name, search_library=False)
+#
+#             cage.prepare_initial_topology()
+#             cage.extract_unique_metal_sites()
+#             cage.sites[0].fp_coord_file = f'{name:}/template.pdb'
+#             cage.sites[0].fp_topol_file = f'{name:}/template.top'
+#             cage.sites[0].load_fingerprint()
+#             cage.sites[0].set_cutoff()
+#             cage.unique_sites = []
+#             cage.parametrize(out_coord='saturated_template.pdb', out_topol='saturated_template.top')
+#
+#
+# for basis_folder in ['zhang', 'uff']:
+#     for idx, _ in list(enumerate(folder_names)):
+#         if not (("Pd" in basis_folder or "Ga" in basis_folder) and basis_folder=='zhang'):
+#             folder_name = folder_names[idx]
+#             #os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
+#             os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10_{basis_folder:}/{folder_name}/")
+#
+#             name = f"site_{folder_name[:2].title():}0"
+#             metal_name = folder_name[:2].title()
+#
+#             library_name = 'merz-opc'
+#             if folder_name in uff_folders:
+#                 library_name = 'uff'
+#
+#             cage = supramolecular_structure(f'{name:}/bonded/saturated_template_optimised.xyz',
+#                                             metal_charges={metal_name: metal_charges_dic[folder_name]},
+#                                             vdw_type = library_name, search_library=False)
+#
+#             cage.prepare_initial_topology()
+#             cage.extract_unique_metal_sites()
+#             cage.sites[0].fp_coord_file = f'{name:}/template.pdb'
+#             cage.sites[0].fp_topol_file = f'{name:}/template.top'
+#             cage.sites[0].load_fingerprint()
+#             cage.sites[0].set_cutoff()
+#             cage.unique_sites = []
+#             cage.parametrize(out_coord='saturated_template.pdb', out_topol='saturated_template.top')
+#
+# basis_folder = '10'
+#
+# folder_names = ['Zn_protein']
 
-library_name = 'merz-opc'
-if folder_name in uff_folders:
-    library_name = 'uff'
-
-cage = supramolecular_structure(f'{name:}/saturated_template.xyz',
-                                metal_charges={metal_name: metal_charges_dic[folder_name]},
-                                vdw_type=library_name, search_library=False)
-
-cage.prepare_initial_topology()
-cage.extract_unique_metal_sites()
-cage.sites[0].fp_coord_file = f'{name:}/template.pdb'
-cage.sites[0].fp_topol_file = f'{name:}/template.top'
-cage.sites[0].load_fingerprint()
-cage.sites[0].set_cutoff()
-cage.unique_sites = []
-cage.parametrize(out_coord='saturated_template.pdb', out_topol='saturated_template.top')
-
-#for basis_folder in ['10', 'TZVPP', 'wb97']:
-
-
-
-    for idx, _ in list(enumerate(folder_names)):
-        if not (basis_folder=='TZVPP' and folder_names[idx]=='Ru_Pd_cage'):
-            folder_name = folder_names[idx]
-            #os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
-            os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
-
-            name = f"site_{folder_name[:2].title():}0"
-            metal_name = folder_name[:2].title()
-
-            library_name = 'merz-opc'
-            if folder_name in uff_folders:
-                library_name = 'uff'
-
-            cage = supramolecular_structure(f'{name:}/bonded/saturated_template_optimised.xyz',
-                                            metal_charges={metal_name: metal_charges_dic[folder_name]},
-                                            vdw_type = library_name, search_library=False)
-
-            cage.prepare_initial_topology()
-            cage.extract_unique_metal_sites()
-            cage.sites[0].fp_coord_file = f'{name:}/template.pdb'
-            cage.sites[0].fp_topol_file = f'{name:}/template.top'
-            cage.sites[0].load_fingerprint()
-            cage.sites[0].set_cutoff()
-            cage.unique_sites = []
-            cage.parametrize(out_coord='saturated_template.pdb', out_topol='saturated_template.top')
-
-basis_folder = '10'
-
-folder_names = ['Zn_protein']
-'''
 
 #
 # #for basis_folder in ['10']:
@@ -162,132 +165,187 @@ uff_folders = ['Ga_cage', 'Ru_Pd_cage' ]
 #
 # #for basis_folder in ['10', 'TZVPP', 'wb97']:
 
-
-folder_names = ['Ga_cage']
-for basis_folder in ['10', 'TZVPP', 'wb97']:
-    for idx, _ in list(enumerate(folder_names)):
-        if not (basis_folder == 'TZVPP' and folder_names[idx] == 'Ru_Pd_cage'):
-            folder_name = folder_names[idx]
-            print(folder_name)
-
-            os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
-
-            name = f"site_{folder_name[:2].title():}0"
-            metal_name = folder_name[:2].title()
-
-            metal_charges = {metal_name: metal_charges_dic[folder_name]}
-            if folder_name == 'Ru_Pd_cage':
-                metal_charges = {'Ru' : 2, 'Pd' : 2}
-
-            library_name = 'merz-opc'
-            if folder_name in uff_folders:
-                library_name = 'uff'
-
-            cage = supramolecular_structure(f'crystal.pdb',
-                                            metal_charges=metal_charges,
-                                            vdw_type = library_name, search_library=False)
-
-            if folder_name == 'Pd_o':
-                cage.prepare_initial_topology(homoleptic_ligand_topol = 'ligand.itp')
-            elif folder_name == 'Ga_cage':
-                cage.prepare_initial_topology(homoleptic_ligand_topol='ligand.top')
-            else:
-                cage.prepare_initial_topology()
-
-            cage.extract_unique_metal_sites()
-            for idx_site in range(len(cage.sites)):
-                cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
-                cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
-                cage.sites[idx_site].load_fingerprint()
-                cage.sites[idx_site].set_cutoff()
-            cage.unique_sites = []
-            cage.parametrize(out_coord='crystal_metallicious.pdb', out_topol='crystal_metallicious.top')
-
-
-#folder_names = ['Co_cage']
-for truncation_scheme_string in ['dihedral', 'angle', 'bond']:
-
-    for idx, folder_name in enumerate(folder_names):
-
-        print('XXXXXX', folder_name, truncation_scheme_string)
-        basis_folder = '10'
-        # os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
-        os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
-
-        name = f"site_{folder_name[:2].title():}0"
-        metal_name = folder_name[:2].title()
-
-        library_name = 'merz-opc'
-        if folder_name in uff_folders:
-            library_name = 'uff'
-
-        metal_charges = {metal_name: metal_charges_dic[folder_name]}
-        if folder_name == 'Ru_Pd_cage':
-            metal_charges = {'Ru' : 2, 'Pd' : 2}
-
-        cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', metal_charges=metal_charges,
-                                        topol='init_topol/noncovalent_complex.top', vdw_type=library_name,
-                                        search_library=False, truncation_scheme=truncation_scheme_string,
-                                        covalent_cutoff=2.5)
-
-        if folder_name!="Co_cage":
-            #cage.prepare_initial_topology()
-            cage.extract_unique_metal_sites()
-            for idx_site in range(len(cage.sites)):
-                cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
-                cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
-                cage.sites[idx_site].load_fingerprint()
-                cage.sites[idx_site].set_cutoff()
-            cage.unique_sites = []
-        else:
-
-            cage.extract_unique_metal_sites()
-            for site in cage.unique_sites:
-                site.fp_coord_file = f"{site.directory:}/template.pdb"
-                site.fp_topol_file = f"{site.directory:}/template.top"
-            cage.assign_fingerprints()
-
-        cage.parametrize(out_coord=f'crystal_metallicious_{truncation_scheme_string:}.pdb',
-                         out_topol=f'crystal_metallicious_{truncation_scheme_string:}.top')
-
-
-
-
-
-
-
-# #for basis_folder in ['10', 'TZVPP', 'wb97']:
-# #basis_folder = 'wb97'
-# #
-# #for truncation_scheme_string in ['dihedral', 'angle', 'bond']:
-# #for truncation_scheme_string in ['bond']:
+#
+# folder_names = ['Co_cage']
+#for basis_folder in ['10', 'TZVPP', 'wb97']:
+#for basis_folder in ['10_zhang', '10_uff']:
+#
+# folder_names = ['Co_cage']
+#
+# for basis_folder in ['10']:
+#     for idx, _ in list(enumerate(folder_names)):
+#         if not (basis_folder == 'TZVPP' and folder_names[idx] == 'Ru_Pd_cage'):
+#             folder_name = folder_names[idx]
+#             print(folder_name)
+#
+#             os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
+#
+#             name = f"site_{folder_name[:2].title():}0"
+#             metal_name = folder_name[:2].title()
+#
+#             metal_charges = {metal_name: metal_charges_dic[folder_name]}
+#             if folder_name == 'Ru_Pd_cage':
+#                 metal_charges = {'Ru' : 2, 'Pd' : 2}
+#
+#             library_name = 'merz-opc'
+#             if folder_name in uff_folders:
+#                 library_name = 'uff'
+#
+#             #shutil.copyfile(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/{folder_name:}/crystal.pdb", "crystal.pdb")
+#
+#             cage = supramolecular_structure(f'crystal.pdb',
+#                                             metal_charges=metal_charges,
+#                                             vdw_type = library_name, search_library=False)
 #
 #
 #
+#             if folder_name == 'Pd_o':
+#                 # shutil.copyfile(
+#                 #     f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/{folder_name:}/ligand.itp",
+#                 #     "ligand.itp")
+#                 cage.prepare_initial_topology(homoleptic_ligand_topol = 'ligand.itp')
+#             elif folder_name == 'Ga_cage':
+#                 # shutil.copyfile(
+#                 #     f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/{folder_name:}/ligand.top",
+#                 #     "ligand.top")
+#                 cage.prepare_initial_topology(homoleptic_ligand_topol='ligand.top')
+#             else:
+#                 cage.prepare_initial_topology()
+#
+#             cage.extract_unique_metal_sites()
+#
+#             for idx_site in range(len(cage.sites)):
+#                 cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
+#                 cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
+#                 cage.sites[idx_site].load_fingerprint()
+#                 cage.sites[idx_site].set_cutoff()
+#             cage.unique_sites = []
+#             cage.parametrize(out_coord='crystal_metallicious.pdb', out_topol='crystal_metallicious.top')
+#
 # #
-# # for basis_folder in ['10']:
-# #     for idx, _ in list(enumerate(folder_names)):
-# #
-# #         folder_name = folder_names[idx]
-# #         print(folder_name)
-# #         #os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
-# #         os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}_torsion/{folder_name}/")
-# #
-# #         name = f"site_{folder_name[:2].title():}0"
-# #         metal_name = folder_name[:2].title()
-# #
-# #         library_name = 'merz-opc'
-# #         if folder_name in uff_folders:
-# #             library_name = 'uff'
-# #
-# #         metal_charges = {metal_name: metal_charges_dic[folder_name]}
-# #         if folder_name == 'Ru_Pd_cage':
-# #             metal_charges = {'Ru' : 2, 'Pd' : 2}
-# #
-# #         cage = supramolecular_structure(f'crystal.pdb',
-# #                                         metal_charges=metal_charges,
-#                                         vdw_type = library_name, search_library=False)
-#         cage.prepare_initial_topology()
+# #folder_names = ['Co_cage']
+# for truncation_scheme_string in ['dihedral', 'angle', 'bond']:
+#
+#     for idx, folder_name in enumerate(folder_names):
+#
+#         print('XXXXXX', folder_name, truncation_scheme_string)
+#         basis_folder = '10'
+#         # os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
+#         os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
+#
+#         name = f"site_{folder_name[:2].title():}0"
+#         metal_name = folder_name[:2].title()
+#
+#         library_name = 'merz-opc'
+#         if folder_name in uff_folders:
+#             library_name = 'uff'
+#
+#         metal_charges = {metal_name: metal_charges_dic[folder_name]}
+#         if folder_name == 'Ru_Pd_cage':
+#             metal_charges = {'Ru' : 2, 'Pd' : 2}
+#
+#         cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', metal_charges=metal_charges,
+#                                         topol='init_topol/noncovalent_complex.top', vdw_type=library_name,
+#                                         search_library=False, truncation_scheme=truncation_scheme_string,
+#                                         covalent_cutoff=2.5)
+#
+#         if folder_name!="Co_cage":
+#             #cage.prepare_initial_topology()
+#             cage.extract_unique_metal_sites()
+#             for idx_site in range(len(cage.sites)):
+#                 cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
+#                 cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
+#                 cage.sites[idx_site].load_fingerprint()
+#                 cage.sites[idx_site].set_cutoff()
+#             cage.unique_sites = []
+#         else:
+#
+#             cage.extract_unique_metal_sites()
+#             for site in cage.unique_sites:
+#                 site.fp_coord_file = f"{site.directory:}/template.pdb"
+#                 site.fp_topol_file = f"{site.directory:}/template.top"
+#             cage.assign_fingerprints()
+#
+#         cage.parametrize(out_coord=f'crystal_metallicious_{truncation_scheme_string:}.pdb',
+#                          out_topol=f'crystal_metallicious_{truncation_scheme_string:}.top')
+#
+
+folder_names = ['Co_cage']
+
+for idx, folder_name in enumerate(folder_names):
+
+    #print('XXXXXX', folder_name, truncation_scheme_string)
+    basis_folder = '10_uff'
+    # os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_TZVPP/{folder_name}/")
+    os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}/{folder_name}/")
+
+    name = f"site_{folder_name[:2].title():}0"
+    metal_name = folder_name[:2].title()
+
+    library_name = 'merz-opc'
+    if folder_name in uff_folders:
+        library_name = 'uff'
+
+    metal_charges = {metal_name: metal_charges_dic[folder_name]}
+    if folder_name == 'Ru_Pd_cage':
+        metal_charges = {'Ru' : 2, 'Pd' : 2}
+
+    cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', metal_charges=metal_charges,
+                                    topol='init_topol/noncovalent_complex.top', vdw_type=library_name,
+                                    search_library=False, truncation_scheme=None,
+                                    covalent_cutoff=2.5)
+
+    if folder_name!="Co_cage":
+        #cage.prepare_initial_topology()
+        cage.extract_unique_metal_sites()
+        for idx_site in range(len(cage.sites)):
+            cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
+            cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
+            cage.sites[idx_site].load_fingerprint()
+            cage.sites[idx_site].set_cutoff()
+        cage.unique_sites = []
+    else:
+        cage.extract_unique_metal_sites()
+        for site in cage.unique_sites:
+            site.fp_coord_file = f"{site.directory:}/template.pdb"
+            site.fp_topol_file = f"{site.directory:}/template.top"
+        cage.assign_fingerprints()
+
+    cage.parametrize(out_coord=f'crystal_metallicious.pdb',
+                     out_topol=f'crystal_metallicious.top')
+
+
+
+
+#for basis_folder in ['10', 'TZVPP', 'wb97']:
+#basis_folder = 'wb97'
+#
+#for truncation_scheme_string in ['dihedral', 'angle', 'bond']:
+#for truncation_scheme_string in ['bond']:
+# folder_names= ['Ru_Pd_cage']
+#
+# for basis_folder in ['10']:
+#     for idx, _ in list(enumerate(folder_names)):
+#         folder_name = folder_names[idx]
+#         print(folder_name)
+#
+#         os.chdir(f"/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_{basis_folder:}_torsion/{folder_name}/")
+#
+#         name = f"site_{folder_name[:2].title():}0"
+#         metal_name = folder_name[:2].title()
+#
+#         library_name = 'merz-opc'
+#         if folder_name in uff_folders:
+#             library_name = 'uff'
+#
+#         metal_charges = {metal_name: metal_charges_dic[folder_name]}
+#         if folder_name == 'Ru_Pd_cage':
+#             metal_charges = {'Ru' : 2, 'Pd' : 2}
+#
+#         cage = supramolecular_structure(f'crystal.pdb',
+#                                         metal_charges=metal_charges, vdw_type = library_name, search_library=False)
+#
+#         cage.prepare_initial_topology(homoleptic_ligand_topol='linker0.top')
 #
 #         if folder_name!="Co_cage":
 #             cage.extract_unique_metal_sites()
@@ -309,11 +367,16 @@ for truncation_scheme_string in ['dihedral', 'angle', 'bond']:
 #                          out_topol='crystal_metallicious_impropers.top')
 #
 #
-#
-#         cage = supramolecular_structure(f'crystal.pdb',
-#                                         metal_charges=metal_charges,
+#         cage = supramolecular_structure(f'crystal.pdb', metal_charges=metal_charges,
 #                                         vdw_type = library_name, search_library=False)
-#         cage.prepare_initial_topology()
+#         cage.prepare_initial_topology(homoleptic_ligand_topol='linker0.top')
+#
+#         #cage.prepare_initial_topology()
+#
+#         #cage = supramolecular_structure(f'crystal.pdb',
+#         #                                metal_charges=metal_charges,
+#         #                                vdw_type = library_name, search_library=False)
+#         #cage.prepare_initial_topology()
 #
 #         if folder_name!="Co_cage":
 #             cage.extract_unique_metal_sites()

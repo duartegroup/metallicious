@@ -32,7 +32,7 @@ def find_metal_indices(cage, metal_name):
     
     return metal_indices, n_metals
 
-def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, closest_neighbhors = 3, neighbhor_cutoff=None):
+def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, closest_neighbhors = 3, neighbhor_cutoff=None, donors=None):
     '''
     Finds bound ligands to metal, assumes that atoms within cutoff_covalent (default 3) are bound to metal.
     Returns list of sub-graphs of bound ligands; it does not cut ligands (so they can be uneven)
@@ -68,8 +68,8 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
         closest_atoms = []  # closest atoms, we assume that they are donors of electrons
         clusters_of_atoms = cage.atoms[list(G_sub_cage)]
 
-
         all_metal_cluster_distances = distance_array(clusters_of_atoms.positions, metal.position, box=cage.dimensions)
+
         if np.min(all_metal_cluster_distances) < cutoff_covalent:
             G_sub_cages_bound.append(G_sub_cage)
             G_indices = list(G_sub_cage.nodes)
@@ -83,7 +83,6 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
 
             for order in ordered[1:]:
                 if all_metal_cluster_distances.T[0][order] < cutoff_covalent: #order has to be change to real number!
-
                     append = True
                     for temp_atom in close_atoms:
                         if nx.shortest_path_length(G_sub_cage, G_indices[temp_atom], G_indices[order]) < closest_neighbhors:
@@ -94,8 +93,19 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
             #temp_atom = clusters_of_atoms.atoms[np.argmin(all_metal_cluster_distances)]
             for atom in close_atoms:
                 temp_atom = clusters_of_atoms.atoms[atom]
-                closest_atoms_string+=f" {temp_atom.name:s} {temp_atom.index:d}: {all_metal_cluster_distances[atom][0]:f} A"
-                closest_atoms.append(temp_atom.index)
+                add = False
+                if donors is not None:
+                    if not hasattr(temp_atom, 'type'):
+                        add = True # we need to take a guess that this atom is a donor...
+                    elif temp_atom.type in donors:
+                        add= True
+                else: # we add everything
+                    add = True
+
+                if add:
+                    closest_atoms_string += f" {temp_atom.name:s} {temp_atom.index:d}: {all_metal_cluster_distances[atom][0]:f} A"
+                    closest_atoms.append(temp_atom.index)
+
                 
         
             closest_atoms_ligands.append(closest_atoms)
@@ -149,7 +159,7 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
                 neighbour_indices += list(nx.generators.ego_graph(selected_bound_ligand, closest_atom, radius=2).nodes)
                 direct_neighbour_indices += list(
                     nx.generators.ego_graph(selected_bound_ligand, closest_atom, radius=1).nodes)
-
+        # TODO TUTAJ2
         cut_sphere = cage[[metal_index] + neighbour_indices]
         cut_sphere_direct = cage[[metal_index] + direct_neighbour_indices]
 
@@ -196,7 +206,7 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
         close_atoms_and_in_rings = list(set(atoms_within_cutoff + rings_with_closest_atom))
 
         # we remove atoms which are alone, not connected to anything
-        # this might be effect that ring was removed, but its hydrogen left behind, as a result, the fragment of the ring is reconstructured, which we don't want
+        # this might be affect that ring was removed, but its hydrogen left behind, as a result, the fragment of the ring is reconstructured, which we don't want
         Gsub = selected_bound_ligand.subgraph(close_atoms_and_in_rings)
         close_atoms_and_in_rings = list(np.concatenate(
             [list(Gsub_connect) for Gsub_connect in nx.connected_components(Gsub) if len(Gsub_connect) > 1]))
@@ -226,7 +236,7 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
     return site_single, site_ligands_single, site_link_atoms_single
 
 
-def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies, covalent_cutoff=3.0):
+def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies, covalent_cutoff=3.0, donors=None):
     '''
     Select closest atoms connected to metal.
 
@@ -270,8 +280,11 @@ def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies, 
         #metal = cage.atoms[metal_index]
         #bound_ligands2, selected_closest_atoms2 = find_bound_whole_ligands(metal, cage, G_sub_ligands)
 
-        bound_ligands, selected_closest_atoms = find_bound_ligands_nx(cage, metal_index,cutoff=None, cutoff_covalent=covalent_cutoff)
-        site_single, _ , site_link_atoms_single = find_closest_and_add_rings(metal_index, cage,bound_ligands, selected_closest_atoms, aromaticity)
+
+
+        bound_ligands, selected_closest_atoms = find_bound_ligands_nx(cage, metal_index,cutoff=None, cutoff_covalent=covalent_cutoff, donors=donors)
+        # TODO possibly here:
+        site_single, _ , site_link_atoms_single = find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closest_atoms, aromaticity)
         site+= site_single
         #site_ligands += site_ligands_single
         site_link_atoms += site_link_atoms_single
@@ -614,7 +627,7 @@ def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_me
     return cage, topol, list(range(len(all_metals_indices)))
 
 
-def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None, covalent_cutoff=3.0):
+def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True, all_metal_names=None, covalent_cutoff=3.0, donors=None):
     '''
     It takes a structure and tries to find structures around metals.
 
@@ -640,7 +653,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output=None, c
     G_all_ligands = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(all_ligands_atoms.atoms, all_ligands_atoms.atoms.positions, box=all_ligands_atoms.dimensions))
     nx.set_node_attributes(G_all_ligands, {atom.index: atom.name[0] for atom in all_ligands_atoms.atoms}, "name")
 
-    binding_sites_graphs, site_link_atoms = find_closest_and_add_rings_iterate(metal_indices, cage, all_metals_indices, covalent_cutoff)
+    binding_sites_graphs, site_link_atoms = find_closest_and_add_rings_iterate(metal_indices, cage, all_metals_indices, covalent_cutoff, donors=donors)
 
     if check_uniquness:
         unique_sites, unique_site_link_atoms = check_uniqueness(binding_sites_graphs, site_link_atoms,  cage, metal_name)

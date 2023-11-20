@@ -8,12 +8,11 @@ from networkx.algorithms import isomorphism
 import parmed as pmd
 from copy import deepcopy
 
-from metallicious.antechamber_interface import antechamber
+from metallicious.antechamber_interface import antechamber, check_antechamber_if_available
 from metallicious.extract_metal_site import find_metal_indices
 from metallicious.initial_site import create_metal_topol
 from metallicious.mapping import unwrap
 from metallicious.log import logger
-
 
 
 def mapping_itp_coords(syst, ligand_file):
@@ -38,6 +37,11 @@ def mapping_itp_coords(syst, ligand_file):
         return True, topol, ordered, G_top
 
 def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, output_top, metal_vdw, ligand_topol=None):
+    if check_antechamber_if_available()== False:
+        return ImportError("Not antechamber detected (preparation of initial topology is done by antechamber)")
+
+
+
     crystal = MDAnalysis.Universe(filename)
     crystal.residues.resids = 0 # Antechamber requires one residue
 

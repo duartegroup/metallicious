@@ -7,6 +7,19 @@ from metallicious.mod_seminario import modified_seminario_method
 from metallicious.improper_torsion import find_impropers_and_values
 
 
+def check_if_orca_available():
+    try:
+        import autode as ade
+    except:
+        raise ImportError("No autode found")
+
+    method = ade.methods.ORCA()
+
+    if method.is_available is False:
+        raise NameError("For parametrization of templates, QM software ORCA is required")
+
+
+
 def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
     '''
     Removes bonds which are not connected to donors (by default N, O, S). This is to remove bonds such as Metal-C or Metal-H

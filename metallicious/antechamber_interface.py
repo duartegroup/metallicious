@@ -3,6 +3,7 @@ import parmed as pmd
 from tempfile import mkdtemp
 import os
 import shutil
+
 from subprocess import Popen, DEVNULL
 import MDAnalysis
 
@@ -17,7 +18,24 @@ from metallicious.log import logger
 import rdkit
 import numpy as np
 
-def antechamber(pdbfile,output, charge=None, verbose=False):
+def check_antechamber_if_available():
+    '''
+    Checks if antechamber (ambertools) is installed)
+    :return:
+    '''
+    return shutil.which('antechamber') is not None
+
+
+def antechamber(pdbfile,output, charge=None):
+    '''
+    Simple antechamber interface.  It runs with GAFF2. Sometimes it gives charge which is not equal to formal charge:
+    we simply subtract the diffrence over all atoms
+
+    :param pdbfile: (string) pdb file
+    :param output:  (string) top output file
+    :param charge: (int) formal charge of a molecule
+    :return: None
+    '''
 
     def run_external(command, assertion=None):
         with open("output.txt", 'w') as output_file:
@@ -91,6 +109,14 @@ import argparse
 
 
 def neutralize_charge(file_name, output, charge=0):
+    '''
+    Normalizes charge present in *top file to specified charge.
+    It is to prevent antechamber from small diffrences of charge from expected one.
+    :param file_name: (string) input topology file in gromacs format (*top)
+    :param output: (string) output topology file in gromacs format (*top)
+    :param charge: (int) charge
+    :return: None
+    '''
     File = open(file_name, "r")
     text = File.read()
     File.close()
@@ -163,18 +189,13 @@ def neutralize_charge(file_name, output, charge=0):
     File.close()
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", help="pdb file")
-    parser.add_argument("-smi", help="smiles")
-    parser.add_argument("-charge", default=0, help="Topology of the linker ")
-    parser.add_argument("-o", default='topol.top', help="Output coordination file")
-    parser.add_argument("-v", action='store_true', dest='v', help="Be loud")
-    parser.set_defaults(v=False)
-    return parser.parse_args()
-
-
 def smiles_to_mol(smiles, outfile='rdkit.pdb'):
+    '''
+    Converts SMILES string into pdb file
+    :param smiles: (string) SMILES string
+    :param outfile: (string) output PDB file
+    :return:
+    '''
 
     from rdkit import Chem
     from rdkit.Chem import AllChem
@@ -189,8 +210,16 @@ def smiles_to_mol(smiles, outfile='rdkit.pdb'):
     Chem.rdForceFieldHelpers.MMFFOptimizeMolecule(mol)
     Chem.MolToPDBFile(mol, outfile)
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", help="pdb file")
+    parser.add_argument("-smi", help="smiles")
+    parser.add_argument("-charge", default=0, help="Topology of the linker ")
+    parser.add_argument("-o", default='topol.top', help="Output coordination file")
+    parser.add_argument("-v", action='store_true', dest='v', help="Be loud")
+    parser.set_defaults(v=False)
+    return parser.parse_args()
 
-# MAKE it less louder
 if __name__ == '__main__':
     args = get_args()
     if args.f is not None:
@@ -198,6 +227,5 @@ if __name__ == '__main__':
     elif args.smi is not None:
         smiles_to_mol(args.smi, 'rdkit.pdb')
         antechamber('rdkit.pdb', args.o, args.charge, args.v)
-
     else:
         print("Provide input file")

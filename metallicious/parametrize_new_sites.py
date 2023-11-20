@@ -2,7 +2,7 @@ import argparse
 import shutil
 
 from metallicious.extract_metal_site import extract_metal_structure, find_metal_indices
-from metallicious.seminario import single_seminario
+from metallicious.seminario import single_seminario, check_if_orca_available
 from metallicious.charges import calculate_charges2
 from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, \
     copy_pair_exclusions, update_pairs, add_1_4_metal_pairs
@@ -99,15 +99,13 @@ class supramolecular_structure:
         self.tmpdir_path = '.'  # mkdtemp()
         os.chdir(self.tmpdir_path)
 
-        if self.topol is None:
-            logger.info(f"Please provide topology, or use .prepare_initial_topology()")
 
     def find_metal_sites(self):
         syst = MDAnalysis.Universe(self.filename)
         for name in self.metal_names:
             indices, _ = find_metal_indices(syst, name)
             for index in indices:
-                site = metal_site(name.title(), self.metal_charge_dict[name], index, fp_style=self.truncation_scheme, covalent_cutoff=self.covalent_cutoff)
+                site = metal_site(name.title(), self.metal_charge_dict[name], index, fp_style=self.truncation_scheme, covalent_cutoff=self.covalent_cutoff, donors=self.donors)
                 self.sites.append(site)
 
         self.assign_fingerprints()
@@ -127,7 +125,7 @@ class supramolecular_structure:
                                         fingerprint_guess_list=self.fingerprint_guess_list,
                                         m_m_cutoff=10, vdw_type=self.vdw_type, library_path=self.library_path,
                                         search_library=self.search_library,
-                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme)
+                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme, donors=self.donors)
 
             if guessed is not False:  # do not change to True...
                 site.fp_coord_file = f"{guessed:}.pdb"
@@ -144,7 +142,7 @@ class supramolecular_structure:
         # extract metal sites:
         for metal_name in self.metal_names:
             site_lists = extract_metal_structure(self.filename, self.topol, metal_name, output=f"site_{metal_name:}",
-                                                 all_metal_names=self.metal_names, covalent_cutoff=self.covalent_cutoff)
+                                                 all_metal_names=self.metal_names, covalent_cutoff=self.covalent_cutoff, donors=self.donors)
 
             for site_list in site_lists:
                 site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
@@ -172,7 +170,11 @@ class supramolecular_structure:
         old_filename = self.filename
         new_filename = self.filename[self.filename.rfind('/')+1:]
 
-        shutil.copyfile(old_filename, f'{subdir}/{new_filename}')
+        try:
+            shutil.copyfile(old_filename, f'{subdir}/{new_filename}')
+        except shutil.SameFileError:
+            pass
+
         if homoleptic_ligand_topol is not None:
             shutil.copyfile(homoleptic_ligand_topol, f'{subdir}/{homoleptic_ligand_topol}')
         os.chdir(subdir)
@@ -191,20 +193,21 @@ class supramolecular_structure:
 
         os.chdir(here)
 
-    def parametrize(self, out_coord='out.pdb', out_topol='out.top'):
+    def parametrize(self, out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=False):
+        if prepare_initial_topology==True:
+            self.prepare_initial_topology()
+
+        if self.topol is None:
+            raise Exception("Topology file not specified, please provide topology, or use prepare_initial_topology=True")
 
         if self.check_if_parameters_available() is False:
             logger.info("[ ] Extracting the structure")
             self.parametrize_metal_sites()
             self.assign_fingerprints()
 
-
-
         logger.info(self.summary())
         logger.info("The templates available!")
 
-        if self.topol is None:
-            raise Exception("topology file not found")
 
         # check if topol and coord have the same names of atoms TODO
 
@@ -221,10 +224,16 @@ class supramolecular_structure:
         if len(self.unique_sites) == 0:
             self.extract_unique_metal_sites()
 
+        if len(self.unique_sites)>0 and self.allow_new_templates is True:
+            check_if_orca_available()
+
         for site in self.unique_sites:
             #if site.check_library() is False:
             if site.fp_topol_file is None:
                 if self.allow_new_templates is True:
+                    # TODO check if ORCA psiresp and others available
+
+
                     site.parametrize()
                     self.add_site_to_library(site)
                 else:
@@ -261,7 +270,7 @@ class supramolecular_structure:
 
 
 class metal_site():
-    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None, covalent_cutoff=3.0):
+    def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None, covalent_cutoff=3.0, donors = None):
         self.metal_name = metal_name
         self.metal_charge = metal_charge
         self.index = index
@@ -270,6 +279,7 @@ class metal_site():
         self.fp_style = fp_style
         self.covalent_cutoff= covalent_cutoff
         self.ignore_truncation_warning = True
+        self.donors = donors
 
     def _print(self):
         if self.fp_coord_file is not None:

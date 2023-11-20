@@ -52,8 +52,8 @@ class patcher():
         if output_coords.endswith('.gro'):
             shutil.copy(f'{self.cage_coord:s}', f'{output_coords:s}')
         else:
-            coord = pmd.load_file(f'{tmpdir_path:s}/{self.cage_coord:s}')
-            coord.save(f'{output_coords:s}', overwrite=True)
+            syst = MDAnalysis.Universe(f'{tmpdir_path:s}/{self.cage_coord:s}')
+            syst.atoms.write(f'{output_coords:s}')
 
         self.topol_new.write(f"temp_topol.top")
 
@@ -87,8 +87,7 @@ class patcher():
 
 
         for site in sites:
-
-            mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_coord, site.index, site.metal_name, site.fp_syst, cutoff=site.ligand_cutoff, covalent_cutoff=site.covalent_cutoff)
+            mapping_fp_to_new, _ = find_mapping_of_fingerprint_on_metal_and_its_surroundings(cage_coord, site.index, site.metal_name, site.fp_syst, cutoff=site.ligand_cutoff, covalent_cutoff=site.covalent_cutoff, donors=site.donors)
 
             self.topol_new = adjust_charge(self.topol_new, site.fp_topol, mapping_fp_to_new)
 
