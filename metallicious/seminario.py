@@ -233,8 +233,11 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     opt_filename = f"{site.name:s}_optimised.xyz"
     site.print_xyz_file(filename=opt_filename)
 
+    # we use .to(ade.units.J_per_ang_sq) twice due to changes from autode 1.3.2 to 1.4.0
+    # this is for compability with autode 1.3.2
     site.hessian.to(ade.units.J_per_ang_sq)
-    hessian = np.array(site.hessian)
+    # and here it is for compability with autod 1.4.0
+    hessian = np.array(site.hessian.to(ade.units.J_per_ang_sq))
     hessian *= 6.022e23/4.184e3 # we convert tto kcal/mol/angs^2
 
     bond_list = list(site.graph.edges)

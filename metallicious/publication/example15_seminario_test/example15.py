@@ -332,25 +332,32 @@ cage.parametrize()
 #protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)},topol="topol.top", vdw_type="uff", search_library=False)
 # #protein.parametrize(out_coord="test.gro", out_topol="test.top")
 
-os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/trim24_apo")
-from metallicious import supramolecular_structure
-protein = supramolecular_structure("complex_trim24.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff")
-protein.extract_unique_metal_sites()
-
-protein.sites[0].fp_coord_file = 'site_Zn0/template.pdb'
-protein.sites[0].fp_topol_file = 'site_Zn0/template.top'
-protein.sites[0].load_fingerprint()
-protein.sites[0].set_cutoff()
-protein.sites[1].fp_coord_file = 'site_Zn1/template.pdb'
-protein.sites[1].fp_topol_file = 'site_Zn1/template.top'
-protein.sites[1].load_fingerprint()
-protein.sites[1].set_cutoff()
-
-protein.assign_fingerprints()
+# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/trim24_apo")
+# from metallicious import supramolecular_structure
+# protein = supramolecular_structure("complex_trim24.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff")
+# protein.extract_unique_metal_sites()
+#
+# protein.sites[0].fp_coord_file = 'site_Zn0/template.pdb'
+# protein.sites[0].fp_topol_file = 'site_Zn0/template.top'
+# protein.sites[0].load_fingerprint()
+# protein.sites[0].set_cutoff()
+# protein.sites[1].fp_coord_file = 'site_Zn1/template.pdb'
+# protein.sites[1].fp_topol_file = 'site_Zn1/template.top'
+# protein.sites[1].load_fingerprint()
+# protein.sites[1].set_cutoff()
+#
+# protein.assign_fingerprints()
 
 
 #cage.sites[idx_site].fp_coord_file = f'site_{cage.sites[idx_site].metal_name:}0/template.pdb'
 #cage.sites[idx_site].fp_topol_file = f'site_{cage.sites[idx_site].metal_name:}0/template.top'
 
-protein.parametrize(out_coord="trim24_out.pdb", out_topol="out.top")
+# protein.parametrize(out_coord="trim24_out.pdb", out_topol="out.top")
+
+#---------------
+
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/zn_test_2c")
+from metallicious import supramolecular_structure
+protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff", search_library=False)
+protein.parametrize(out_coord="zn_protein_out.pdb", out_topol="out.top")
 
