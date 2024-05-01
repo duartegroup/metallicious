@@ -3,7 +3,6 @@ import os
 import MDAnalysis
 import parmed as pmd
 import shutil
-from tempfile import mkdtemp
 from metallicious.log import logger
 from metallicious.load_fingerprint import find_mapping_of_fingerprint_on_metal_and_its_surroundings
 from metallicious.copy_topology_params import adjust_bonds, adjust_dihedrals, adjust_angles, adjust_impropers,\
@@ -14,46 +13,44 @@ warnings.filterwarnings('ignore')
 
 class patcher():
     '''
-
-
+    Main procedure copies the parameters from template into inputted force-field parameters
     '''
-    path = None
-    tmpdir_path = None
-    cage = None
-    topol_new = None # this is our new topology
 
-    output_topol = "cage.top"
-    output_coords = "cage.gro"
+    # path = None #TODO 2024/4/11 reduntant? I coppied it into __init__
+    # tmpdir_path = None
+    # cage = None
+    # topol_new = None # this is our new topology
+    #
+    # output_topol = "cage.top"
+    # output_coords = "cage.gro"
 
-    def __init__(self, output_topol=None, output_coords=None):
-        None
-        ''' This is redundant TODO (1/11/23)
-        logger.info(f"Pathway of the library {os.path.dirname(__file__):s}")
+    def __init__(self):
+        self.path = None
+        self.tmpdir_path = None
+        self.cage = None
+        self.topol_new = None  # this is our new topology
 
-        if output_topol is not None:
-            self.output_topol = output_topol
+        self.output_topol = "cage.top"
+        self.output_coords = "cage.gro"
 
-        if output_coords is not None:
-            self.output_coords = output_coords
-
-        self.tmp_directory()
-        
-        logger.info('Current directory:' )
-        logger.info(f'Created temporary directory: {self.tmpdir_path:s}')
-        
-    def tmp_directory(self):
-        self.path = os.getcwd()
-        self.tmpdir_path = mkdtemp()
-        
-    def close(self):
-        shutil.rmtree(self.tmpdir_path)
-        '''
     def save(self, output_coords, output_topol, tmpdir_path):
+        '''
+        Saves the new force-field parameters and (reordered) coordination file
+
+        :param output_coords: (str) filename of output coordination file
+        :param output_topol: (str) filename of output force-field file
+        :param tmpdir_path: (str) temporary directory where the new created topology is
+        :return:
+        '''
         if output_coords.endswith('.gro'):
             shutil.copy(f'{self.cage_coord:s}', f'{output_coords:s}')
         else:
-            syst = MDAnalysis.Universe(f'{tmpdir_path:s}/{self.cage_coord:s}')
-            syst.atoms.write(f'{output_coords:s}')
+            if self.cage_coord.endswith('.xyz'): # ParmED seems not to work with xyz files
+                syst = MDAnalysis.Universe(f'{tmpdir_path:s}/{self.cage_coord:s}')
+                syst.atoms.write(f'{output_coords:s}')
+            else:
+                topol = pmd.load_file(f'{tmpdir_path:s}/{self.cage_coord:s}')
+                topol.save(f'{output_coords:s}', overwrite = True)
 
         self.topol_new.write(f"temp_topol.top")
 
@@ -65,8 +62,6 @@ class patcher():
 
         os.remove(f"temp_topol.top")
 
-
-
     def copy_site_topology_to_supramolecular(self, sites, cage_coord=None, cage_topol=None):
         '''
         The main function, which copies all the bonded paramters to the cage
@@ -75,9 +70,9 @@ class patcher():
         2) Loads the fingerprint (it tries to make guess if now sure)
         3) Copies all the paramters
 
-        :param sites:
-        :param cage_coord:
-        :param cage_topol:
+        :param sites: (metallicious.metal_site) stores template
+        :param cage_coord: (str) filename of the coordination file
+        :param cage_topol: (str) filename of the topology (readable by parmed) file of the structure
         :return:
         '''
 
@@ -109,12 +104,14 @@ class patcher():
         self.topol_new = update_pairs(self.topol_new)
         logger.info('Finished')
 
+        return True
+
     def prepare_new_topology(self, cage_coord, cage_topol):
         '''
         Copies existing topology to the topology which can be read and modified
 
-        :param cage_coord: (string) filename of the coordination file of the structure
-        :param cage_topol: (string) filename of the topology (readable by parmed) file of the structure
+        :param cage_coord: (str) filename of the coordination file of the structure
+        :param cage_topol: (str) filename of the topology (readable by parmed) file of the structure
         :return:
         '''
 

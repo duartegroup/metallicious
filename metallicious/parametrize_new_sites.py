@@ -1,33 +1,53 @@
-import argparse
-import shutil
-
 from metallicious.extract_metal_site import extract_metal_structure, find_metal_indices
 from metallicious.seminario import single_seminario, check_if_orca_available
 from metallicious.charges import calculate_charges2
 from metallicious.copy_topology_params import copy_bonds, copy_angles, copy_dihedrals, copy_impropers, \
-    copy_pair_exclusions, update_pairs, add_1_4_metal_pairs
+    copy_pair_exclusions, update_pairs
 from metallicious.load_fingerprint import guess_fingerprint, load_fp_from_file
 from metallicious.data import vdw_data
 from metallicious.prepare_initial_topology import prepare_initial_topology
 from metallicious.log import logger
-from metallicious.main import patcher
+from metallicious.patcher import patcher
 from metallicious.utils import new_directory
-
+from metallicious.asserts import compare_topology_and_coords, check_if_parametrization_modules_available
 import numpy as np
 import MDAnalysis
 from MDAnalysis.lib.distances import distance_array
 
+import shutil
 import os
 
-
-# TODO: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
-
 class supramolecular_structure:
+    '''
+    The main structure holidng all the information about the intput and communicating between diffrent classes
+
+    '''
     def __init__(self, filename, metal_charge_mult=None, metal_charges=None, vdw_type=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=False,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
                  fingerprint_guess_list=None, truncation_scheme=None, covalent_cutoff=3):
+        '''
+        Initialize the class
+
+        :param filename: (str) name of the coordination file
+        :param metal_charge_mult:  (dict) the names charges, and multiplicity of the metals in format
+                                        {metal_name: (metal_charges, multiplicity)}
+        :param metal_charges: (dict) the names and charges of metals in the input structure in format:
+                                          {metal_name1: metal_charges1, metal1_name2: metal_charge2}
+        :param vdw_type: (str) name of LJ dataset used for metal paramters
+        :param topol: (str) path to topology (optional)
+        :param keywords: list(str) the keywords for QM calculations
+        :param improper_metal: (bool) if True it will parametrize the improper dihedral involving metal
+        :param donors: (list(str)) list of atom elements with which metal forms bond
+        :param library_path: (str) directory of template library, be default where the script is
+        :param ff: (str) parametrization protocol for small organic molecules (only gaff available)
+        :param search_library: (bool) if True, metallicious searrched templates in template library,
+                    if False, it will parametrize template
+        :param fingerprint_guess_list: (list(str)) list of templates to check
+        :param truncation_scheme: (str) name of the truncation scheme
+        :param covalent_cutoff: (float) if metal-atoms smaller then cutoff it creates bonds ligand with metal
+        '''
 
         logger.info(f"Library with templates is located: {library_path:}")
 
@@ -42,7 +62,7 @@ class supramolecular_structure:
         self.ff = ff
 
         self.covalent_cutoff = covalent_cutoff
-
+        self.closest_neighbhors = 3
 
         #if topol is not None:
         #self.topol = self.make_metals_first(topol)
@@ -64,7 +84,6 @@ class supramolecular_structure:
         elif metal_charges is not None:
             self.metal_charge_dict = metal_charges
             self.metal_names = list(metal_charges.keys())
-            # self.
             self.allow_new_templates = False
         else:
             raise ValueError("Not correct format of metal_charge_mult/metal_charges")
@@ -74,8 +93,8 @@ class supramolecular_structure:
 
         elif vdw_type is None:
             for vdw_type in vdw_data:
-                present = [(metal_name in vdw_data[vdw_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}"  in vdw_data[vdw_type]) for metal_name in self.metal_names]
 
+                present = [(metal_name in vdw_data[vdw_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[vdw_type]) for metal_name in self.metal_names]
                 if sum(present) == len(present):
                     self.vdw_type = vdw_type
                     logger.info(
@@ -84,7 +103,13 @@ class supramolecular_structure:
             for metal_name in self.metal_names:
                 if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in \
                         vdw_data[vdw_type]:
-                    raise ValueError(f"One of the metals ({metal_name:}) not avaialble in selected LJ library")
+
+                    metal_available_in = []
+                    for vdw_type in vdw_data:
+                        if (metal_name in vdw_data[vdw_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[vdw_type]):
+                            metal_available_in.append(vdw_type)
+
+                    raise ValueError(f"Metal ({metal_name:}) unavailable in selected LJ library, but it seems it is present in {metal_available_in:}")
             self.vdw_type = vdw_type
 
         self.fingerprint_guess_list = fingerprint_guess_list
@@ -107,7 +132,6 @@ class supramolecular_structure:
             for index in indices:
                 site = metal_site(name.title(), self.metal_charge_dict[name], index, fp_style=self.truncation_scheme, covalent_cutoff=self.covalent_cutoff, donors=self.donors)
                 self.sites.append(site)
-
         self.assign_fingerprints()
 
 
@@ -142,7 +166,7 @@ class supramolecular_structure:
         # extract metal sites:
         for metal_name in self.metal_names:
             site_lists = extract_metal_structure(self.filename, self.topol, metal_name, output=f"site_{metal_name:}",
-                                                 all_metal_names=self.metal_names, covalent_cutoff=self.covalent_cutoff, donors=self.donors)
+                                                 all_metal_names=self.metal_names, covalent_cutoff=self.covalent_cutoff, donors=self.donors, closest_neighbhors = self.closest_neighbhors)
 
             for site_list in site_lists:
                 site_list[1] = self.metal_charge_dict[metal_name]  # we change the charge
@@ -190,7 +214,6 @@ class supramolecular_structure:
                 site.index = metal_index
         else:
             raise ValueError("Only GAFF supported")
-
         os.chdir(here)
 
     def parametrize(self, out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=False):
@@ -206,10 +229,10 @@ class supramolecular_structure:
             self.assign_fingerprints()
 
         logger.info(self.summary())
-        logger.info("The templates available!")
+        logger.info("The templates are available!")
 
-
-        # check if topol and coord have the same names of atoms TODO
+        # Check if number of atoms agree in both files
+        compare_topology_and_coords(self.topol, self.filename)
 
         parameter_copier = patcher()
         parameter_copier.copy_site_topology_to_supramolecular(self.sites, cage_coord=self.filename,
@@ -231,8 +254,7 @@ class supramolecular_structure:
             #if site.check_library() is False:
             if site.fp_topol_file is None:
                 if self.allow_new_templates is True:
-                    # TODO check if ORCA psiresp and others available
-
+                    check_if_parametrization_modules_available()
 
                     site.parametrize()
                     self.add_site_to_library(site)
@@ -245,7 +267,6 @@ class supramolecular_structure:
         # adding to the library
         if os.path.isfile(site.fp_topol_file) and os.path.isfile(site.fp_coord_file):
             file_idx = 0
-
             while True:
                 if os.path.isfile(f"{self.library_path:}/{site.name}_{file_idx}.top"):
                     file_idx += 1
@@ -260,7 +281,6 @@ class supramolecular_structure:
 
     def summary(self):
         string = "Sites:\n"
-
         for site in self.sites:
             string += site._print() + '\n'
 
@@ -268,9 +288,25 @@ class supramolecular_structure:
         for site in self.unique_sites:
             string += f"{site.metal_name}({site.metal_charge}+)"
 
-
 class metal_site():
+    '''
+    This class stores information about the metal binding site part of the input structure
+    '''
+
     def __init__(self, metal_name, metal_charge, index, fp_topol=None, fp_coord=None, fp_style=None, covalent_cutoff=3.0, donors = None):
+        '''
+        Information needed later for patcher to modify the input force-field parameters
+
+        :param metal_name: (names) metal names
+        :param metal_charge: (int) formal of charge
+        :param index: (int) index of metal
+        :param fp_topol: (parmed.topology) topology of template
+        :param fp_coord: (MDAnalysis.Universe) coordinates of the template
+        :param fp_style: (str) truncation scheme for template
+        :param covalent_cutoff: (float) cut-off for metal-ligand interactions
+        :param donors: (list(str)) list of elements used as donor-acceptor
+        '''
+
         self.metal_name = metal_name
         self.metal_charge = metal_charge
         self.index = index
@@ -307,7 +343,6 @@ class metal_site():
     def set_cutoff(self):
         metal_position = self.fp_syst.atoms[0].position
         nometal_position = self.fp_syst.atoms[1:].positions
-
         self.ligand_cutoff = np.max(distance_array(metal_position, nometal_position)) + 2.0
 
         return True
@@ -319,6 +354,27 @@ class new_metal_site():
                  ligand_smiles=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
                  donors=['N', 'S', 'O'], vdw_type=None):
+        '''
+        The class stores and processes information needed for new template parametrization
+
+        :param metal_name: (str) metal name
+        :param metal_charge: (int) formal charge
+        :param mult: (int) multiplicity
+        :param directory: (str) directory in which parameterization will be performed
+        :param ligand_names: (list(str)) list of ligand names
+        :param unique_ligands_pattern: (list(int)) list indicated which ligands are the same (e.g. [0,1,1])
+        :param link_atoms: (list(int)) indices of link atoms (unsaturated atoms)
+        :param additional_atoms: (list(int)) indices of additional hydrogen's in saturate template, which will be removed
+        :param starting_index: (list(int)) starting indices for new ligands
+        :param indecies: list(int) indices of template's atoms in the input structure
+        :param ligand_charges: (list(int)) list of ligand charges
+        :param ligand_smiles: (list(str)) list of ligand smiles
+        :param topol: (str) (Non-bonded) force-field parameters of the metal site (which will be changed)
+        :param keywords: list(str) keywords for QM cancellations
+        :param improper_metal: (bool) if True improper dihedral involving metal will be parametrized
+        :param donors: (list(str)) list of element names with which metal are connected
+        :param vdw_type: (str) name of the dataset used for metal Lennard-Jones parameters
+        '''
 
         self.unique_ligands_pattern = unique_ligands_pattern
         self.link_atoms = link_atoms
@@ -389,6 +445,10 @@ class new_metal_site():
         return self._print()
 
     def seminario(self):
+        '''
+        Find the distances and force constants of metal binding site using Cole's Seminario method
+        :return:
+        '''
         site_charge = self.metal_charge + np.sum(self.ligand_charges)
 
         self.bonds, self.angles, self.dihedrals, self.impropers, self.pairs, self.filename = single_seminario(
@@ -420,31 +480,48 @@ class new_metal_site():
 
 
     def partial_charge(self):
-        # calculate_charges2(metal_name, metal_charge, filename, unique_ligands_pattern, link_atoms, additional_atoms,
-        #                        starting_index, vdw_data_name, mult=1):
+        '''
+        Calculate the charges of the metal site using restrained electrostatic poential (RESP)
+        :return:
+        '''
+
         partial_charges = calculate_charges2(self.metal_name, self.metal_charge, self.directory,
                                              self.unique_ligands_pattern, self.ligand_charges, self.link_atoms,
                                              self.additional_atoms,
                                              self.starting_index,
                                              metal_radius=self.metal_radius, mult=self.mult)
 
+        print("partial charges", partial_charges)#TODO
         # Removing additional atoms:
         partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if
                            idx not in self.additional_atoms]
+
+        print("rem charges", partial_charges)#TODO
+        print("additional atoms", self.additional_atoms)#TODO
 
         logger.info("\t[ ] Copying charges")
         for idx, atom in enumerate(self.topol.atoms):
             atom.charge = partial_charges[idx]
         logger.info("\t[+] Charges calculated !")
 
+
+        self.topol.save("temp_temp_topol.top", overwrite=True) #TODO
+
     def reduce_to_template(self, out_topol='template.top', out_coord='template.pdb'):
+        '''
+        Remove the extra atoms(hydrogens) from saturated template to create template
+
+        :param out_topol: (str) output force-field parameters file
+        :param out_coord: (str) ouput coordination file
+        :return:
+        '''
         # self.topol.write(f"old_new_topol.top")
 
         # self.topol.strip(f"@{','.join(list(map(str, np.array(self.additional_atoms) + 1))):s}")
         self.topol.save(out_topol, overwrite=True)
 
         new_cage = MDAnalysis.Universe(self.filename)
-        # new_cage.atoms.write(f"old_new_template.pdb")
+        new_cage.atoms.write(f"old_new_template.pdb")
 
         logger.info(f"removing additional atoms {self.additional_atoms:}")
 
@@ -463,9 +540,17 @@ class new_metal_site():
         logger.info(f"Coordination file: {self.fp_coord_file:}")
 
     def check_library(self):
+        '''
+        Guess the template of the metal site
+        :return:
+        '''
         return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name, metal_charge=self.metal_charge, vdw_type=self.vdw_type)
 
     def parametrize(self):
+        '''
+        Parametrizes the new template: runs seminarion, partial charge calculation and reduction to the template
+        :return:
+        '''
         here = os.getcwd()
         os.chdir(self.directory)
 

@@ -16,6 +16,14 @@ from metallicious.log import logger
 
 
 def mapping_itp_coords(syst, ligand_file):
+    '''
+    Reorders atoms in the coordination file to match the same order as force-field file using graph isomorphism
+
+    :param syst: (MDAnalysis.Universe) the coordination file
+    :param ligand_file: (str) path to force-field file
+    :return:
+    '''
+
     if ligand_file is None:
         return False, False, False, False
 
@@ -26,6 +34,7 @@ def mapping_itp_coords(syst, ligand_file):
     G_top = nx.Graph(bonds)
     nx.set_node_attributes(G_top, {atom.idx: atom.name[0] for atom in topol.atoms}, "name")
     iso = nx.isomorphism.GraphMatcher(G_lig, G_top, node_match=lambda n1, n2: n1['name'] == n2['name'])
+
     if not iso.is_isomorphic():
         return False, False, False, False
     else:
@@ -37,10 +46,22 @@ def mapping_itp_coords(syst, ligand_file):
         return True, topol, ordered, G_top
 
 def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, output_top, metal_vdw, ligand_topol=None):
-    if check_antechamber_if_available()== False:
-        return ImportError("Not antechamber detected (preparation of initial topology is done by antechamber)")
+    '''
+    Using Antechamber prepares a topology for input structure
 
+    :param filename: (str) filename of the input coordination file
+    :param metal_names: (list(str)) names of metals
+    :param metal_charge: (list(int)) formal charges of the metal
+    :param output_coord: (str) filename of the output coordination file
+    :param output_top: (str) filename of the output force-field file
+    :param metal_vdw: (str) name of dataset used for the metal LJ parameters
+    :param ligand_topol: (str, optional) filename of the force-field parameters of the linker (it will not parametrize
+                                        antechamber) (single ligand only!)
+    :return: (list(int)) indices of the metals in coordination/topology file
+    '''
 
+    if check_antechamber_if_available() == False and ligand_topol is None:
+        raise ImportError("Not antechamber detected (preparation of initial topology is done by antechamber)")
 
     crystal = MDAnalysis.Universe(filename)
     crystal.residues.resids = 0 # Antechamber requires one residue
@@ -129,8 +150,6 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
     for z, nodes in enumerate(nx.connected_components(G1)):
 
         ligands.select_atoms(f" index {' '.join(list(map(str, list(nodes)))):}").write(f"temp.pdb")
-
-        # logger.info(len(nodes))
         Gsub = G1.subgraph(nodes)
 
         for top_idx, Gtop in enumerate(Gtops):
@@ -156,30 +175,15 @@ def prepare_initial_topology(filename, metal_names, metal_charge, output_coord, 
             iso = isomorphism.GraphMatcher(Gsub, Gtop, node_match=lambda n1, n2: n1['name'] == n2['name'])
             if iso.is_isomorphic():
                 for node in list(nodes):
-                    # print(node, iso.mapping[node])
-                    # print(
-                    # print(crystal.atoms[node].name, topology.atoms[iso.mapping[node]].name)
                     new_ligand.atoms[iso.mapping[node]].position = crystal.atoms[node].position
                 ligand_group[z] = top_idx
 
                 new_ligands.append(new_ligand.atoms)
-                #cage_topol += deepcopy(ligand_tops[top_idx])
                 n_ligands+=1
-                # print(len(new_ligands),new_ligands )
-
             else:
-                #raise ValueError("Error, cannot match the structures. You need to create topology with nonboned metal manually (or you might try to optimize structure by for example xtb)")
-                '''
-                print(os.getcwd())
-                print(list(nodes))
-                #crystal.atoms[list(nodes)].write("temp.pdb")
-                #new_ligand.atoms[list(Gsub.nodes())].write("temp.pdb")
+                logger.debug("cannot match the ligands. No need to worry if heteroleptic. Otherwise you need to create topology with nonboned metal manually (or you might try to optimize structure")
 
-                print("The subgraphs are not isomorphic, are you sure these are the same molecules?")
-                print(f"Number of atoms: from coordinates: {len(Gsub):d}, from_topology: {len(Gtop):d}")
-                print(f"Number of edges: from coordinates: {len(Gsub.edges()):d}, from_topology: {len(Gtop.edges()):d}")
 
-                '''
     cage_topol = None
     if metal_ions is not None:
         for metal_name, indecies in zip(metal_names, metal_indecies):

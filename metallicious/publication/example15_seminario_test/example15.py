@@ -57,9 +57,11 @@ cage.parametrize()
 #
 #
 # os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_Lusby/")
-#
-# #cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
-# #                                topol='init_topol/noncovalent_complex.top', vdw_type='merz-opc', search_library=False)
+# #
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
+#                                 topol='init_topol/noncovalent_complex.top',
+#                                 vdw_type='zhang-opc',
+#                                 search_library=False)
 # cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
 #                                 vdw_type='merz-opc', search_library=False)
 # cage.parametrize(prepare_initial_topology=True)
@@ -165,6 +167,7 @@ cage.parametrize()
 # cage = supramolecular_structure("protein.gro", topol="protein.top", metal_charge_mult={'Zn': (2, 1)}, improper_metal=False)
 # # #cage.prepare_initial_topology()
 # cage.parametrize()
+
 '''
 os.chdir("/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof")
 name = "site_Co0"
@@ -183,9 +186,11 @@ cage.sites[0].set_cutoff()
 cage.unique_sites = []
 cage.parametrize(out_coord='saturated_template_bond.pdb', out_topol='saturated_template_bond.top')
 '''
-# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
-# cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', vdw_type='merz-opc')
-# cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
+
+os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
+cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', vdw_type='merz-opc', search_library=False)
+cage.prepare_initial_topology(homoleptic_ligand_topol='linker_small_resp.top')
+cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
 
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof')
 # cage = supramolecular_structure('topol/enormous.gro', {'Co': (2,4)}, topol='topol/enormous.top', vdw_type='merz-opc')
@@ -198,9 +203,6 @@ cage.parametrize(out_coord='saturated_template_bond.pdb', out_topol='saturated_t
 # cage.prepare_initial_topology(homoleptic_ligand_topol='new_linker.top')
 # cage.parametrize()
 # print("A")
-
-
-
 
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_06/Co_mof')
 # cage = supramolecular_structure('Co_tet.pdb', {'Co': (2,4)}, vdw_type='merz-tip3p',  improper_metal=False)
@@ -356,8 +358,52 @@ cage.parametrize()
 
 #---------------
 
-os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/zn_test_2c")
-from metallicious import supramolecular_structure
-protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff", search_library=False)
-protein.parametrize(out_coord="zn_protein_out.pdb", out_topol="out.top")
+# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/Bernie/zn_test_2c")
+# from metallicious import supramolecular_structure
+# protein = supramolecular_structure("zn_protein.gro", metal_charge_mult={"Zn": (2,1)}, topol="topol.top", vdw_type="uff", search_library=False)
+# protein.parametrize(out_coord="zn_protein_out.pdb", out_topol="out.top")
 
+#---------------
+
+# os.chdir("/u/fd/chem1540/Research/DA/pd2l4_6+/MD/init_topol/")
+# from metallicious import supramolecular_structure
+# protein = supramolecular_structure("noncovalent_complex.pdb", topol="noncovalent_complex.top",
+#                                    metal_charge_mult={"Pd": (2,1)},  vdw_type='merz-opc', truncation_scheme='angle')
+#protein.closest_neighbhors = 1
+#protein.covalent_cutoff = 2.5
+#protein.extract_unique_metal_sites()
+
+
+#protein.parametrize(out_coord="zn_protein_out.pdb", out_topol="out.top")
+
+#os.chdir("/u/fd/chem1540/Research/DA/pd2l4_6+/MD/init_topol/")
+#
+# os.chdir("/u/fd/chem1540/Research/ClE/MD")
+# cage = supramolecular_structure('cage.xyz', metal_charges={'Pd':2 }, vdw_type='merz-opc')
+# cage.parametrize(out_coord='parameters/C4.pdb', out_topol='C4.top', prepare_initial_topology=True)
+
+
+
+
+#
+# os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Pd_Lusby/")
+#
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
+#                                 topol='init_topol/noncovalent_complex.top',
+#                                 vdw_type='merz-opc',
+#                                 search_library=True)
+#
+# cage.parametrize(out_coord='C4.inpcrd', out_topol='C4.prmtop')
+
+# cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',  metal_charge_mult={'Pd': (2, 1)},
+#                                 vdw_type='merz-opc', search_library=False)
+# cage.parametrize(prepare_initial_topology=True)
+
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/MD_tests/cages/pd6l4_nb/test_metallicious/")
+
+cage = supramolecular_structure('start.gro',  metal_charge_mult={'Pd': (2, 1)},
+                                topol='topol.top',
+                                vdw_type='merz-opc',
+                                search_library=True)
+
+cage.parametrize(out_coord='new.pdb', out_topol='new.top')

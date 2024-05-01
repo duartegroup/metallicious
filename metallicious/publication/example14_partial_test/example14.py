@@ -3,7 +3,7 @@ sys.path.insert(0, '/home/fd05/fd/chem1540/github/cgbind2pmd/')
 
 
 try:
-    from metallicious.main import patcher
+    from metallicious.patcher import patcher
     from metallicious.extract_metal_site import extract_metal_structure
     from metallicious.initial_site import create_initial_topol
 except:

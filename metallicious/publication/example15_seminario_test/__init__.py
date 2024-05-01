@@ -1,1 +1,1 @@
-from metallicious.main import patcher
+from metallicious.patcher import patcher

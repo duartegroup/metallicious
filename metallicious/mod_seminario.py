@@ -50,8 +50,8 @@ def bonds_calculated_printed(vibrational_scaling_squared, bond_list, bond_length
     unique_values_bonds = [] # Used to find average values
 
     for i in range(0, len(bond_list)):
-        AB = force_constant_bond(bond_list[i][0], bond_list[i][1],eigenvalues, eigenvectors, coords)
-        BA = force_constant_bond(bond_list[i][1], bond_list[i][0],eigenvalues, eigenvectors, coords)
+        AB = force_constant_bond(bond_list[i][0], bond_list[i][1], eigenvalues, eigenvectors, coords)
+        BA = force_constant_bond(bond_list[i][1], bond_list[i][0], eigenvalues, eigenvectors, coords)
 
         # Order of bonds sometimes causes slight differences, find the mean
         k_b[i] = np.real(( AB + BA ) /2);

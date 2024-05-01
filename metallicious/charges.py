@@ -5,9 +5,18 @@ import os
 import shutil
 from metallicious.log import logger
 from metallicious.utils import new_directory
-
 import MDAnalysis
+
+
 def connectivity_for_qcel(filename, metal_name):
+    '''
+    Returns connectivity between atoms required by qcel
+
+    :param filename: (str) filename with coorinates
+    :param metal_name: (str) name of metal
+    :return: (list(list(int,int))) list of pairs indicating connected atoms
+    '''
+
     atoms = MDAnalysis.Universe(filename).atoms
     if metal_name is not None:
         types = atoms.types
@@ -36,13 +45,12 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
     :return:
     '''
 
-
     import autode as ade
     from autode.wrappers.ORCA import work_in_tmp_dir, logger
     import psiresp
     import qcelemental as qcel
 
-    # Below functions are to overwrite some of the autode functionality
+    # Below functions are to overwrite for some of the autode functionality
     # in particular we want to save the ESP files, densities etc.
     def old_execute(self, calc):
         @work_in_tmp_dir(filenames_to_copy=calc.input.filenames,
@@ -111,18 +119,15 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
     molecule_qcel = qcel.models.Molecule.from_file(filename, molecular_charge=charge, connectivity=connectivity_for_qcel(filename, metal_name))
     molecule_psiresp = psiresp.Molecule(qcmol=molecule_qcel, charge=charge)
     logger.info(f"Formal charge of the molecule for template calculations: {charge:}")
-
     here = os.getcwd()
 
     # Becasue how autode works, it will try to load the files, but becasue we modified how autode is executed here
-    # t might load incorrect grid
+    # it might load incorrect grid
     # we need to remove folder with previous calculations if they exist:
-
     if os.path.isdir("resp"):
         shutil.rmtree("resp")
     new_directory("resp")
     os.chdir("resp")
-
 
     if opt:
         ade.wrappers.ORCA.ORCA.execute = old_execute
@@ -139,16 +144,13 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
     # create reorientations of the single conformer
     molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
     molecule_psiresp.generate_orientations(True)
-    # GridOptions._generate_vdw_grid(np.array([atom.atomic_symbol for atom in site.atoms]), np.array([atom.coordinate.real for atom in site.atoms]))
     conf = molecule_psiresp.conformers[0]
-
     name = site.name
 
     # Iteration over the reorientations of the molecule
     for orient_idx in range(n_reorientations):
-
-        # orient_idx=0
         orient = conf.orientations[orient_idx]
+
         # this does not work if already ortogonalized. it will break if file is reused.... :-(
         orient.compute_grid(GridOptions)
         print(orient.grid)
@@ -183,7 +185,6 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
         constrained_atoms = [index for index, _ in enumerate(site.atoms) if index in extra_atoms]
 
         logger.info(f"Constraining atoms {constrained_atoms:} Symbols: {[molecule_psiresp.atoms[a].symbol for a in constrained_atoms]:}")
-
         constraints.add_charge_sum_constraint_for_molecule(molecule_psiresp, charge=0, indices=constrained_atoms)
         logger.info(f"Constrains: {constraints.charge_sum_constraints:}")
 
@@ -195,13 +196,12 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
     logger.info(f"RESP before making extra atoms zero: {resp_charges:} Sum: {np.sum(resp_charges)}")
 
     # for some reason there is small charge left on residues
-    # we calculatte mean of all, but not constrained atoms (we will set up them to zero)
+    # we calculate mean of all, but not constrained atoms (we will set up them to zero)
     if extra_atoms is not None:
         mean_left_charge = (charge - np.sum(resp_charges) + np.sum(resp_charges[constrained_atoms])) / float(
             len(resp_charges) - len(constrained_atoms))
     else:
         mean_left_charge = (charge - np.sum(resp_charges)) / float(len(resp_charges))
-
     resp_charges += mean_left_charge
 
     if extra_atoms is not None:
@@ -224,7 +224,7 @@ def calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, sit
     :param unique_ligands_pattern: (list(int)) ligand pattern, the same ligands get the same index
     :param site_charges: (list(float)) partial charges of the whole site
     :param ligand_charges: (list(float)) partial charges of separated ligands
-    :return:
+    :return: (list(float)) list of partial charges
     '''
     logger.info(f"calcualte_diffrence() arguments: {metal_charge:}, {unique_ligands_pattern:}, {site_charges:}, {ligand_charges:}")
     # unconcatanatet to the split charges:
@@ -260,6 +260,31 @@ def calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, sit
 
 def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_pattern, ligand_charges_pattern, link_atoms,
                        additional_atoms, starting_index, metal_radius, mult=1):
+    '''
+    Procedure of calculating residual partial charges for the metal sites. This function implicitly assumes that we are
+    in folder "site_{metal_name}{side_idx}" and files saturated_template.xyz and ligand_{idx}.xyz exists.
+    It runs RESP calculation for the metal sites and its separated components and calcualtes their diffrence.
+    The charges are then symmetrized over the same type of ligands.
+
+    :param metal_name: (string) metal name
+    :param metal_charge: (int) formal charge of metal
+    :param filename: (string) filename
+    :param unique_ligands_pattern: (list(int)) ligand pattern, the same ligands get the same index
+    :param ligand_charges_pattern: (list(int)) charges of ligands
+    :param link_atoms: (list(int)) indeces of linking atoms
+    :param additional_atoms: (list(list(int)) list of indices of hydrogen atoms to make unsaturated template saturated
+    :param starting_index:
+    :param metal_radius: (float) VdW radius of the metal
+    :param mult: (int) multiplicity of the metal (it is assumed that this is multiplicity of the system)
+    :return: list(float) list of residual partial charges
+    '''
+
+    if not os.path.isfile("saturated_template.xyz"):
+        raise ValueError("There is no saturated_template.xyz file")
+    for lig_idx in list(set(unique_ligands_pattern)) :
+        if not os.path.isfile(f"ligand_{lig_idx:d}.xyz"):
+            raise ValueError(f"There is no ligand_{lig_idx:d}.xyz file")
+
     extra_atoms = link_atoms + additional_atoms
 
     unique_ligands_constraints = {}
@@ -285,11 +310,13 @@ def calculate_charges2(metal_name, metal_charge, filename, unique_ligands_patter
     site_charges = resp_orca('saturated_template.xyz', charge=metal_charge + np.sum(ligand_charges_pattern), opt=False,
                              metal_name=metal_name, metal_radius=metal_radius, mult=mult, extra_atoms=extra_atoms)
 
-    print("ligand charges", len(ligand_charges), ligand_charges)
-    print("ligand        ", len(site_charges), site_charges)
+    logger.debug(f"ligand charges: {len(ligand_charges):}, {ligand_charges:}")
+    logger.debug(f"site charges: {len(site_charges):}, {site_charges:}")
 
     new_site_charges = calcualte_diffrence_and_symmetrize(metal_charge, unique_ligands_pattern, site_charges,
                                                           ligand_charges)
+
+    logger.debug(f"Site charges after symmetrization: {len(new_site_charges):}, {new_site_charges:}")
 
     return new_site_charges
 

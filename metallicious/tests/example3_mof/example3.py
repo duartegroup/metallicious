@@ -3,7 +3,7 @@ sys.path.insert(0, '/home/fd05/fd/chem1540/github/cgbind2pmd/')
 
 
 try:
-    from metallicious.main import patcher
+    from metallicious.patcher import patcher
 except:
     from cgbind2pmd.main import cgbind2pmd
 

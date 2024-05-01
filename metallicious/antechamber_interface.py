@@ -6,13 +6,8 @@ import shutil
 
 from subprocess import Popen, DEVNULL
 import MDAnalysis
-
-# try:
 from metallicious.log import logger
-# except:
-#     from log import logger
-#     from utils import mdanalysis_to_rdkit
-
+import argparse
 
 
 import rdkit
@@ -47,8 +42,6 @@ def antechamber(pdbfile,output, charge=None):
             with open("output.txt") as File:
                 text = File.read()
                 logger.info(text)
-        #        assert assertion in text
-
 
     pwd = os.getcwd()
     tmpdir_path = mkdtemp()
@@ -64,7 +57,6 @@ def antechamber(pdbfile,output, charge=None):
     syst.atoms.write('temp.pdb')
 
     if charge is None:
-        #mol = mdanalysis_to_rdkit(syst.atoms)
         mol = syst.atoms.convert_to("RDKIT")
         charge = rdkit.Chem.GetFormalCharge(mol)
         logger.info(f"    Guessing charge: {charge:}")
@@ -93,7 +85,6 @@ def antechamber(pdbfile,output, charge=None):
     parm = pmd.load_file('temp.prmtop', 'temp.inpcrd')
     parm.save('topol.top', format='gromacs')
 
-
     neutralize_charge('topol.top', 'topol2.top', charge=charge)
 
     shutil.copyfile('topol2.top', f'{pwd:s}/{output:s}')
@@ -103,9 +94,6 @@ def antechamber(pdbfile,output, charge=None):
     shutil.rmtree(tmpdir_path)
 
     syst.atoms.write(f'{pwd:s}/{output[:-4]:s}.pdb')
-
-
-import argparse
 
 
 def neutralize_charge(file_name, output, charge=0):
@@ -185,7 +173,6 @@ def neutralize_charge(file_name, output, charge=0):
     else:
         for line in moleculetype.splitlines():
             print(line, file=File)
-
     File.close()
 
 
@@ -216,16 +203,17 @@ def get_args():
     parser.add_argument("-smi", help="smiles")
     parser.add_argument("-charge", default=0, help="Topology of the linker ")
     parser.add_argument("-o", default='topol.top', help="Output coordination file")
-    parser.add_argument("-v", action='store_true', dest='v', help="Be loud")
     parser.set_defaults(v=False)
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = get_args()
     if args.f is not None:
-        antechamber(args.f,  args.o,args.charge, args.v)
+        antechamber(args.f,  args.o, args.charge)
     elif args.smi is not None:
         smiles_to_mol(args.smi, 'rdkit.pdb')
-        antechamber('rdkit.pdb', args.o, args.charge, args.v)
+        antechamber('rdkit.pdb', args.o, args.charge)
     else:
         print("Provide input file")
+
+

@@ -5,7 +5,7 @@ import MDAnalysis
 from metallicious.mapping import map_two_structures
 from metallicious.mod_seminario import modified_seminario_method
 from metallicious.improper_torsion import find_impropers_and_values
-
+from metallicious.log import logger
 
 def check_if_orca_available():
     try:
@@ -17,8 +17,6 @@ def check_if_orca_available():
 
     if method.is_available is False:
         raise NameError("For parametrization of templates, QM software ORCA is required")
-
-
 
 def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
     '''
@@ -37,42 +35,43 @@ def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
                     bond[1][1] == metal_name and bond[1][0] in donors):
                 new_bonds[bond[0]] = bonds[bond]
             else:
-                print(f"Seminario method detect bond {bond[1]}, but non-metal atom is not a donor (donors={donors:}), so removing it")
+                logger.info(
+                    f"Seminario method detect bond {bond[1]}, but non-metal atom is not a donor (donors={donors:}), so removing it")
 
         else:
             new_bonds[bond[0]] = bonds[bond]
     return new_bonds
 
-def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+
+def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern):
     '''
-    This is symetrization of bond and angles
+    This procedure finds the bonds and angles which are equivalent in the graph representation
 
     :param bonds:
-    :param metal_name:
-    :param filename_opt:
-    :param starting_index:
-    :param indecies:
-    :param unique_ligands_pattern:
-    :param donors:
+    :param metal_name: (str) metal name
+    :param filename_opt: (str) path to optimised structure
+    :param starting_index: TODO
+    :param indecies: (list(list(int))) lists containing atom indices of diffrent ligands
+    :param unique_ligands_pattern: (list(int)) list showing which ligands are equivalent (e.g.,[0,0,1] -> first 2 are the same type of ligand). The bonded paramters of the same ligands are symmetrised
     :return:
     '''
 
     site = MDAnalysis.Universe(filename_opt)
     ligand_indecies = indecies[1:]
-    
+
     metal_index = 0
     for unique_ligand in list(set(unique_ligands_pattern)):
         unique_ligand_indecies = [a for a, b in enumerate(unique_ligands_pattern) if b == unique_ligand]
 
         mappings = []
         for unique_ligand_idx in unique_ligand_indecies:
-            mapping, _ = map_two_structures(0, site.atoms[[0] + ligand_indecies[unique_ligand_idx]], site.atoms[[0] + ligand_indecies[unique_ligand_indecies[0]]], metal_name)
+            mapping, _ = map_two_structures(0, site.atoms[[0] + ligand_indecies[unique_ligand_idx]],
+                                            site.atoms[[0] + ligand_indecies[unique_ligand_indecies[0]]], metal_name)
             mappings.append(mapping)
 
         bonds_reference = {}
         for bond in bonds:
             if len([1 for atom in bond if atom in [0] + ligand_indecies[unique_ligand_indecies[0]]]) == len(bond):
-                #if bond[0] in [0] + ligand_indecies[0] and bond[1] in [0] + ligand_indecies[0]:
                 bonds_reference[bond] = bonds[bond]
 
         for bond in bonds_reference:
@@ -101,10 +100,24 @@ def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, ind
 
     return bonds
 
-def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern, donors=["N", "O", "S"]):
+
+def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies,
+                                       unique_ligands_pattern, donors=["N", "O", "S"]):
+    '''
+    It starts procedures of removing not valid bonds (metal-non donor bonds, i.g., to prevent Metal-hydrogen)
+
+    :param bonds_with_names:
+    :param metal_name:
+    :param filename_opt:
+    :param starting_index:
+    :param indecies:
+    :param unique_ligands_pattern:
+    :param donors:
+    :return:
+    '''
+
     bonds = remove_non_metal_donor_bonds(bonds_with_names, metal_name, donors=donors)
-    bonds = symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
-                                    donors=donors)
+    bonds = symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern)
     return bonds
 
 
@@ -114,25 +127,26 @@ def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
     for angle in angles:
         if metal_name in angle[1]:
             metal_on_side_condition = (
-                        (angle[1][0] == metal_name or angle[1][2] == metal_name) and (angle[1][1] in donors))
+                    (angle[1][0] == metal_name or angle[1][2] == metal_name) and (angle[1][1] in donors))
             metal_in_middle_condition = (
-                        angle[1][1] == metal_name and (angle[1][0] in donors) and (angle[1][2] in donors))
+                    angle[1][1] == metal_name and (angle[1][0] in donors) and (angle[1][2] in donors))
 
             if metal_on_side_condition or metal_in_middle_condition:
                 new_angles[angle[0]] = angles[angle]
             else:
-                print(f"Not valid angle: Seminario method detected angle, but the atoms do not belong to donor list ({donors:}); angle:{angle:}")
+                logger.info(
+                    f"Not valid angle: Seminario method detected angle, but the atoms do not belong to donor list ({donors:}); angle:{angle:}")
         else:
             new_angles[angle[0]] = angles[angle]
     return new_angles
 
 
-def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
-                                       donors=["N", "O", "S"]):
+def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies,
+                                        unique_ligands_pattern,
+                                        donors=["N", "O", "S"]):
     angles = remove_non_metal_donor_angles(angles_with_names, metal_name, donors=donors)
     angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, starting_index, indecies,
-                                     unique_ligands_pattern,
-                                     donors=donors)
+                                     unique_ligands_pattern)
     return angles
 
 
@@ -153,6 +167,7 @@ def extend_angle_to_dihedral(angle, bonds):
             dihedrals.append([a] + angle)
     return dihedrals
 
+
 def generate_all_dihedrals(angles, bonds, metal_index=0):
     dihedrals = []
     for angle_indexes in angles:
@@ -167,8 +182,8 @@ def generate_all_dihedrals(angles, bonds, metal_index=0):
             new_dihedrals.append(dihedral)
     return new_dihedrals
 
-def create_dummy_dihedrals(angles, bonds, metal_index=0):
 
+def create_dummy_dihedrals(angles, bonds, metal_index=0):
     dihedrals_indexes = generate_all_dihedrals(angles, bonds, metal_index)
     dihedrals = {}
 
@@ -178,6 +193,12 @@ def create_dummy_dihedrals(angles, bonds, metal_index=0):
 
 
 def create_pair_exclusions(dihedrals, angles):
+    """
+    Finds atoms interacting by 1-4 interactions, which will be put to pair exclusions
+    :param dihedrals: (list(int,int,int,int)) list of indices quartets describing which atoms form dihedral
+    :param angles: (list(int,int,int)) list of indices triads describing angles
+    :return: list(int,int) list of indices pairs
+    """
     pairs = []
     for dihedral in dihedrals:
         not_2_3_body = True
@@ -191,19 +212,33 @@ def create_pair_exclusions(dihedrals, angles):
 
     return pairs
 
-def strip_names_from_covalent(covalent_paramters): # TODO remove
-    new_covalent = {}
-    for covalent in covalent_paramters:
-        new_covalent[covalent[0]] = covalent_paramters[covalent]
-    return new_covalent
 
 def generate_angles_from_bonds(bond_list):
+    """
+    Finds angles by combining two bonds connecting the same atom
+    :param bond_list: (list(int,int)) list of indices pairs describing bonds
+    :return: (list(int,int,int)) list of indices triads describing angles
+    """
+
     angle_list = []
     for bond in bond_list:
         angle_list += extend_angle_to_dihedral(list(bond), bond_list)
     return angle_list
 
-def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+
+def frequencies(filename, charge=0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1):
+    '''
+    Runs frequency calculations using autodE
+
+    :param filename: (str) name of the coordination file
+    :param charge: (int) charge for QM calculations
+    :param keywords: (list(str)) keywords for QM calculations
+    :param mult: (int) multiplicity
+    :return: (str, array(float)),list(str), array(array(float)), list((int,int)), list((int,int))
+    name of optimised file, array containing position, list of names, hessian matrix, bond list (pairs of atoms), and
+    angle list (trides of atoms)
+    '''
+
     import autode as ade
     method = ade.methods.ORCA()
 
@@ -216,10 +251,11 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     if site.imaginary_frequencies is not None:
         if len(site.imaginary_frequencies) > 0:
             # Sometimes it does not converge, then we use tighter criterium
-            if 'TIGHTOPT' in [keyword.upper() for keyword in keywords] or 'OPT' in [keyword.upper() for keyword in keywords]:
+            if 'TIGHTOPT' in [keyword.upper() for keyword in keywords] or 'OPT' in [keyword.upper() for keyword in
+                                                                                    keywords]:
                 new_keywords = []
                 for keyword in keywords:
-                    if keyword.upper() == 'TIGHTOPT' or  keyword.upper() == 'OPT':
+                    if keyword.upper() == 'TIGHTOPT' or keyword.upper() == 'OPT':
                         new_keywords.append("tightOPT")
                     else:
                         new_keywords.append(keyword)
@@ -238,38 +274,52 @@ def frequencies(filename, charge = 0, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tig
     site.hessian.to(ade.units.J_per_ang_sq)
     # and here it is for compability with autod 1.4.0
     hessian = np.array(site.hessian.to(ade.units.J_per_ang_sq))
-    hessian *= 6.022e23/4.184e3 # we convert tto kcal/mol/angs^2
+    hessian *= 6.022e23 / 4.184e3  # we convert tto kcal/mol/angs^2
 
     bond_list = list(site.graph.edges)
     angle_list = generate_angles_from_bonds(bond_list)
 
     return opt_filename, np.array(site.coordinates), names, hessian, bond_list, angle_list
 
-def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1, vibrational_scaling = None):
+
+def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], charge=0, mult=1,
+                     vibrational_scaling=None):
+    '''
+    Starts frequency calculations and the uses Mod. Seminario method to get bonds and angles
+
+    :param filename: (str) input structure file
+    :param keywords: (list(str)) keywords for QM calculations
+    :param charge: (int) charge for QM calculations
+    :param mult: (int) multiplicity for charge calculations
+    :param vibrational_scaling: (float) vibrational scaling, see  https://cccbdb.nist.gov/vsfx.asp
+    :return:  (dict(), list(), str) two dictionaries, bonds and angles, with indices of atoms and their names as key,
+    and bond lenght and force constant as values; name of the optimised file
+    '''
+
     here = os.getcwd()
     os.system("mkdir bonded")
     os.chdir("bonded")
 
-    opt_filename, coords, atom_names, hessian, bond_list, angle_list = frequencies("../"+filename, charge, keywords=keywords, mult=mult)
+    opt_filename, coords, atom_names, hessian, bond_list, angle_list = frequencies("../" + filename, charge,
+                                                                                   keywords=keywords, mult=mult)
 
     # Scalling factor taken from https://cccbdb.nist.gov/vsfx.asp and assumed that for basis set of double zeta and higher the scalling does not change
     if vibrational_scaling is not None:
-        vibrational_scaling=vibrational_scaling
+        vibrational_scaling = vibrational_scaling
     elif 'PBE0' in keywords:
         vibrational_scaling = 0.96
     elif 'wB97X-D3' in keywords:
         vibrational_scaling = 0.955
     else:
-        vibrational_scaling=1
+        vibrational_scaling = 1
 
-    bonds_with_names, angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list, vibrational_scaling=vibrational_scaling)
-
-    #dummy_dihedrals = create_dummy_dihedrals(strip_names_from_covalent(angles_with_names), strip_names_from_covalent(bonds_with_names), filename=opt_filename)
+    bonds_with_names, angles_with_names = modified_seminario_method(hessian, coords, atom_names, bond_list, angle_list,
+                                                                    vibrational_scaling=vibrational_scaling)
 
     os.chdir(here)
 
-    #return bonds_with_names, angles_with_names, dummy_dihedrals, f"bonded/{opt_filename:s}"
     return bonds_with_names, angles_with_names, f"bonded/{opt_filename:s}"
+
 
 def remove_atoms_from_bonded(bonds, angles, impropers, atoms_to_remove):
     new_params = []
@@ -296,7 +346,7 @@ def remove_indices_of_removed_atoms(bonds, angles, impropers, atoms_to_remove):
     for bonded in [bonds, angles, impropers]:
         new_bonded = {}
         for param in bonded:
-            indices = tuple([idx-sum(np.array(atoms_to_remove)<idx) for idx in param])
+            indices = tuple([idx - sum(np.array(atoms_to_remove) < idx) for idx in param])
             new_bonded[indices] = bonded[param]
         new_params.append(new_bonded)
     new_bonds, new_angles, new_impropers = new_params
@@ -304,56 +354,54 @@ def remove_indices_of_removed_atoms(bonds, angles, impropers, atoms_to_remove):
     return new_bonds, new_angles, new_impropers
 
 
-def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal = False, donors=['N', 'S', 'O'], atoms_to_remove=None, vibrational_scaling=None):
-    #bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult, vibrational_scaling=vibrational_scaling)
+def single_seminario(filename, metal_charge, metal_name, starting_index, indecies, unique_ligands_pattern,
+                     keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False,
+                     donors=['N', 'S', 'O'], atoms_to_remove=None, vibrational_scaling=None):
+    """
+
+    :param filename: (str) input structure for which bonds and angles will be found
+    :param metal_charge: (int) charge for QM calculations
+    :param metal_name: (str) name of the metal
+    :param starting_index: list(int) indices where the new ligands starts
+    :param indecies:
+    :param unique_ligands_pattern:
+    :param keywords:
+    :param mult:
+    :param improper_metal:
+    :param donors:
+    :param atoms_to_remove:
+    :param vibrational_scaling:
+    :return:
+    """
+
+    # bonds_with_names, angles_with_names, dummy_dihedrals, filename_opt = simple_seminario(filename, keywords=keywords, charge=metal_charge, mult=mult, vibrational_scaling=vibrational_scaling)
     bonds_with_names, angles_with_names, filename_opt = simple_seminario(filename, keywords=keywords,
-                                                                                          charge=metal_charge,
-                                                                                          mult=mult,
-                                                                                          vibrational_scaling=vibrational_scaling)
+                                                                         charge=metal_charge,
+                                                                         mult=mult,
+                                                                         vibrational_scaling=vibrational_scaling)
 
+    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies,
+                                               unique_ligands_pattern,
+                                               donors=donors)
 
-    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern,
-                                       donors=donors)
+    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies,
+                                                 unique_ligands_pattern,
+                                                 donors=donors)
 
-    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt,  starting_index, indecies, unique_ligands_pattern,
-                                       donors=donors)
-
-    if improper_metal: 
-        impropers = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies, charge=metal_charge, mult=mult, filename=filename_opt)
+    if improper_metal:
+        impropers = find_impropers_and_values(bonds, metal_name, unique_ligands_pattern, starting_index, indecies,
+                                              charge=metal_charge, mult=mult, filename=filename_opt)
     else:
         impropers = {}
-        
+
     if len(atoms_to_remove) is not None:
         bonds, angles, impropers = remove_atoms_from_bonded(bonds, angles, impropers, atoms_to_remove)
         bonds, angles, impropers = remove_indices_of_removed_atoms(bonds, angles, impropers, atoms_to_remove)
 
-    dummy_dihedrals= create_dummy_dihedrals(angles, bonds, metal_index=0)
+    dummy_dihedrals = create_dummy_dihedrals(angles, bonds, metal_index=0)
 
-    dihedrals = {} #dihedrals are not implemented
+    dihedrals = {}  # dihedrals are not implemented
 
     pairs = create_pair_exclusions(dummy_dihedrals, angles)
 
     return bonds, angles, dihedrals, impropers, pairs, filename_opt
-
-
-def save_bonded_paramters_to_file(self, n_site=0):
-    File = open(f"bonds_{n_site:d}.dat", "w")
-    for bond in self.bonds:
-        File.write(f'{"-".join(list(map(str, bond))):}:{",".join(list(map(str, self.bonds[bond]))):}')
-    File.close()
-
-    File = open(f"angles_{n_site:d}.dat", "w")
-    for angle in self.angles:
-        File.write(f'{"-".join(list(map(str, angle))):}:{",".join(list(map(str, self.angles[angle]))):}')
-    File.close()
-
-    File = open(f"dihedrals_{n_site:d}.dat", "w")
-    for dihedral in self.dihedrals:
-        File.write(f'{"-".join(list(map(str, dihedral))):}:{",".join(list(map(str, self.dihedrals[dihedral]))):}')
-    File.close()
-
-
-
-
-
-

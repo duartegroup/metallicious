@@ -20,6 +20,13 @@ from metallicious.utils import strip_numbers_from_atom_name
 
 
 def syst_to_graph(atoms, vdwradii):
+    '''
+    Transforms MDAnalysis.Universe.atoms to the Graph (edges are bonds)
+
+    :param atoms: (MDAnalysis.Universe.atoms) input coordination file
+    :param vdwradii: (dict) dictionary of names and charges
+    :return: (NetworkX.Graph) Graph where edges are bonds
+    '''
     bonds = MDAnalysis.topology.guessers.guess_bonds(atoms, atoms.positions)
     G_fingerprint = nx.Graph()
     if len(bonds) > 0:  # fingerprint with ligands larger than one atom
@@ -33,10 +40,12 @@ def syst_to_graph(atoms, vdwradii):
 
 def unwrap(syst, metal_type, metal_cutoff=3):
     '''
-    This tries to unwrap the trajectory through PBC
-    
-    :param syst:
-    :return:
+    Adds to MDAnalysis.Universe bonds which are through periodic boundary conditions
+
+    :param syst: (MDAnalysis.Universe) input coordinates
+    :param metal_type: (str) metal element
+    :param metal_cutoff: (float) cut-off for metal-ligand bond
+    :return: (MDAnalysis.Universe.atoms)
     '''
     new_universe = syst.universe.copy()
 
@@ -54,10 +63,26 @@ def unwrap(syst, metal_type, metal_cutoff=3):
     return new_syst
 
 def int_list_to_str(lista):
+    '''
+    Transforms list of integers to string (e.g., [1,2,3] -> "1 2 3")
+    :param lista: (list(int)) list of integers
+    :return: (str) string
+    '''
     return " ".join(list(map(str, lista)))
 
 
 def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, metal_name):
+    '''
+    Compares two structures (connected_cut_system and syst_fingerprint) and tries to find the equivalent atoms in each.
+    The equivalent atoms are storred as dictionary (e.g.,{1:2,2:1,3:3}), which shows the index of equivalent atoms in
+    the other structure. Mapping is necessary to copy template to the input structure
+
+    :param metal_index: (int) metal index in input structure
+    :param connected_cut_system: (MDAnalysis.Universe.atoms) input structure 1,for which mapping will be found
+    :param syst_fingerprint:(MDAnalysis.Universe.atoms) input structure 2, which is reference
+    :param metal_name: (str) metal name
+    :return: (dict, int): the mapping, and the RMSD of syst_fingerprint and reordered (mapped) connected_cut_system  
+    '''
     # usually fingerprint suppose to not have the PBC, but for standrazing purposes we unwrap it:
     syst_fingerprint_pbc = syst_fingerprint
     if syst_fingerprint.universe.dimensions is not None:
@@ -105,6 +130,7 @@ def map_two_structures(metal_index, connected_cut_system, syst_fingerprint, meta
 
         # we check all permutation of atom numbers in residues
         for lig_a, lig_b in enumerate(perm):
+
             # if length of ligands is different, then this is definitely wrong permutation
             if len(G_fingerprint_subs_heavy_atoms[lig_a]) != len(G_site_subs_heavy_atoms[lig_b]):
                 mappings = []
