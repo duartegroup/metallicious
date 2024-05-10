@@ -35,7 +35,9 @@ pip install metallicious
 Parametrization of structure with coordinates saved as `supramolecular_cage.xyz` with (nonbonded) topology `supramolecular_cage.top` (of the whole structure): 
 ```
 from metallicious import supramolecular_structure
-cage = supramolecular_structure('supramolecular_cage.xyz', metal_charges={'metal name 1': charge of metal 1(integer), 'metal name 2':charge of metal 2(integer) }, topol='supramolecular_cage.top', vdw_type='uff')
+cage = supramolecular_structure('supramolecular_cage.xyz',
+                                metal_charges={'metal name 1': charge of metal 1(integer), 'metal name 2':charge of metal 2(integer),...},
+                                topol='supramolecular_cage.top', vdw_type='uff')
 cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 ```
 
