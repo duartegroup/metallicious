@@ -32,14 +32,20 @@ conda install rdkit autode psiresp mdanalysis networkx qcelemental==0.25.1 amber
 pip install metallicious
 ```
 ## Quick start
-Parametrization of structure wih coordinates saved in `ru_pd.xyz` with (nonbonded) topology `ru_pd.top` (of the whole structure): 
+Parametrization of structure with coordinates saved as `supramolecular_cage.xyz` with (nonbonded) topology `supramolecular_cage.top` (of the whole structure): 
+```
+from metallicious import supramolecular_structure
+cage = supramolecular_structure('supramolecular_cage.xyz', metal_charges={'metal name 1': charge of metal 1(integer), 'metal name 2':charge of metal 2(integer) }, topol='supramolecular_cage.top', vdw_type='uff')
+cage.parametrize(out_coord='out.pdb', out_topol='out.top')
+```
 
+For example, for the structure ru_pd.xyz with force-field parameters saved as ru_pd.top, which consists of two metals Pd2+ and Ru2+, the input file looks like this:
 ```
 from metallicious import supramolecular_structure
 cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
 cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 ```
-The `supramolecular_structure` function takes a coordination file (*.xyz, *.pdb, *.gro, etc. supported by MDAnalysis), topolog file (*top, *prmtop, supported by ParmEd), dictionary of metal ions along with their charge (and in case template parametrization is needed multiplicity) and type of Van der Waals metal paramters as input.
+The `supramolecular_structure` function takes a coordination file (*.xyz, *.pdb, *.gro, etc. supported by MDAnalysis), topology file (*top, *prmtop, supported by ParmEd), dictionary of metal ions along with their charge (and in case template parametrization is needed multiplicity) and type of Van der Waals metal parameters as input.
 
 ## Initial topology file
 If you don't have a topology file, you can generate a simple force-field parametrization using General Amber Force-field (GAFF):
@@ -50,8 +56,8 @@ cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, v
 cage.prepare_initial_topology()
 cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 ```
-However, we do not intend to automate parametrization of the organic part of the molecule.
-Please refer to specialised tools such as gromacs, atb, ambertools and charmm-gui. 
+However, we do not intend to automate the parametrization of the organic part of the molecule.
+Please refer to specialized tools such as gromacs, atb, ambertools, and charmm-gui. 
 
 
 # Handling missing templates
@@ -62,7 +68,7 @@ In such cases to solutions are possible:
 ### 1. Parametrize template 
 We recommend to run template parametrization on HPC/cluster as it can take some time (our experience is ~8h on 8 CPUs per template).
 
-Specifing explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automaticly infrom metallicious to be ready to parametrize the template
+Specifying explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automatically inform metallicious to be ready to parametrize the template
 
 ```
 from metallicious import supramolecular_structure
@@ -88,7 +94,7 @@ It is also possible to use the metallicious just form command line. For example:
 ```
 metallicious -f cage.xyz -vdw_type merz-tip3p -metal_and_charges Pd 2 -prepare_topol
 ```
-For details see:
+For details, see:
 ```
 metallicious -h
 ```
