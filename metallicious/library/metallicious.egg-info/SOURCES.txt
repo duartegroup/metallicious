@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+setup.py
+metallicious/library/metallicious.egg-info/PKG-INFO
+metallicious/library/metallicious.egg-info/SOURCES.txt
+metallicious/library/metallicious.egg-info/dependency_links.txt
+metallicious/library/metallicious.egg-info/entry_points.txt
+metallicious/library/metallicious.egg-info/requires.txt
+metallicious/library/metallicious.egg-info/top_level.txt

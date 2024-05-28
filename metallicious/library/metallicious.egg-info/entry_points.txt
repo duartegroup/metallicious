@@ -1,0 +1,2 @@
+[console_scripts]
+metallicious = metallicious.__main__:main
