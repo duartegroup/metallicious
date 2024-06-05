@@ -6,7 +6,7 @@ Usage
 Installation
 ------------
 
-The easiest way to install _metallicious_ is to use conda enviroment and pip:
+The easiest way to install *metallicious* is to use conda environment:
 
 conda create --name metallicious
 conda activate metallicious
@@ -20,19 +20,19 @@ pip install metallicious
 Dependencies
 ----------------
 
-The core dependencies of _metallicious_:
-- [rdkit](https://www.rdkit.org/)
-- [networkx](https://networkx.org/)
-- [MDAnalysis](https://www.mdanalysis.org/)
-- [ParmEd](https://parmed.github.io/ParmEd/html/index.html)
+The core dependencies of *metallicious*:
+* `rdkit <https://www.rdkit.org/>`_
+* `networkx <https://networkx.org/>`_
+* `MDAnalysis <https://www.mdanalysis.org/>`_
+* `ParmEd <https://parmed.github.io/ParmEd/html/index.html>`_
 
 (**Optional**) the parametrization of templates requires:
-- [autode](https://github.com/duartegroup/autodE)
-- [ORCA](https://orcaforum.kofo.mpg.de/app.php/portal)
-- [psiRESP](https://github.com/lilyminium/psiresp)
+* `autode <https://github.com/duartegroup/autodE>`_
+* `ORCA <https://orcaforum.kofo.mpg.de/app.php/portal>`_
+* `psiRESP <https://github.com/lilyminium/psiresp>`_
 
 (**Optional**) simple force-field parametrization with General Amber Force-field (GAFF) requires:
-- [ambertools](https://ambermd.org/AmberTools.php)
+* `ambertools <https://ambermd.org/AmberTools.php>`_
 
 
 
