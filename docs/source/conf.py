@@ -2,7 +2,7 @@
 
 # -- Project information
 
-project = 'metallivious'
+project = 'metallicious'
 copyright = '2024, Piskorz'
 author = 'Piskorz'
 

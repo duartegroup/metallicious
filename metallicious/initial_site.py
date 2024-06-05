@@ -14,6 +14,13 @@ from metallicious.antechamber_interface import antechamber
 
 
 def create_metal_topol(metal_name, metal_charge, vdw_data_name):
+    '''
+
+    :param metal_name: (string) name of the metal
+    :param metal_charge: (int) charge of the metal
+    :param vdw_data_name: (string) name of the library from which take the L-J parameters
+    :return:
+    '''
     data = vdw_data[vdw_data_name]
 
     if f"{metal_name.title():}{metal_charge:}" in data:
