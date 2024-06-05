@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: metallicious
-Version: 0.2.27
+Version: 0.2.29
 Requires-Dist: numpy
 Requires-Dist: MDAnalysis
 Requires-Dist: rdkit
