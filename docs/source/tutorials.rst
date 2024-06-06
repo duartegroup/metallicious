@@ -1,7 +1,7 @@
 Examples
 =====
 
-.. _examples:
+.. _tutorials:
 
 The examples here are
 
