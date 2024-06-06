@@ -14,9 +14,8 @@ Contents
 
 .. toctree::
 
-   index
    installation
    usage
    examples
-   tutorial
+   tutorialS
    api

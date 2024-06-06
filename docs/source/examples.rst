@@ -5,7 +5,7 @@ Examples
 
 The examples here are
 
-Example 1
+Example 1: Quick start
 ------------
 
 Simple paramterization of the cage with 2 metals. As an imput we provide coordination file in PBD format and non-bonded
@@ -15,11 +15,12 @@ force-field paramters in *.top format (GROMACS). Morover LJ paramters of the Ru 
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.pdb', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.pdb', metal_charges={'Ru': 2, 'Pd':2 },
+                                    topol='ru_pd.top', vdw_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
-Example 2
+Example 2: automated organic force-field
 ------------
 
 In case of lack of the topology simple parametrization using AmberTools with GAFF force-field is done of the linker.
@@ -62,7 +63,8 @@ The template for this metal site is not available in metallicious. Therfore runn
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
+                                    vdw_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 raises an error "Topology file not specified, please provide topology, or use prepare_initial_topology=True".
@@ -81,7 +83,8 @@ dependencies (see installation guide) are needed (`autode <https://github.com/du
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
+                                    vdw_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 Bare in mind that parametrization of template is time-consuming. It will perform DFT optimalisation using ORCA/autodE. By default autodE uses 4 cores but this can be modified:
@@ -91,13 +94,15 @@ Bare in mind that parametrization of template is time-consuming. It will perform
     from metallicious import supramolecular_structure
     import autode as ade
     ade.Config.n_cores = 8
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
+                                    vdw_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 By default parametrization is done on D3BJ-PBE0/def2-SVP (keywords = ['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq']).
 This can be changed by specifing keywords in class supramolecular structure class:
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc', keywords= ['B3LYP', '6-31G*', 'tightOPT', 'freq'])
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
@@ -111,9 +116,7 @@ Truncation scheme are very simple
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    # This will not work becasue there is no exact template for this site:
-    # cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')
-
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc', truncation_scheme='dihedral')
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
+                                     vdw_type='merz-opc', truncation_scheme='dihedral')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
