@@ -33,7 +33,8 @@ Charge of organic ligand is guessed by rdkit frp, 3D structure of the atoms. Whi
 sometimes there might be ambiguity about the structure. In this example template site can have to sites:
 
 .. image:: images/gallium.png
-  :width: 400
+  :width: 200
+  :align: center
   :alt:
 
 As you can see the drown structure can correspond to two possible variation: 1,2benzodiol. and 1,2.
