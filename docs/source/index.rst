@@ -9,7 +9,7 @@ Welcome to metallicious's documentation!
 .. image:: images/summary.png
   :width: 200
   :align: center
-  :alt:
+  :alt: Figure of summary of metallicious protocol
 
 
 .. note::
@@ -21,7 +21,6 @@ Contents
 
 .. toctree::
 
-   index
    installation
    usage
    examples

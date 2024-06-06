@@ -1,9 +1,9 @@
-Examples
+Tutorials
 =====
 
 .. _tutorials:
 
-The examples here are
+
 
 Tutorial 1: Force-field parameters from SMILES string
 ------------
