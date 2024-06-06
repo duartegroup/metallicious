@@ -13,6 +13,7 @@ force-field paramters in *.top format (GROMACS). Morover LJ paramters of the Ru 
 (vdw_type=uff), as they are only one available for Ru metal.
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.pdb', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
@@ -25,6 +26,7 @@ In case of lack of the topology simple parametrization using AmberTools with GAF
 *metallicious* will prepare the non-bonded force-field paramters of the whole structure which is saved to folder "init_topol".
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
@@ -32,6 +34,7 @@ In case of lack of the topology simple parametrization using AmberTools with GAF
 The parameters can be saved to AMBER format force-field
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
     cage.parametrize(out_coord='out.inpcrd', out_topol='out.prmtop', prepare_initial_topology=True)
@@ -44,6 +47,7 @@ If the cage is homoleptic and you have available force-field paramters of the li
 generate initial topology of the whole structure.
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
     cage.prepare_initial_topology(homoleptic_ligand_topol='linker.top')
@@ -56,6 +60,7 @@ Cage shown below have rather complex metal binding site.
 The template for this metal site is not available in metallicious. Therfore running command:
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
@@ -74,6 +79,7 @@ specifing the multiplicity of the metal which also enembales QM calculation. For
 dependencies (see installation guide) are needed (`autode <https://github.com/duartegroup/autodE>`_, `ORCA <https://orcaforum.kofo.mpg.de/app.php/portal>`_, and `psiRESP <https://github.com/lilyminium/psiresp>`_).
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
@@ -81,6 +87,7 @@ dependencies (see installation guide) are needed (`autode <https://github.com/du
 Bare in mind that parametrization of template is time-consuming. It will perform DFT optimalisation using ORCA/autodE. By default autodE uses 4 cores but this can be modified:
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     import autode as ade
     ade.Config.n_cores = 8
@@ -102,6 +109,7 @@ Example 5
 Truncation scheme are very simple
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     # This will not work becasue there is no exact template for this site:
     # cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc')

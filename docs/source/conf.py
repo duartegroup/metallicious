@@ -35,7 +35,7 @@ html_logo = "logo_rect.png"
 html_theme_options = {
     'logo_only': False
 }
-html_favicon = 'images/icon.ico'
+html_favicon = 'icon.ico'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'

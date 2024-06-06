@@ -11,6 +11,7 @@ Tutorial 1: Force-field parameters from SMILES string
 It is extremely simple to obtain force-field parameters just from SMILES string by combining  functionality of metallicious with `cgbind <https://github.com/duartegroup/cgbind/tree/master>`_:
 
 .. code-block:: python
+
     from cgbind import Linker, Cage
     from metallicious import supramolecular_structure
 
@@ -39,6 +40,7 @@ As you can see the drown structure can correspond to two possible variation: 1,2
 To correct this one needs to overwrite the guesses charges.
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('nonbonded.pdb', {'Ga': (3, 1)}, topol = 'noncovalent_complex.top', vdw_type='uff', search_library=False)
     cage.extract_unique_metal_sites()
