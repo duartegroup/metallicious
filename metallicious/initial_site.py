@@ -15,11 +15,12 @@ from metallicious.antechamber_interface import antechamber
 
 def create_metal_topol(metal_name, metal_charge, vdw_data_name):
     '''
+    Creates force-field parameters of the metal, reading from library of available L-J parameters
 
     :param metal_name: (string) name of the metal
     :param metal_charge: (int) charge of the metal
     :param vdw_data_name: (string) name of the library from which take the L-J parameters
-    :return:
+    :return: (parmed.topologyobject) topology
     '''
     data = vdw_data[vdw_data_name]
 

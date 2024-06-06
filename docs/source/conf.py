@@ -31,11 +31,11 @@ templates_path = ['_templates']
 
 html_theme = 'sphinx_rtd_theme'
 #html_static_path = ['_static']
-html_logo = "logo_square.png"
+html_logo = "logo_rect.png"
 html_theme_options = {
     'logo_only': False
 }
-html_favicon = 'images/icon.ico'
+html_favicon = 'icon.ico'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'

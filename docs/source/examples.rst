@@ -71,7 +71,7 @@ Example 4: Parametrization of new template
 
 If paramters for the template are not available, you might decide to parametrize them. In *metallicious* this is done by
 specifing the multiplicity of the metal which also enembales QM calculation. For this functionality, the additional
-dependencies (see installation guide) are needed (`autode <https://github.com/duartegroup/autodE>`_, `ORCA <https://orcaforum.kofo.mpg.de/app.php/portal>`_, and`psiRESP <https://github.com/lilyminium/psiresp>`_).
+dependencies (see installation guide) are needed (`autode <https://github.com/duartegroup/autodE>`_, `ORCA <https://orcaforum.kofo.mpg.de/app.php/portal>`_, and `psiRESP <https://github.com/lilyminium/psiresp>`_).
 
 .. code-block:: python
     from metallicious import supramolecular_structure

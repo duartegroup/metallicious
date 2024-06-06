@@ -1,8 +1,8 @@
 """
 Set up logging with the standard python logging module. Set the log level with
-$CGBIND_LOG_LEVEL = {'', INFO, WARNING, DEBUG}
+$METALLICIOUS_LOG_LEVEL = {'', INFO, WARNING, DEBUG}
 
-i.e. export CGBIND_LOG_LEVEL=DEBUG
+i.e. export METALLICIOUS_LOG_LEVEL=DEBUG
 
 """
 import logging

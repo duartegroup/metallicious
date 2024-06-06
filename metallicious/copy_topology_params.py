@@ -9,34 +9,7 @@ from metallicious.utils import strip_numbers_from_atom_name
 import networkx as nx
 
 
-'''
-def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
-    logger.info("   [ ] Changing charges and atomtypes")
-    #sum_of_charge_diffrences = 0
 
-    for a in mapping_fp_to_new:
-        logger.info(f"          {topol_new.atoms[mapping_fp_to_new[a]].type:s} "
-                    f"{topol_new.atoms[mapping_fp_to_new[a]].name:s} "
-                    f"{topol_new.atoms[mapping_fp_to_new[a]].charge:} --> "
-                    f"{fp_topol.atoms[a].type, fp_topol.atoms[a].name:} {topol_new.atoms[mapping_fp_to_new[a]].charge + fp_topol.atoms[a].charge:}")
-
-        atom = fp_topol.atoms[a]
-
-        if atom.type not in topol_new.parameterset.atom_types.keys():
-            logger.info(f"      [^] Adding new atomtype: {atom.type:s}")
-            atomtype = pmd.topologyobjects.AtomType(name=atom.type, number=atom.number, mass=atom.mass)
-            topol_new.parameterset.atom_types[atom.type] = atomtype
-
-        topol_new.atoms[mapping_fp_to_new[a]].type = fp_topol.atoms[a].type
-        topol_new.atoms[mapping_fp_to_new[a]].epsilon = fp_topol.atoms[a].epsilon
-        topol_new.atoms[mapping_fp_to_new[a]].sigma = fp_topol.atoms[a].sigma
-        topol_new.atoms[mapping_fp_to_new[a]].rmin = fp_topol.atoms[a].rmin
-        topol_new.atoms[mapping_fp_to_new[a]].charge += fp_topol.atoms[a].charge  # topol_fp.atoms[a].charge
-
-        #sum_of_charge_diffrences += fp_topol.atoms[a].charge
-
-    return topol_new
-'''
 def adjust_charge(topol_new, fp_topol, mapping_fp_to_new):
     logger.info("   [ ] Changing charges ")
     sum_of_charge_diffrences = 0
@@ -323,11 +296,6 @@ def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
             logger.info("And you should be worry if it is not the end of fingerprint")
             found = True
 
-            '''
-            for dihedral in topol_fp.dihedrals:
-            if dihedral.atom1.idx==0:
-            print(dihedral.atom1.idx+1, dihedral.atom2.idx+1, dihedral.atom3.idx+1, dihedral.atom4.idx+1)
-            '''
 
         if not found:
             type_to_assign = pmd.topologyobjects.ImproperType(psi_k=dihedral_fp.type.psi_k,
@@ -351,53 +319,7 @@ def adjust_impropers(topol_new, topol_fp, mapping_fp_to_new):
 
     return topol_new
 
-'''
-def adjust_bonds(topol_new, topol_fp, mapping_fp_to_new):
-    logger.info("   [ ] Adding new bonds to topology")
 
-    for bond_fp in topol_fp.bonds:
-        found = False
-
-        for bond_new in topol_new.bonds:
-            # if bond_fp.atom1.name=="ZN":
-            #    print(bond_fp.atom1.idx , bond_new)
-
-            # print(bond_new, bond_new.atom1.name)
-            # Check if atoms in mapping (that they are not the additional atoms)
-            if bond_fp.atom1.idx in mapping_fp_to_new and bond_fp.atom2.idx in mapping_fp_to_new:
-                # print("It is in the mapping")
-
-                if ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom1.idx] and bond_new.atom2.idx ==
-                     mapping_fp_to_new[bond_fp.atom2.idx]) or
-                        ((bond_new.atom1.idx == mapping_fp_to_new[bond_fp.atom2.idx] and bond_new.atom2.idx ==
-                          mapping_fp_to_new[bond_fp.atom1.idx]))):
-                    if (bond_fp.type != bond_new.type):
-                        logger.info(f"      [o] Diffrent bond type {bond_new.type:} {bond_fp.type:}")
-                    found = True
-            else:
-                found = True
-
-        if not found:
-            # type_to_assign= bond_fp.type
-            # type_to_assign = pmd.topologyobjects.AngleType(angle_fp.type.k, angle_fp.type.theteq)
-            # print("AAA", bond_fp.type.k, bond_fp.type.req, len(topol_new.bond_types))
-
-            type_to_assign = pmd.topologyobjects.BondType(bond_fp.type.k, bond_fp.type.req,
-                                                          list=topol_new.bond_types)
-
-            # if type_to_assign not in topol_new.bond_types:
-            topol_new.bond_types.append(type_to_assign)
-
-            atom1 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom1.idx]]
-            atom2 = topol_new.atoms[mapping_fp_to_new[bond_fp.atom2.idx]]
-            topol_new.bonds.append(pmd.topologyobjects.Bond(atom1, atom2, type=type_to_assign))
-
-            logger.info(
-                f"      [o] New bond: {mapping_fp_to_new[bond_fp.atom1.idx]:}  {type_to_assign:} {atom1.name:}-{atom2.name:} ({mapping_fp_to_new[bond_fp.atom2.idx]:})")
-
-    return topol_new
-
-'''
 def adjust_pair_exclusions(topol_new, topol_fp, mapping_fp_to_new):
     logger.info("   [ ] Adding new pair exclusions to topology")
     for pair_fp in topol_fp.adjusts:

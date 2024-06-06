@@ -8,6 +8,11 @@ from metallicious.improper_torsion import find_impropers_and_values
 from metallicious.log import logger
 
 def check_if_orca_available():
+    '''
+    Checks if ORCA/autodE is available
+
+    :return: (bool) True if ORCA/autodE is available
+    '''
     try:
         import autode as ade
     except:
@@ -43,17 +48,16 @@ def remove_non_metal_donor_bonds(bonds, metal_name, donors=['N', 'O', 'S']):
     return new_bonds
 
 
-def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern):
+def symmetrize_bonds_angles(bonds, metal_name, filename_opt, indecies, unique_ligands_pattern):
     '''
     This procedure finds the bonds and angles which are equivalent in the graph representation
 
-    :param bonds:
+    :param bonds: (dict) dictionary including bonds parametrized by seminario
     :param metal_name: (str) metal name
     :param filename_opt: (str) path to optimised structure
-    :param starting_index: TODO
-    :param indecies: (list(list(int))) lists containing atom indices of diffrent ligands
+    :param indecies: (list(list(int))) lists containing atom indices of different ligands
     :param unique_ligands_pattern: (list(int)) list showing which ligands are equivalent (e.g.,[0,0,1] -> first 2 are the same type of ligand). The bonded paramters of the same ligands are symmetrised
-    :return:
+    :return: (dict) new dictionary including bond parameters
     '''
 
     site = MDAnalysis.Universe(filename_opt)
@@ -101,27 +105,38 @@ def symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, ind
     return bonds
 
 
-def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies,
+def bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, indecies,
                                        unique_ligands_pattern, donors=["N", "O", "S"]):
     '''
-    It starts procedures of removing not valid bonds (metal-non donor bonds, i.g., to prevent Metal-hydrogen)
+    It starts procedures of removing not valid bonds (metal-non donor bonds, i.g., to prevent Metal-hydrogen).
 
-    :param bonds_with_names:
-    :param metal_name:
-    :param filename_opt:
-    :param starting_index:
-    :param indecies:
-    :param unique_ligands_pattern:
-    :param donors:
-    :return:
+    It normalizes values of the bonds which are the same
+
+    :param bonds_with_names: (dict) dictionary including bonds
+    :param metal_name: (str) name of the metal
+    :param filename_opt: (str) filename of optimised structure
+    :param starting_index: (list(int)) indices of first atoms of diffrent the residues
+    :param indecies: (list(list)) list of indecies of diffrent residues
+    :param unique_ligands_pattern: (list(int)) list showing which ligands are equivalent (e.g.,[0,0,1] -> first 2 are the same type of ligand). The bonded paramters of the same ligands are symmetrised
+    :param donors: (list(str)) names of the donor atoms, with which the metal can form bond
+    :return: (dict) dictionary which includes bonds
     '''
 
     bonds = remove_non_metal_donor_bonds(bonds_with_names, metal_name, donors=donors)
-    bonds = symmetrize_bonds_angles(bonds, metal_name, filename_opt, starting_index, indecies, unique_ligands_pattern)
+    bonds = symmetrize_bonds_angles(bonds, metal_name, filename_opt, indecies, unique_ligands_pattern)
     return bonds
 
 
 def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
+    '''
+    It removes angle parameters which does not include bond metal-donor (for example to remove metal-hydrogen,
+    or metal-carbon involving angles)
+
+    :param angles: (dict) list of angle parameters
+    :param metal_name: (str) name of the metal
+    :param donors: (list(str)) list of names of donor atoms
+    :return: (dict) new list of angle parameters with invalid angles removed
+    '''
     metal_name = metal_name.title()
     new_angles = {}
     for angle in angles:
@@ -141,16 +156,39 @@ def remove_non_metal_donor_angles(angles, metal_name, donors=['N', 'S', 'O']):
     return new_angles
 
 
-def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies,
+def angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, indecies,
                                         unique_ligands_pattern,
                                         donors=["N", "O", "S"]):
+    '''
+    Removes angles from angles_with_names which include invalid metal-ligand bonded parameters, that is the one which
+    are NOT formed with metal-donors atoms. In particular this is useful to remove weak bonds between metal and carbon,
+    and metal and hydrogen.
+
+    Then it normalizes the angles which are the same in different ligands.
+
+
+    :param angles_with_names: (dict) dictionary of the angles
+    :param metal_name: (str) name of the metal
+    :param filename_opt: (str) filename of the optimized structure
+    :param starting_index:
+    :param indecies:
+    :param unique_ligands_pattern: (list(int)) list showing which ligands are equivalent (e.g.,[0,0,1] -> first 2 are the same type of ligand). The bonded paramters of the same ligands are symmetrised
+    :param donors:
+    :return: (dict) new dictionary of the angles
+    '''
     angles = remove_non_metal_donor_angles(angles_with_names, metal_name, donors=donors)
-    angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, starting_index, indecies,
-                                     unique_ligands_pattern)
+    angles = symmetrize_bonds_angles(angles, metal_name, filename_opt, indecies, unique_ligands_pattern)
     return angles
 
 
 def extend_angle_to_dihedral(angle, bonds):
+    '''
+    Create a possible dihedral by extending angle by single bond
+
+    :param angle: (list) indecies of atoms in angle
+    :param bonds: (list) list of bonds
+    :return: (list) dihedral
+    '''
     dihedrals = []
     last_atom = angle[-1]
     temp = list(set(np.concatenate([[bond[0], bond[1]] for bond in bonds if last_atom in bond])))
@@ -169,6 +207,13 @@ def extend_angle_to_dihedral(angle, bonds):
 
 
 def generate_all_dihedrals(angles, bonds, metal_index=0):
+    '''
+    Create all possible dihedral by extending all angles by single bond
+
+    :param angles: (list) list of angles
+    :param bonds: (list) list of bonds
+    :return: (list(list)) list of dihedrals
+    '''
     dihedrals = []
     for angle_indexes in angles:
         if metal_index in angle_indexes:
@@ -184,6 +229,17 @@ def generate_all_dihedrals(angles, bonds, metal_index=0):
 
 
 def create_dummy_dihedrals(angles, bonds, metal_index=0):
+    '''
+    Generates dictionary of dihedrals which includes dihedrals generated by extending angles by single bond. The force
+    constant and value of these are dihedrals are set to 0.
+
+    :param angles: (list) list of angles
+    :param bonds: (list) list of bonds
+    :param metal_index: (int) metal index
+    :return: (list(list)) list of dihedrals
+
+    :return:
+    '''
     dihedrals_indexes = generate_all_dihedrals(angles, bonds, metal_index)
     dihedrals = {}
 
@@ -322,6 +378,16 @@ def simple_seminario(filename, keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT',
 
 
 def remove_atoms_from_bonded(bonds, angles, impropers, atoms_to_remove):
+    '''
+    Removes bonds, angles, and impropers which include specified atoms (atoms_to_remove). This procedure is used to
+    remove hydrogen atoms needed for the QM calculations, but removed to create template.
+
+    :param bonds: (dict) dictionary of the bonds
+    :param angles: (dict) dictionary of the angles
+    :param impropers: (dict) dictionary of the impropers
+    :param atoms_to_remove: (list(int)) list of indices of atoms
+    :return: (dict, dict, dict) new dictionaries of bonds, angles and impropers without parameters for specified atoms
+    '''
     new_params = []
     for bonded in [bonds, angles, impropers]:
         new_bonded = {}
@@ -341,6 +407,15 @@ def remove_atoms_from_bonded(bonds, angles, impropers, atoms_to_remove):
 
 
 def remove_indices_of_removed_atoms(bonds, angles, impropers, atoms_to_remove):
+    '''
+    Renumbers the atom indices in bonded parameters that thy are in a sequence without gaps
+
+    :param bonds: (dict) dictionary of the bonds
+    :param angles: (dict) dictionary of the angles
+    :param impropers: (dict) dictionary of the impropers
+    :param atoms_to_remove: (list(int)) list of indices of atoms
+    :return: (dict, dict, dict) new dictionaries of bonds, angles and impropers with reordered
+    '''
     atoms_to_remove = sorted(atoms_to_remove)
     new_params = []
     for bonded in [bonds, angles, impropers]:
@@ -358,19 +433,20 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
                      keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], mult=1, improper_metal=False,
                      donors=['N', 'S', 'O'], atoms_to_remove=None, vibrational_scaling=None):
     """
+    Runs seminario method for the structure inputed in filename
 
     :param filename: (str) input structure for which bonds and angles will be found
     :param metal_charge: (int) charge for QM calculations
     :param metal_name: (str) name of the metal
-    :param starting_index: list(int) indices where the new ligands starts
-    :param indecies:
-    :param unique_ligands_pattern:
-    :param keywords:
-    :param mult:
-    :param improper_metal:
-    :param donors:
-    :param atoms_to_remove:
-    :param vibrational_scaling:
+    :param starting_index: list(int) indices where the new ligands start
+    :param indecies: (list(list(int))) lists containing atom indices of different ligands
+    :param unique_ligands_pattern: (list(int)) list showing which ligands are equivalent (e.g.,[0,0,1] -> first 2 are the same type of ligand). The bonded paramters of the same ligands are symmetrised
+    :param keywords: (list(str)) keywords for level of theory
+    :param mult: (int) multiplitiy of the metal
+    :param improper_metal: (bool) if True, parametrize the improper dihedral involving metal
+    :param donors: (list(str)) atoms with which metal can interact
+    :param atoms_to_remove: (list) list of hydrogen atoms to remove in order to create the template from saturated template
+    :param vibrational_scaling: (float) vibrational scaling for the QM frequencies
     :return:
     """
 
@@ -380,11 +456,11 @@ def single_seminario(filename, metal_charge, metal_name, starting_index, indecie
                                                                          mult=mult,
                                                                          vibrational_scaling=vibrational_scaling)
 
-    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, starting_index, indecies,
+    bonds = bond_remove_invalid_and_symmetrize(bonds_with_names, metal_name, filename_opt, indecies,
                                                unique_ligands_pattern,
                                                donors=donors)
 
-    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, starting_index, indecies,
+    angles = angle_remove_invalid_and_symmetrize(angles_with_names, metal_name, filename_opt, indecies,
                                                  unique_ligands_pattern,
                                                  donors=donors)
 

@@ -10,6 +10,7 @@ from metallicious.log import logger
 from metallicious.patcher import patcher
 from metallicious.utils import new_directory
 from metallicious.asserts import compare_topology_and_coords, check_if_parametrization_modules_available
+
 import numpy as np
 import MDAnalysis
 from MDAnalysis.lib.distances import distance_array
@@ -19,7 +20,7 @@ import os
 
 class supramolecular_structure:
     '''
-    The main structure holidng all the information about the intput and communicating between diffrent classes
+    The main structure holidng all the information about the intput and communicating between different classes
 
     '''
     def __init__(self, filename, metal_charge_mult=None, metal_charges=None, vdw_type=None, topol=None,

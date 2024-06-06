@@ -16,14 +16,6 @@ class patcher():
     Main procedure copies the parameters from template into inputted force-field parameters
     '''
 
-    # path = None #TODO 2024/4/11 reduntant? I coppied it into __init__
-    # tmpdir_path = None
-    # cage = None
-    # topol_new = None # this is our new topology
-    #
-    # output_topol = "cage.top"
-    # output_coords = "cage.gro"
-
     def __init__(self):
         self.path = None
         self.tmpdir_path = None

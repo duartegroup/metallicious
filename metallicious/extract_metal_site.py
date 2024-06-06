@@ -663,10 +663,10 @@ def read_and_reoder_topol_and_coord(filename, topol_filename, metal_name, all_me
     return cage, topol, list(range(len(all_metals_indices)))
 
 
-def extract_metal_structure(filename, topol_filename, metal_name, output=None, check_uniquness=True,
-                            all_metal_names=None, covalent_cutoff=3.0, donors=None, closest_neighbhors=3):
+def extract_metal_structure(filename: object, topol_filename: object, metal_name: object, output: object = None, check_uniquness: object = True,
+                            all_metal_names: object = None, covalent_cutoff: object = 3.0, donors: object = None, closest_neighbhors: object = 3) -> object:
     '''
-    It takes an input supramolecular structure and it tries extract metal binding site
+    It takes an input supramolecular structure, and it tries extract metal binding site
 
     :param filename:
     :param metal_name:
