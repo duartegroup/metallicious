@@ -118,8 +118,7 @@ For details, see:
 Extended list of the bash command:
 
 .. list-table::
-    :widths: 10 40 20 10 10
-    :header-rows: 1
+   :header-rows: 1
 
    * - Variable
      - Comment
