@@ -118,7 +118,8 @@ For details, see:
 Extended list of the bash command:
 
 .. list-table:: Title
-   :header-rows: 1
+    :widths: 1 1 1 1 1
+    :header-rows: 1
 
    * - Variable
      - Comment
@@ -163,7 +164,7 @@ Extended list of the bash command:
    * - -LJ_type
      - Type of parameters for Lennard-Jones parameters
      - uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew
-     - merz-opc
+     - uff
      - No
    * - -truncate
      - Truncation scheme
@@ -196,44 +197,54 @@ Available parameters
 ------------
 
 Default templates
+~~~~~~~~~~~~
 
+By default, *metallicious* contains a few templates which are commonly used in metallo-organic cages. However, more templates can be easily added using automated parametrization procedure, which is also part of *metallicious*.
 
 .. image:: images/docs_templates.png
-  :width: 300
-  :align: center
-  :alt:
+    :width: 500
+    :align: center
+    :alt:
+
+    Initial templates available as part of *metallicious*
+
+
 
 Lennard-Jones
+~~~~~~~~~~~
 
-*metallicious* overwrites metal parameters using Lennard-Jones (LJ) parameters taken from literature.  In particular these are available parameters and references:
+*metallicious* overwrites metal parameters using Lennard-Jones (LJ) parameters taken from literature. In particular, it is possible to use listed below parameters:
 
-    - Merz-OPC [Merzopc]_
-    - Merz-opc3 [Merzopc]_
-    - Merz-tip3p-fb [Merzopc]_
-    - Merz-tip4p-fb [Merzopc]_
-    - Merz-spce [Merztip3p]_
-    - Merz-tip3p [Merztip3p]_
-    - Merz-tip4-ew [Merztip3p]_
-    - Zhang-tip3p [zhang]_
-    - Zhang-opc3 [zhang]_
-    - Zhang-spce [zhang]_
-    - Zhang-spceb [zhang]_
-    - Zhang-tip3p-fb [zhang]_
-    - Zhang-opc [zhang]_
-    - Zhang-tip4p2005 [zhang]_
-    - Zhang-tip4p-d [zhang]_
-    - Zhang-tip4p-fb [zhang]_
-    - Zhang-tip4p-ew [zhang]_
-    - UFF [uff]_
+    - merz-OPC [Merzopc]_
+    - merz-opc3 [Merzopc]_
+    - merz-tip3p-fb [Merzopc]_
+    - merz-tip4p-fb [Merzopc]_
+    - merz-spce [Merztip3p]_
+    - merz-tip3p [Merztip3p]_
+    - merz-tip4-ew [Merztip3p]_
+    - zhang-tip3p [zhang]_
+    - zhang-opc3 [zhang]_
+    - zhang-spce [zhang]_
+    - zhang-spceb [zhang]_
+    - zhang-tip3p-fb [zhang]_
+    - zhang-opc [zhang]_
+    - zhang-tip4p2005 [zhang]_
+    - zhang-tip4p-d [zhang]_
+    - zhang-tip4p-fb [zhang]_
+    - zhang-tip4p-ew [zhang]_
+    - uff [uff]_
 
-All available paramters are shown on peridoic table below.
+Periodic table below shows for which elements L-J parameters are available.
 
 
 .. image:: images/periodic_table.png
-  :width: 400
-  :align: center
-  :alt:
+    :width: 400
+    :align: center
+    :alt:
 
+    Available L-J parameters in *metallicious*. L-J parameters for most of the elements are available from UFF [uff]_. L-J parameters for some of the metals were derived by Merz et al. [Merzopc]_ [Merztip3p]_ and Zhang et al. [zhang]_ to reproduce hydration free energies and coordination number in aqueous complex.
+
+\n
 
 References:
 

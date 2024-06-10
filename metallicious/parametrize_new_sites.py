@@ -354,7 +354,7 @@ class new_metal_site():
                  link_atoms=None, additional_atoms=None, starting_index=None, indecies=None, ligand_charges=None,
                  ligand_smiles=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
-                 donors=['N', 'S', 'O'], vdw_type=None):
+                 donors=['N', 'S', 'O'], vdw_type='uff'):
         '''
         The class stores and processes information needed for new template parametrization
 
@@ -492,21 +492,15 @@ class new_metal_site():
                                              self.starting_index,
                                              metal_radius=self.metal_radius, mult=self.mult)
 
-        print("partial charges", partial_charges)#TODO
         # Removing additional atoms:
         partial_charges = [partial_charge for idx, partial_charge in enumerate(partial_charges) if
                            idx not in self.additional_atoms]
-
-        print("rem charges", partial_charges)#TODO
-        print("additional atoms", self.additional_atoms)#TODO
 
         logger.info("\t[ ] Copying charges")
         for idx, atom in enumerate(self.topol.atoms):
             atom.charge = partial_charges[idx]
         logger.info("\t[+] Charges calculated !")
 
-
-        self.topol.save("temp_temp_topol.top", overwrite=True) #TODO
 
     def reduce_to_template(self, out_topol='template.top', out_coord='template.pdb'):
         '''

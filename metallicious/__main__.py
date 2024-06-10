@@ -12,7 +12,7 @@ def get_args():
 
     parser.add_argument("-metal_and_charge",nargs='+', help="Metal names and charges (optionally, multiplicity, when parametrization needed), for example: Pd 2 1 Ru 2 1")
     parser.add_argument("-keywords", help="autodE keywords for QM calculations (default: PBE0 D3BJ def2-SVP tightOPT freq)", nargs='+')
-    parser.add_argument("-LJ_type", default='merz-opc',
+    parser.add_argument("-LJ_type", default='uff',
                         help="Type of parameters for Lennard-Jones paramters (default: merz-opc; available: uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew")
     parser.add_argument("-truncate", help="Truncation scheme (defualt: None; available: None, 3-bond (dihedral), 2-bond (angle), 1-bond(bond))", default=None)
     parser.add_argument("-improper_metal", action='store_true', default=False,
