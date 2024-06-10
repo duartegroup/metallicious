@@ -118,7 +118,7 @@ For details, see:
 Extended list of the bash command:
 
 .. list-table:: Title
-   :widths:  30 50 10 10
+   :widths: 10 50 20 10 10
    :header-rows: 1
 
    * - Variable
