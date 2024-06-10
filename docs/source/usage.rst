@@ -6,7 +6,9 @@ Usage
 Python module
 ------------
 
-Quick_start
+
+Quick start
+------------
 
 Parametrization of structure with coordinates saved as `supramolecular_cage.xyz` with (nonbonded) topology `supramolecular_cage.top` (of the whole structure):
 
@@ -42,13 +44,15 @@ If you don't have a topology file, you can generate a simple force-field paramet
 However, we do not intend to automate the parametrization of the organic part of the molecule.
 Please refer to specialized tools such as gromacs, atb, ambertools, and charmm-gui.
 
+Handling missing templates
+------------
 
-# Handling missing templates
 
 The number of combination of possible ligands and metal results that inevitibly you will encounter metal site for which there is no template.
 In such cases to solutions are possible:
 
-### 1. Parametrize template
+1. Parametrize template
+~~~~~~~~~~
 We recommend to run template parametrization on HPC/cluster as it can take some time (our experience is ~8h on 8 CPUs per template).
 
 Specifying explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automatically inform metallicious to be ready to parametrize the template
@@ -60,7 +64,8 @@ Specifying explicitly the metal multiplicity using the metal_charge_mult variabl
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
-### 2. Truncate existing template
+2. Truncate existing template
+~~~~~~~~~~~~~~~~
 
 If an exact template is unavailable in the library, you can truncate part of an existing template.
 Truncation is based on the distance from the metal centre, such as 4-bonds away ("dihedral"), 3-bonds away ("angles"), or 1-bond away ("bonds").
@@ -100,13 +105,17 @@ Bash command line
 
 It is also possible to use the metallicious just form command line. For example:
 
-metallicious -f cage.xyz -vdw_type merz-tip3p -metal_and_charges Pd 2 -prepare_topol
+.. code-block:: bash
+
+    metallicious -f cage.xyz -vdw_type merz-tip3p -metal_and_charges Pd 2 -prepare_topol
 
 For details, see:
 
-metallicious -h
+.. code-block:: bash
 
-Possible input for bash command:
+    metallicious -h
+
+Extended list of the bash command:
 
 .. list-table:: Title
    :widths:  30 50 10 10
