@@ -10,6 +10,7 @@ Quick_start
 
 Parametrization of structure with coordinates saved as `supramolecular_cage.xyz` with (nonbonded) topology `supramolecular_cage.top` (of the whole structure):
 
+.. code-block:: python
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('supramolecular_cage.xyz',
@@ -20,6 +21,7 @@ Parametrization of structure with coordinates saved as `supramolecular_cage.xyz`
 
 For example, for the structure ru_pd.xyz with force-field parameters saved as ru_pd.top, which consists of two metals Pd2+ and Ru2+, the input file looks like this:
 
+.. code-block:: python
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
@@ -29,6 +31,8 @@ For example, for the structure ru_pd.xyz with force-field parameters saved as ru
 
 ## Initial topology file
 If you don't have a topology file, you can generate a simple force-field parametrization using General Amber Force-field (GAFF):
+
+.. code-block:: python
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
@@ -49,6 +53,7 @@ We recommend to run template parametrization on HPC/cluster as it can take some 
 
 Specifying explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automatically inform metallicious to be ready to parametrize the template
 
+.. code-block:: python
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, vdw_type='uff')
@@ -62,6 +67,8 @@ Truncation is based on the distance from the metal centre, such as 4-bonds away 
 Such a strategy is fast but results in a loss of accuracy.
 
 For example:
+
+.. code-block:: python
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, truncation_scheme = 'dihedral')
@@ -99,39 +106,82 @@ For details, see:
 
 metallicious -h
 
+Possible input for bash command:
+
 .. list-table:: Title
    :widths: 25 25 50
    :header-rows: 1
 
-   * - [copy from SI]
-     - Heading row 1, column 2
-     - Heading row 1, column 3
-   * - Row 1, column 1
-     -
-     - Row 1, column 3
-   * - Row 2, column 1
-     - Row 2, column 2
-     - Row 2, column 3
-
-
--f Metaloorganic structure (*.gro, *.pdb, etc. all supported by MDAnalysis)
--p Metaloorganic topology of the whole structure (*.top, *.prmtop, etc. all supported by ParmEd)", default=False)
--of", help="Output metaloorganic structure (*.gro, *.pdb, etc. supported by MDAnalysis)", default='out.pdb')
-parser.add_argument("-op", help="Output metaloorganic topology (*.top, *.prmtop, etc. supported by ParmEd)", default='out.top')
-
-parser.add_argument("-metal_and_charge",nargs='+', help="Metal names and charges (optionally, multiplicity, when parametrization needed), for example: Pd 2 1 Ru 2 1")
-parser.add_argument("-keywords", help="autodE keywords for QM calculations (default: PBE0 D3BJ def2-SVP tightOPT freq)", nargs='+')
-parser.add_argument("-LJ_type", default='merz-opc',
-                    help="Type of parameters for Lennard-Jones paramters (default: merz-opc; available: uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew")
-parser.add_argument("-truncate", help="Truncation scheme (defualt: None; available: None, 3-bond (dihedral), 2-bond (angle), 1-bond(bond))", default=None)
-parser.add_argument("-improper_metal", action='store_true', default=False,
-                    help="Calculate improper dihedral of the metal-aromatic (default: False)")
-parser.add_argument("-donors", nargs='+', default=['N', 'S', 'O'],
-                    help = "Donors from the connected ligands, usually electronegative atom, such as N, S, O, but sometimes metal is connected to carbon (default: N S O)")
-parser.add_argument("-prepare_initial_topol", action='store_true', default=False, help="Prepare initial topology using GAFF")
-parser.add_argument("-linker_topol", default=None, help="Linker force-field (topology) parameters")
-return parser.parse_args()
-
+   * - Variable
+     - Comment
+     - Possible input
+     - Default
+     - Required
+   * - -h, --help
+     - Show help message and exit
+     - Possible input
+     - None
+     - No
+   * - -f
+     - Metaloorganic coordination file
+     - *.gro, *.pdb and other coordination formats supported by MDAnalysis
+     - None
+     - Yes
+   * - -p
+     - Metaloorganic force-field parameters of non-bonded model
+     - .top, .prmtop, etc. and other supported by ParmEd
+     - None
+     - Yes (unless prepare_topol specified)
+   * - -of
+     - Output metaloorganic structure
+     - .gro, .pdb and other formats supported by MDAnalysis
+     - out.pdb
+     - No
+   * - -op
+     - Output metaloorganic topology
+     - .top, .prmtop and other formats supported by ParmEd
+     - out.top
+     - No
+   * - -metal_and_charges
+     - Metal names and charges (optionally, multiplicity when parametrization needed)
+     - Names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
+     - None
+     - Yes
+   * - -keywords
+     - autodE keywords for QM calculations
+     - See autodE or ORCA manual
+     - PBE0 D3BJ def2-SVP tightOPT freq
+     - No
+   * - -LJ_type
+     - Type of parameters for Lennard-Jones parameters
+     - uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew
+     - merz-opc
+     - No
+   * - -truncate
+     - Truncation scheme
+     - None, 3bond/dihedral, 2bond/angle, 1bond/bond
+     - None
+     - No
+   * - -improper_metal
+     - Calculate the improper dihedral of the metal-aromatic
+     - True/False
+     - False
+     - No
+   * - -donors
+     - Donors from the connected ligands, usually electronegative atoms, such as N, S, O, but sometimes metal is connected to carbon
+     - Any element name separated by space
+     - N S O
+     - No
+   * - -prepare_topol
+     - Prepare initial topology using GAFF
+     - True/False
+     - False
+     - No
+   * - -linker_topol
+     - Linker force-field (topology) parameters, only used when prepare_topol=True
+     - .top, .prmtop, etc. and other supported by ParmEd
+     - None
+     - No
 
 
 Available parameters
@@ -139,4 +189,16 @@ Available parameters
 
 Default templates
 
+
+.. image:: images/docs_templates.png
+  :width: 200
+  :align: center
+  :alt:
+
 Lennard-Jones
+
+
+.. image:: images/periodic_table.png
+  :width: 200
+  :align: center
+  :alt:

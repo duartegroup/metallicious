@@ -8,8 +8,8 @@ The examples here are
 Example 1: Quick start
 ------------
 
-Simple paramterization of the cage with 2 metals. As an imput we provide coordination file in PBD format and non-bonded
-force-field paramters in *.top format (GROMACS). Morover LJ paramters of the Ru and Pd are taken from universal force-field
+Simple parametrization of the cage with 2 metals. As an input we provide coordination file in PBD format and non-bonded
+force-field parameters in *.top format (GROMACS). Moreover, LJ parameters of the Ru and Pd are taken from universal force-field
 (vdw_type=uff), as they are only one available for Ru metal.
 
 .. code-block:: python
@@ -99,12 +99,13 @@ Bare in mind that parametrization of template is time-consuming. It will perform
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 By default parametrization is done on D3BJ-PBE0/def2-SVP (keywords = ['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq']).
-This can be changed by specifing keywords in class supramolecular structure class:
+This can be changed by specifying keywords in class supramolecular structure class:
 
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 }, vdw_type='merz-opc', keywords= ['B3LYP', '6-31G*', 'tightOPT', 'freq'])
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
+    vdw_type='merz-opc', keywords= ['B3LYP', '6-31G*', 'tightOPT', 'freq'])
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 

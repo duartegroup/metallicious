@@ -1,3 +1,3 @@
-__all__ = ['metallicious']
+#__all__ = ['metallicious']
 
 from metallicious.parametrize_new_sites import supramolecular_structure
