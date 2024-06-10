@@ -16,7 +16,8 @@ Parametrization of structure with coordinates saved as `supramolecular_cage.xyz`
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('supramolecular_cage.xyz',
-                                    metal_charges={'metal name 1': charge of metal 1(integer), 'metal name 2':charge of metal 2(integer),...},
+                                    metal_charges={'metal name 1': charge of metal 1(integer),
+                                                   'metal name 2':charge of metal 2(integer),...},
                                     topol='supramolecular_cage.top', vdw_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
@@ -26,18 +27,21 @@ For example, for the structure ru_pd.xyz with force-field parameters saved as ru
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, topol='ru_pd.top', vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 },
+                                    topol='ru_pd.top', vdw_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
 
-## Initial topology file
+Initial topology file
+~~~~~~~~~~~~~~~~~~~~~
 If you don't have a topology file, you can generate a simple force-field parametrization using General Amber Force-field (GAFF):
 
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 },
+                                    vdw_type='uff')
     cage.prepare_initial_topology()
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
@@ -152,7 +156,7 @@ Extended list of the bash command:
      - No
    * - -metal_and_charges
      - Metal names and charges (optionally, multiplicity when parametrization needed)
-     - Names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
+     - Names and charges are separate by whitespace | (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
      - None
      - Yes
    * - -keywords
@@ -205,7 +209,7 @@ By default, *metallicious* contains a few templates which are commonly used in m
     :align: center
     :alt: Here should be figure of the available templates
 
-    Initial templates available as part of *metallicious*
+    Initial templates available as part of *metallicious*.
 
 
 Lennard-Jones
@@ -235,7 +239,7 @@ Lennard-Jones
 Periodic table below shows for which elements L-J parameters are available.
 
 .. figure:: images/periodic_table.png
-    :figwidth: 400
+    :figwidth: 500
     :align: center
     :alt: Here should be figure of periodic table with indicated L-J parameters
 
