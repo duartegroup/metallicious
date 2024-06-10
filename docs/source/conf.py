@@ -33,7 +33,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_context = {
     'css_files': [
-        'css/custom.css',  # overrides for wide tables in RTD theme
+        '_static/custom.css',  # overrides for wide tables in RTD theme
         ],
     }
 
