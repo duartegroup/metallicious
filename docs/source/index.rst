@@ -5,7 +5,7 @@ Welcome to metallicious's documentation!
 
 .. image:: images/summary.png
   :align: center
-  :width: 300
+  :width: 400
   :alt: Figure of summary of metallicious protocol
 
 
