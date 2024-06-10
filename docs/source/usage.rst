@@ -127,8 +127,6 @@ Grid table:
 +------------+------------+-----------+-----------+-----------+
 | Header 1   | Header 2   | Header 3  | Header 3  | Header 3  |
 +============+============+===========+===========+===========+
-| metal_and_charges | Metal names and charges (optionally, multiplicity when parametrization needed) | Names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1) | None | Yes |
-+------------+------------+-----------+-----------+-----------+
 | body row 1 | column 2   | column 3  | column 3  | column 3  |
 +------------+------------+-----------+-----------+-----------+
 | body row 1 | column 2   | column 3  | column 3  | column 3  |
