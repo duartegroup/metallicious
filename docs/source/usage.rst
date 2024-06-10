@@ -200,7 +200,7 @@ Default templates
 
 By default, *metallicious* contains a few templates which are commonly used in metallo-organic cages. However, more templates can be easily added using automated parametrization procedure, which is also part of *metallicious*.
 
-.. image:: images/docs_templates.png
+.. figure:: images/docs_templates.png
     :width: 500
     :align: center
     :alt: Here should be figure of the available templates
@@ -233,7 +233,7 @@ Lennard-Jones
 
 Periodic table below shows for which elements L-J parameters are available.
 
-.. image:: images/periodic_table.png
+.. figure:: images/periodic_table.png
     :width: 400
     :align: center
     :alt: Here should be figure of periodic table with indicated L-J parameters
