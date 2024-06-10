@@ -120,7 +120,6 @@ Extended list of the bash command:
 .. list-table::
     :widths: 10 40 20 10 10
     :header-rows: 1
-    :class: longtable
 
    * - Variable
      - Comment
@@ -210,7 +209,6 @@ By default, *metallicious* contains a few templates which are commonly used in m
     Initial templates available as part of *metallicious*
 
 
-
 Lennard-Jones
 ~~~~~~~~~~~
 
@@ -236,7 +234,6 @@ Lennard-Jones
     - uff [uff]_
 
 Periodic table below shows for which elements L-J parameters are available.
-
 
 .. image:: images/periodic_table.png
     :width: 400
