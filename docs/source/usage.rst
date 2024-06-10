@@ -175,11 +175,11 @@ Grid table:
      - No
    * - -LJ_type
      - Type of parameters for Lennard-Jones parameters
-     - uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb,
-       merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p,
-       zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb,
-       zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb,
-       zhang-tip4p-ew
+     - | uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb,
+       | merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p,
+       | zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb,
+       | zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb,
+       | zhang-tip4p-ew
      - uff
      - No
    * - -truncate
@@ -193,9 +193,9 @@ Grid table:
      - False
      - No
    * - -donors
-     - Donors from the connected ligands, usually
-       electronegative atoms, such as N, S, O,
-       but sometimes metal is connected to carbon
+     - | Donors from the connected ligands, usually
+       | electronegative atoms, such as N, S, O,
+       | but sometimes metal is connected to carbon
      - Any element name separated by space
      - N S O
      - No
