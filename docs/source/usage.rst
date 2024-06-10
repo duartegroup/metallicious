@@ -191,14 +191,55 @@ Default templates
 
 
 .. image:: images/docs_templates.png
-  :width: 200
+  :width: 300
   :align: center
   :alt:
 
 Lennard-Jones
 
+*metallicious* overwrites metal parameters using Lennard-Jones (LJ) parameters taken from literature.  In particular these are available parameters and references:
+
+    - Merz-OPC [Merzopc]_
+    - Merz-opc3 [Merzopc]_
+    - Merz-tip3p-fb [Merzopc]_
+    - Merz-tip4p-fb [Merzopc]_
+    - Merz-spce [Merztip3p]_
+    - Merz-tip3p [Merztip3p]_
+    - Merz-tip4-ew [Merztip3p]_
+    - Zhang-tip3p [zhangtip3p]_
+    - Zhang-opc3 [zhangtip3p]_
+    - Zhang-spce [zhangtip3p]_
+    - Zhang-spceb [zhangtip3p]_
+    - Zhang-tip3p-fb [zhangtip3p]_
+    - Zhang-opc [zhangtip3p]_
+    - Zhang-tip4p2005 [zhangtip3p]_
+    - Zhang-tip4p-d [zhangtip3p]_
+    - Zhang-tip4p-fb [zhangtip3p]_
+    - Zhang-tip4p-ew [zhangtip3p]_
+    - UFF [uff]_
+
+All available paramters are shown on peridoic table below.
+
 
 .. image:: images/periodic_table.png
-  :width: 200
+  :width: 300
   :align: center
   :alt:
+
+
+References:
+
+.. [Merzopc] (a) Sengupta, A.; Li, Z.; Song, L. F.; Li, P.; Merz, K. M. Parameterization of Monovalent Ions for the OPC3, OPC, TIP3P-FB, and TIP4P-FB Water Models. J. Chem. Inf. Model. 2021, 61 (2), 869–880. https://doi.org/10.1021/acs.jcim.0c01390,
+    (b) Li, Z.; Song, L. F.; Li, P.; Merz, K. M. Systematic Parametrization of Divalent Metal Ions for the OPC3, OPC, TIP3P-FB, and TIP4P-FB Water Models. J. Chem. Theory Comput. 2020, 16 (7), 4429–4442. https://doi.org/10.1021/acs.jctc.0c00194.
+    (c) Li, Z.; Song, L. F.; Li, P.; Merz, K. M. Parametrization of Trivalent and Tetravalent Metal Ions for the OPC3, OPC, TIP3P-FB, and TIP4P-FB Water Models. J. Chem. Theory Comput. 2021, 17 (4), 2342–2354. https://doi.org/10.1021/acs.jctc.0c01320.
+
+.. [Merztip3p] (a) Li, P.; Song, L. F.; Merz, K. M. Systematic Parameterization of Monovalent Ions Employing the Nonbonded Model. J. Chem. Theory Comput. 2015, 11 (4), 1645–1657. https://doi.org/10.1021/ct500918t.
+    (b) Li, P.; Roberts, B. P.; Chakravorty, D. K.; Merz, K. M. Rational Design of Particle Mesh Ewald Compatible Lennard-Jones Parameters for +2 Metal Cations in Explicit Solvent. J. Chem. Theory Comput. 2013, 9 (6), 2733–2748. https://doi.org/10.1021/ct400146w.
+    (c) Li, P.; Song, L. F.; Merz, K. M. Parameterization of Highly Charged Metal Ions Using the 12-6-4 LJ-Type Nonbonded Model in Explicit Water. J. Phys. Chem. B 2015, 119 (3), 883–895. https://doi.org/10.1021/jp505875v.
+
+.. [zhangtip3p] (a) Qiu, Y.; Jiang, Y.; Zhang, Y.; Zhang, H. Rational Design of Nonbonded Point Charge Models for Monovalent Ions with Lennard-Jones 12–6 Potential. J. Phys. Chem. B 2021, 125 (49), 13502–13518. https://doi.org/10.1021/acs.jpcb.1c09103.
+    (b) Zhang, Y.; Jiang, Y.; Peng, J.; Zhang, H. Rational Design of Nonbonded Point Charge Models for Divalent Metal Cations with Lennard-Jones 12-6 Potential. J. Chem. Inf. Model. 2021, 61 (8), 4031–4044. https://doi.org/10.1021/acs.jcim.1c00580.
+    (c) Zhang, Y.; Jiang, Y.; Qiu, Y.; Zhang, H. Rational Design of Nonbonded Point Charge Models for Highly Charged Metal Cations with Lennard-Jones 12-6 Potential. J. Chem. Inf. Model. 2021. https://doi.org/10.1021/acs.jcim.1c00723.
+
+.. [uff] Rappé, A. K.; Casewit, C. J.; Colwell, K. S.; Goddard, W. A.; Skiff, W. M. UFF, a Full Periodic Table Force Field for Molecular Mechanics and Molecular Dynamics Simulations. J. Am. Chem. Soc. 1992, 114 (25), 10024–10035. https://doi.org/10.1021/ja00051a040.
+
