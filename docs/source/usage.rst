@@ -155,8 +155,9 @@ Extended list of the bash command:
      - out.top
      - No
    * - -metal_and_charges
-     - Metal names and charges (optionally, multiplicity when parametrization needed) - | MULTILINE | TEXT
-     - Names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
+     - Metal names and charges (optionally, multiplicity when parametrization needed)
+     - | Names and charges are separate by whitespace (e.g., Pd 2 Ru 2)
+       or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
      - None
      - Yes
    * - -keywords
