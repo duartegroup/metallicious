@@ -205,7 +205,7 @@ By default, *metallicious* contains a few templates which are commonly used in m
 .. image:: images/docs_templates.png
     :width: 500
     :align: center
-    :alt:
+    :alt: Here should be figure of the available templates
 
     Initial templates available as part of *metallicious*
 
@@ -241,11 +241,10 @@ Periodic table below shows for which elements L-J parameters are available.
 .. image:: images/periodic_table.png
     :width: 400
     :align: center
-    :alt:
+    :alt: Here should be figure of periodic table with indicated L-J parameters
 
     Available L-J parameters in *metallicious*. L-J parameters for most of the elements are available from UFF [uff]_. L-J parameters for some of the metals were derived by Merz et al. [Merzopc]_ [Merztip3p]_ and Zhang et al. [zhang]_ to reproduce hydration free energies and coordination number in aqueous complex.
 
-\n
 
 References:
 
