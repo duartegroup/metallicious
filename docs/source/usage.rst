@@ -122,6 +122,7 @@ Grid table:
 .. list-table:: Title
     :widths: 1 1 1 1 1
     :header-rows: 1
+    :class: longtable
 
    * - Variable
      - Comment
