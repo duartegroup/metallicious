@@ -31,10 +31,9 @@ templates_path = ['_templates']
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
 html_css_files = [
-  'custom.css'
-  'https://example.com/css/custom.css',
-  ('print.css', {'media': 'print'})
+  'custom.css',
 ]
 
 html_logo = "logo_rect.png"
