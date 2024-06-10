@@ -133,37 +133,27 @@ Extended list of the bash command:
      - No
    * - -f
      - Metaloorganic coordination file
-     - *.gro, *.pdb and other coordination
-       formats supported by MDAnalysis
+     - *.gro, *.pdb and other coordination formats supported by MDAnalysis
      - None
      - Yes
    * - -p
-     - Metaloorganic force-field parameters
-       of non-bonded model
-     - .top, .prmtop, etc. and other
-       supported by ParmEd
+     - Metaloorganic force-field parameters of non-bonded model
+     - .top, .prmtop, etc. and other supported by ParmEd
      - None
      - Yes (unless prepare_topol specified)
    * - -of
      - Output metaloorganic structure
-     - .gro, .pdb and other formats
-       supported by MDAnalysis
+     - .gro, .pdb and other formats supported by MDAnalysis
      - out.pdb
      - No
    * - -op
      - Output metaloorganic topology
-     - .top, .prmtop and other formats
-       supported by ParmEd
+     - .top, .prmtop and other formats supported by ParmEd
      - out.top
      - No
    * - -metal_and_charges
-     - Metal names and charges
-       (optionally, multiplicity when
-       parametrization needed)
-     - Names and charges are separate by
-       whitespace (e.g., Pd 2 Ru 2) or names,
-       charges and multiplicities separated
-       by spaces (e.g., Pd 2 1 Ru 2 1)
+     - Metal names and charges (optionally, multiplicity when parametrization needed)
+     - Names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
      - None
      - Yes
    * - -keywords
@@ -173,11 +163,7 @@ Extended list of the bash command:
      - No
    * - -LJ_type
      - Type of parameters for Lennard-Jones parameters
-     - | uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb,
-       | merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p,
-       | zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb,
-       | zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb,
-       | zhang-tip4p-ew
+     - uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew
      - uff
      - No
    * - -truncate
@@ -191,9 +177,7 @@ Extended list of the bash command:
      - False
      - No
    * - -donors
-     - | Donors from the connected ligands, usually
-       | electronegative atoms, such as N, S, O,
-       | but sometimes metal is connected to carbon
+     - Donors from the connected ligands, usually electronegative atoms, such as N, S, O, but sometimes metal is connected to carbon
      - Any element name separated by space
      - N S O
      - No
@@ -203,10 +187,8 @@ Extended list of the bash command:
      - False
      - No
    * - -linker_topol
-     - Linker force-field (topology) parameters,
-       only used when prepare_topol=True
-     - .top, .prmtop, etc. and other formats
-       supported by ParmEd
+     - Linker force-field (topology) parameters, only used when prepare_topol=True
+     - .top, .prmtop, etc. and other formats supported by ParmEd
      - None
      - No
 
