@@ -117,12 +117,9 @@ For details, see:
 
 Extended list of the bash command:
 
-Grid table:
-
-.. list-table:: Title
-    :widths: 1 1 1 1 1
+.. list-table::
+    :widths: 10 40 20 10 10
     :header-rows: 1
-    :class: longtable
 
    * - Variable
      - Comment
