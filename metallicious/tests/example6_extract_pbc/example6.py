@@ -20,7 +20,7 @@ from metallicious.parametrize_new_sites import supramolecular_structure
 
 import os
 
-cage = supramolecular_structure('noncovalent_complex.pdb', {'Co': (2, 1)}, topol='noncovalent_complex.pdb', vdw_type='merz-opc')
+cage = supramolecular_structure('noncovalent_complex.pdb', {'Co': (2, 1)}, topol='noncovalent_complex.pdb', LJ_type='merz-opc')
 
 cage.extract_unique_metal_sites()
 

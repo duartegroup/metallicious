@@ -23,7 +23,7 @@ class supramolecular_structure:
     The main structure holidng all the information about the intput and communicating between different classes
 
     '''
-    def __init__(self, filename, metal_charge_mult=None, metal_charges=None, vdw_type=None, topol=None,
+    def __init__(self, filename, metal_charge_mult=None, metal_charges=None, LJ_type=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=False,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
@@ -36,14 +36,14 @@ class supramolecular_structure:
                                         {metal_name: (metal_charges, multiplicity)}
         :param metal_charges: (dict) the names and charges of metals in the input structure in format:
                                           {metal_name1: metal_charges1, metal1_name2: metal_charge2}
-        :param vdw_type: (str) name of LJ dataset used for metal paramters
+        :param LJ_type: (str) name of LJ dataset used for metal paramters
         :param topol: (str) path to topology (optional)
         :param keywords: list(str) the keywords for QM calculations
         :param improper_metal: (bool) if True it will parametrize the improper dihedral involving metal
         :param donors: (list(str)) list of atom elements with which metal forms bond
         :param library_path: (str) directory of template library, be default where the script is
         :param ff: (str) parametrization protocol for small organic molecules (only gaff available)
-        :param search_library: (bool) if True, metallicious searrched templates in template library,
+        :param search_library: (bool) if True, metallicious searches templates in template library,
                     if False, it will parametrize template
         :param fingerprint_guess_list: (list(str)) list of templates to check
         :param truncation_scheme: (str) name of the truncation scheme
@@ -89,29 +89,29 @@ class supramolecular_structure:
         else:
             raise ValueError("Not correct format of metal_charge_mult/metal_charges")
 
-        if vdw_type == 'custom' and topol is not None:
+        if LJ_type == 'custom' and topol is not None:
             self.vdw_type = 'custom'
 
-        elif vdw_type is None:
-            for vdw_type in vdw_data:
+        elif LJ_type is None:
+            for LJ_type in vdw_data:
 
-                present = [(metal_name in vdw_data[vdw_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[vdw_type]) for metal_name in self.metal_names]
+                present = [(metal_name in vdw_data[LJ_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[LJ_type]) for metal_name in self.metal_names]
                 if sum(present) == len(present):
-                    self.vdw_type = vdw_type
+                    self.vdw_type = LJ_type
                     logger.info(
-                        f"vdw_type not selected, will use first available for selected metals: {vdw_type:}")
+                        f"vdw_type not selected, will use first available for selected metals: {LJ_type:}")
         else:
             for metal_name in self.metal_names:
-                if metal_name not in vdw_data[vdw_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in \
-                        vdw_data[vdw_type]:
+                if metal_name not in vdw_data[LJ_type] and f"{metal_name:}{self.metal_charge_dict[metal_name]:}" not in \
+                        vdw_data[LJ_type]:
 
                     metal_available_in = []
-                    for vdw_type in vdw_data:
-                        if (metal_name in vdw_data[vdw_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[vdw_type]):
-                            metal_available_in.append(vdw_type)
+                    for LJ_type in vdw_data:
+                        if (metal_name in vdw_data[LJ_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[LJ_type]):
+                            metal_available_in.append(LJ_type)
 
                     raise ValueError(f"Metal ({metal_name:}) unavailable in selected LJ library, but it seems it is present in {metal_available_in:}")
-            self.vdw_type = vdw_type
+            self.vdw_type = LJ_type
 
         self.fingerprint_guess_list = fingerprint_guess_list
         self.truncation_scheme = truncation_scheme

@@ -409,7 +409,7 @@ cage.parametrize()
 # cage.parametrize(out_coord='new.pdb', out_topol='new.top')
 
 os.chdir("/u/fd/chem1540/Downloads/rafa")
-cage = supramolecular_structure('L2_m2l4.xyz',  metal_charge_mult={'Pd': (2, 1)}, vdw_type='merz-opc')
+cage = supramolecular_structure('L2_m2l4.xyz', metal_charge_mult={'Pd': (2, 1)}, LJ_type='merz-opc')
 cage.prepare_initial_topology()
 cage.parametrize(out_coord='new.pdb', out_topol='new.top')
 

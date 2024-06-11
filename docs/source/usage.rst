@@ -1,5 +1,4 @@
-Usage
-=====
+
 
 .. _usage:
 
@@ -83,25 +82,92 @@ For example:
     cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, truncation_scheme = 'dihedral')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
-The extended list of supramolecular_structure class:
 
-    :param filename: (str) name of the coordination file
-    :param metal_charge_mult:  (dict) the names charges, and multiplicity of the metals in format
-                                    {metal_name: (metal_charges, multiplicity)}
-    :param metal_charges: (dict) the names and charges of metals in the input structure in format:
-                                      {metal_name1: metal_charges1, metal1_name2: metal_charge2}
-    :param vdw_type: (str) name of LJ dataset used for metal paramters
-    :param topol: (str) path to topology (optional)
-    :param keywords: list(str) the keywords for QM calculations
-    :param improper_metal: (bool) if True it will parametrize the improper dihedral involving metal
-    :param donors: (list(str)) list of atom elements with which metal forms bond
-    :param library_path: (str) directory of template library, be default where the script is
-    :param ff: (str) parametrization protocol for small organic molecules (only gaff available)
-    :param search_library: (bool) if True, metallicious searrched templates in template library,
-                if False, it will parametrize template
-    :param fingerprint_guess_list: (list(str)) list of templates to check
-    :param truncation_scheme: (str) name of the truncation scheme
-    :param covalent_cutoff: (float) if metal-atoms smaller then cutoff it creates bonds ligand with metal
+
+Input for supramolecular_structure class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The extended input list of supramolecular_structure class:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Variable
+     - Type
+     - Description
+     - Default
+     - Needs to be specified?
+   * - filename
+     - str
+     - name of the coordination file
+     - None
+     - Yes
+   * - metal_charge_mult
+     - dict
+     - the names charges, and multiplicity of the metals in format {metal_name: (metal_charges, multiplicity)}
+     - None
+     - Yes or metal_charges
+   * - metal_charges
+     - dict
+     - the names and charges of metals in the input structure in format: {metal_name1: metal_charges1, metal1_name2: metal_charge2}
+     - None
+     - Yes or metal_charge_mult
+   * - LJ_type
+     - str
+     - name of LJ dataset used for metal paramters (uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew)
+     - None
+     - Yes
+   * - topol
+     - str
+     - force-field parameters file
+     - None
+     - Yes, unless later prepare_initial_topol used
+   * - keywords
+     - list(str)
+     - autodE keywords for QM calculations
+     - PBE0 D3BJ def2-SVP tightOPT freq
+     - No
+   * - improper_metal
+     - bool
+     - if True it will parametrize the improper dihedral involving metal
+     - False
+     - No
+   * - donors
+     - list(str)
+     - list of atom elements with which metal forms bond
+     - ['N', 'S', 'O']
+     - No
+   * - library_path
+     - str
+     - directory of template library, be default where the script is
+     - path to metallicious + /library
+     - No
+   * - search_library
+     - bool
+     - if True, metallicious searches templates in template library,if False, it will parametrize template
+     - True
+     - No
+   * - ff
+     - str
+     - parametrization protocol for small organic molecules (only gaff available at the moment)
+     - 'gaff'
+     - No
+   * - fingerprint_guess_list
+     - list(str)
+     - list of template names, which will be checked from library
+     - None
+     - No
+   * - truncation_scheme
+     - str
+     - name of the truncation scheme
+     - None
+     - No
+   * - covalent_cutoff
+     - float
+     - if metal-atoms smaller then cutoff it is assumed that creates bond with the metal
+     - 3.0
+     - No
+
 
 
 Bash command line
@@ -166,8 +232,7 @@ Extended list of the bash command:
      - No
    * - -LJ_type
      - Type of parameters for Lennard-Jones parameters
-     - .. | Wrapped text
-          uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew
+     - uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew
      - uff
      - No
    * - -truncate

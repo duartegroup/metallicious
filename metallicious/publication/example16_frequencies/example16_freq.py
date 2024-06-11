@@ -616,11 +616,11 @@ for basis_folder in ['10_uff', '10_zhang']:
                 cage = supramolecular_structure('init_topol/noncovalent_complex.pdb',
                                                 topol='init_topol/noncovalent_complex.top',
                                                 metal_charges=metal_charges,
-                                                vdw_type=library_name, search_library=False)
+                                                LJ_type=library_name, search_library=False)
             else:
                 cage = supramolecular_structure(f'crystal.pdb',
                                                 metal_charges=metal_charges,
-                                                vdw_type=library_name, search_library=False)
+                                                LJ_type=library_name, search_library=False)
                 cage.prepare_initial_topology(homoleptic_ligand_topol='linker0.top')
 
             # cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')

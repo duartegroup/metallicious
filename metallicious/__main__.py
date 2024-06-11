@@ -82,7 +82,7 @@ def main():
     truncation_scheme = args.truncate
 
     cage = supramolecular_structure(filename=filename, metal_charge_mult=metal_charge_mult,
-                                    metal_charges=metal_charges, vdw_type=vdw_type, topol=topol, keywords=keywords,
+                                    metal_charges=metal_charges, LJ_type=vdw_type, topol=topol, keywords=keywords,
                                     improper_metal=improper_metal, donors=donors,
                                     truncation_scheme=truncation_scheme)
 

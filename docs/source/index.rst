@@ -9,7 +9,7 @@ Welcome to metallicious's documentation!
   :alt: Figure of summary of metallicious protocol
 
 
-
+**Limitations**: The code currently supports organometallic structures with metals separated by at least 2 non-metal atoms. Metal clusters are not supported. Additionally, metals of the same type must have the same charge and multiplicity.
 
 .. note::
 

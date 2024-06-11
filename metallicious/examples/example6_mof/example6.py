@@ -6,6 +6,6 @@ metallicious -f protein.gro -p protein.top -vdw_type merz-opc -metal_and_charges
 '''
 
 from metallicious import supramolecular_structure
-cage = supramolecular_structure('Co_mof.pdb', metal_charges={'Co':2}, vdw_type='merz-opc')
+cage = supramolecular_structure('Co_mof.pdb', metal_charges={'Co':2}, LJ_type='merz-opc')
 cage.prepare_initial_topology()
 cage.parametrize(out_coord='out.pdb', out_topol='out.top')
