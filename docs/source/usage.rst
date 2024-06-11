@@ -45,8 +45,10 @@ If you don't have a topology file, you can generate a simple force-field paramet
     cage.prepare_initial_topology()
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
-However, we do not intend to automate the parametrization of the organic part of the molecule.
-Please refer to specialized tools such as gromacs, atb, ambertools, and charmm-gui.
+Please note that our focus was on covalent metal parametrization; only basic support for the organic molecule parametrization is available.
+For more robust parameterization protocols, please refer to specialized tools such as
+`gromacs <https://www.gromacs.org/>`_, `ATB <https://atb.uq.edu.au/>`_,
+`ambertools <https://ambermd.org/AmberTools.php>`_, and `charmm-gui <https://www.charmm-gui.org/>`_.
 
 Handling missing templates
 ------------
