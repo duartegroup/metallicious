@@ -126,7 +126,7 @@ which can be changed by specifying "keywords" in the supramolecular_structure cl
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 
-Example 5
+Example 5: Truncation schemes
 ------------
 
 Truncation schemes allow the "recycling" of existing templates from the library by reducing their size, which might match the metal site of interest.
@@ -138,7 +138,9 @@ For example, one of the existing templates in the library can be truncated as fo
   :align: center
   :alt: Here should be shown how template is truncated
 
-result in templates which might match the metal site. They can be used by specifying truncation_scheme in the supramolecular_structure class:
+|
+
+Result in templates which might match the metal site. They can be used by specifying truncation_scheme in the supramolecular_structure class:
 
 .. code-block:: python
 
