@@ -10,6 +10,8 @@ Metallicious (a playful combination of "metal" and "delicious") is an automated 
 
 Metallicious works with minimal user input, relying heavily on educated guesses, which may not always yield the expected results. Therefore, it is recommended to use the tool with caution.
 
+
+
 ## Installation:
 ```
 conda install rdkit autode psiresp mdanalysis networkx qcelemental==0.25.1 ambertools --channel conda-forge
@@ -32,6 +34,10 @@ cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, t
 cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 ```
 The `supramolecular_structure` function takes a coordination file (*.xyz, *.pdb, *.gro, etc. supported by MDAnalysis), topology file (*top, *prmtop, supported by ParmEd), dictionary of metal ions along with their charge (and in case template parametrization is needed multiplicity) and type of Van der Waals metal parameters as input.
+
+See [examples/](https://github.com/tkpiskorz/metallicious/tree/main/metallicious/examples) for
+more examples and [metallicious.readthedocs.io](https://metallicious.readthedocs.io/en/latest/) for
+additional documentation.
 
 ## Command line
 It is also possible to use the metallicious just form command line. For example:
