@@ -3,7 +3,8 @@ Examples
 
 .. _examples:
 
-The examples here are
+This is extended desription of the examples provided in metallicious package (see `examples <https://github.com/tkpiskorz/metallicious/tree/main/metallicious/examples>`_)
+
 
 Example 1: Quick start
 ------------
