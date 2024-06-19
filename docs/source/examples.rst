@@ -17,7 +17,7 @@ force-field parameters in *.top format (GROMACS). Moreover, LJ parameters of the
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.pdb', metal_charges={'Ru': 2, 'Pd':2 },
-                                    topol='ru_pd.top', vdw_type='uff')
+                                    topol='ru_pd.top', LJ_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
@@ -30,7 +30,7 @@ If the force-field parameters are missing, the linker(s) can be parametrized usi
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, LJ_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 
@@ -43,7 +43,7 @@ For example, they can be saved into AMBER format force-field:
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, LJ_type='uff')
     cage.prepare_initial_topology()
     cage.parametrize(out_coord='out.inpcrd', out_topol='out.prmtop')
 
@@ -52,7 +52,7 @@ Alternatively, you prepare_initial_topology can be specified in .parametrize:
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, LJ_type='uff')
     cage.parametrize(out_coord='out.inpcrd', out_topol='out.prmtop', prepare_initial_topology=True)
 
 
@@ -65,7 +65,7 @@ which will be used to generate the initial topology of the whole structure:
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, LJ_type='uff')
     cage.prepare_initial_topology(homoleptic_ligand_topol='linker.top')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
