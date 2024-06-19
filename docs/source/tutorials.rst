@@ -20,7 +20,7 @@ It is straightforward to obtain force-field parameters just from SMILES string b
     cage.print_xyz_file(filename="cage.xyz")
 
     # Parametrize the cage, use AmberTools to parametrize organic linkers
-    cage = supramolecular_structure('cage.xyz', metal_charges={'Pd': 2}, vdw_type='uff')
+    cage = supramolecular_structure('cage.xyz', metal_charges={'Pd': 2}, LJ_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 Tutorial 2: Parametrization of template for gallium cages (known issue and solution)
@@ -43,7 +43,7 @@ sometimes there might be ambiguity about the structure. In this example, the coo
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('nonbonded.pdb', {'Ga': (3, 1)},
                                     topol = 'noncovalent_complex.top',
-                                    vdw_type='uff', search_library=False)
+                                    LJ_type='uff', search_library=False)
     cage.extract_unique_metal_sites()
     cage.unique_sites[0].ligand_charges = [-2, -2, -2] #this specifies ligands' charges
     cage.parametrize()
@@ -54,13 +54,15 @@ While it is worth noting this, this template is part of the default library, so 
 Tutorial 3: Using custom template
 ------------
 
-One might decide that they parametrized the template using a specific technique and did not save it to the library. One might use this template on purpose for specific application
+One might decide that they parametrized the template using a specific methodology (explicit solvent, or diffrent than usuall level of theory)
+and did not save it to the library.
+One might use this template on purpose for specific application
 
 .. code-block:: python
 
     cage = supramolecular_structure(f'cage.xyz',
                                     metal_charges={'Pd': 2},
-                                    vdw_type = 'uff',
+                                    LJ_type = 'uff',
                                     search_library=False)
     cage.extract_unique_metal_sites() # extracts template structures (needed to detect sites)
     cage.sites[0].fp_coord_file = f'selected_template.pdb' # loads coordinates of the template
@@ -76,7 +78,7 @@ Tutorial 4: Custom template library
 
 As default *metallicious* has a library of the templates parametrized using D3BJ-PBE0/def2-SVP and they are saved in directory of *metallicious* in library folder.
 One might however opt for higher level of theory or include implicit solvent effect. The easiest is to create new directory for library of templates.
-This requires only change of the library_directory, as there are not templates inside, we need to parametrize them using new method:
+This requires only change of the library_directory, as there are no templates inside, we need to parametrize them using new method:
 
 
 .. code-block:: python
@@ -84,7 +86,7 @@ This requires only change of the library_directory, as there are not templates i
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('nonbonded.pdb', {'Pd': (2, 1)},
                                     topol = 'noncovalent_complex.top',
-                                    vdw_type='uff'
+                                    LJ_type='uff'
                                     library_path=f'/path/to/new/library/',
                                     keywords = ['CPCM(Water)', 'PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'])
     cage.parametrize()

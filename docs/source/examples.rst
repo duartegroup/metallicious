@@ -9,7 +9,7 @@ This is extended desription of the examples provided in metallicious package (se
 Example 1: Quick start
 ------------
 
-Simple parametrization of the cage with two metals. As input, we provide a coordination file in PBD format and non-bonded
+Simple parametrization of the cage with two metals. As input, we provide a coordination file in PDB format and non-bonded
 force-field parameters in *.top format (GROMACS). Moreover, LJ parameters of the Ru and Pd are taken from the universal force-field
 (vdw_type='uff'), as Ru is available only in this library.
 
@@ -44,6 +44,15 @@ For example, they can be saved into AMBER format force-field:
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
+    cage.prepare_initial_topology()
+    cage.parametrize(out_coord='out.inpcrd', out_topol='out.prmtop')
+
+Alternatively, you prepare_initial_topology can be specified in .parametrize:
+
+.. code-block:: python
+
+    from metallicious import supramolecular_structure
+    cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 }, vdw_type='uff')
     cage.parametrize(out_coord='out.inpcrd', out_topol='out.prmtop', prepare_initial_topology=True)
 
 
@@ -63,7 +72,7 @@ which will be used to generate the initial topology of the whole structure:
 Missing templates
 ------------
 
-Inevitably, one will encounter structures for which the library has no suitable template. For example, there is not template available for the structure shown below:
+Inevitably, one will encounter structures for which the library has no suitable template. For example, there is no template available for the structure shown below:
 
 .. image:: images/lewis.png
   :width: 400
@@ -76,10 +85,10 @@ Running python script:
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
-                                    vdw_type='merz-opc')
+                                    LJ_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
-will rise an error:
+will raise an error:
 
 .. code-block:: python
 
@@ -99,8 +108,8 @@ dependencies (see installation guide) are needed (`autode <https://github.com/du
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
-                                    vdw_type='merz-opc')
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges_mult={'Pd': (2,1)},
+                                    LJ_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 Bear in mind that the parametrization of the template is time-consuming due to the computational cost of QM calculations.
@@ -112,7 +121,7 @@ By default, autodE uses 4 CPUs, which can be modified:
     import autode as ade
     ade.Config.n_cores = 8
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
-                                    vdw_type='merz-opc')
+                                    LJ_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 By default, QM calculations are done using D3BJ-PBE0/def2-SVP (keywords = ['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq']),
@@ -122,7 +131,7 @@ which can be changed by specifying "keywords" in the supramolecular_structure cl
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
-    vdw_type='merz-opc', keywords= ['D3BJ', 'B3LYP', '6-31G*', 'tightOPT', 'freq'])
+    LJ_type='merz-opc', keywords= ['D3BJ', 'B3LYP', '6-31G*', 'tightOPT', 'freq'])
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
 
@@ -146,7 +155,7 @@ Result in templates which might match the metal site. They can be used by specif
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges={'Pd':2 },
-                                     vdw_type='merz-opc', truncation_scheme='dihedral')
+                                     LJ_type='merz-opc', truncation_scheme='dihedral')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 However, they come with reduced accuracy and need to be used cautiously.

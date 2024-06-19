@@ -18,7 +18,7 @@ Parametrization of structure with coordinates saved as `supramolecular_cage.xyz`
     cage = supramolecular_structure('supramolecular_cage.xyz',
                                     metal_charges={'metal name 1': charge of metal 1(integer),
                                                    'metal name 2':charge of metal 2(integer),...},
-                                    topol='supramolecular_cage.top', vdw_type='uff')
+                                    topol='supramolecular_cage.top', LJ_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
@@ -28,7 +28,7 @@ For example, for the structure ru_pd.xyz with force-field parameters saved as ru
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 },
-                                    topol='ru_pd.top', vdw_type='uff')
+                                    topol='ru_pd.top', LJ_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
@@ -41,7 +41,7 @@ If you don't have a topology file, you can generate a simple force-field paramet
 
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('ru_pd.xyz', metal_charges={'Ru': 2, 'Pd':2 },
-                                    vdw_type='uff')
+                                    LJ_type='uff')
     cage.prepare_initial_topology()
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
@@ -54,19 +54,19 @@ Handling missing templates
 ------------
 
 
-The number of combination of possible ligands and metal results that inevitibly you will encounter metal site for which there is no template.
-In such cases to solutions are possible:
+The number of combination of possible ligands and metal results that inevitably you will encounter metal site for which there is no template.
+In such cases two solutions are possible:
 
 1. Parametrize template
 ~~~~~~~~~~
 We recommend to run template parametrization on HPC/cluster as it can take some time (our experience is ~8h on 8 CPUs per template).
 
-Specifying explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automatically inform metallicious to be ready to parametrize the template
+Specifying explicitly the metal multiplicity using the metal_charge_mult variable instead of metal_charges, will automatically inform metallicious to be ready to parametrize the new template.
 
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, vdw_type='uff')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, LJ_type='uff')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
@@ -82,7 +82,7 @@ For example:
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, truncation_scheme = 'dihedral')
+    cage = supramolecular_structure('ru_pd.xyz', metal_charge_mult = {'Ru': (2,1), 'Pd':(2,1)}, truncation_scheme = 'dihedral', LJ_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top')
 
 
@@ -103,38 +103,38 @@ The extended input list of supramolecular_structure class:
    * - filename
      - str
      - name of the coordination file
-     - None
-     - Yes
+     - none
+     - yes
    * - metal_charge_mult
      - dict
      - the names charges, and multiplicity of the metals in format {metal_name: (metal_charges, multiplicity)}
-     - None
-     - Yes or metal_charges
+     - none
+     - yes or metal_charges
    * - metal_charges
      - dict
      - the names and charges of metals in the input structure in format: {metal_name1: metal_charges1, metal1_name2: metal_charge2}
-     - None
-     - Yes or metal_charge_mult
+     - none
+     - yes or metal_charge_mult
    * - LJ_type
      - str
      - name of LJ dataset used for metal paramters (uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew)
-     - None
-     - Yes
+     - none
+     - yes
    * - topol
      - str
      - force-field parameters file
-     - None
+     - none
      - Yes, unless later prepare_initial_topol used
    * - keywords
      - list(str)
      - autodE keywords for QM calculations
      - PBE0 D3BJ def2-SVP tightOPT freq
-     - No
+     - no
    * - improper_metal
      - bool
      - if True it will parametrize the improper dihedral involving metal
-     - False
-     - No
+     - false
+     - no
    * - donors
      - list(str)
      - list of atom elements with which metal forms bond
@@ -144,43 +144,43 @@ The extended input list of supramolecular_structure class:
      - str
      - directory of template library, be default where the script is
      - path to metallicious + /library
-     - No
+     - no
    * - search_library
      - bool
      - if True, metallicious searches templates in template library,if False, it will parametrize template
-     - True
-     - No
+     - true
+     - no
    * - ff
      - str
      - parametrization protocol for small organic molecules (only gaff available at the moment)
      - 'gaff'
-     - No
+     - no
    * - fingerprint_guess_list
      - list(str)
      - list of template names, which will be checked from library
-     - None
-     - No
+     - none
+     - no
    * - truncation_scheme
      - str
      - name of the truncation scheme
-     - None
-     - No
+     - none
+     - no
    * - covalent_cutoff
      - float
      - if metal-atoms smaller then cutoff it is assumed that creates bond with the metal
      - 3.0
-     - No
+     - no
 
 
 
 Bash command line
 ------------
 
-It is also possible to use the metallicious just form command line. For example:
+It is also possible to use the metallicious just from the command line. For example:
 
 .. code-block:: bash
 
-    metallicious -f cage.xyz -vdw_type merz-tip3p -metal_and_charges Pd 2 -prepare_topol
+    metallicious -f cage.xyz -LJ_type merz-tip3p -metal_and_charges Pd 2 -prepare_topol
 
 For details, see:
 
@@ -195,74 +195,74 @@ Extended list of the bash command:
 
    * - Variable
      - Comment
-     - Possible input
+     - possible input
      - Default
      - Required
    * - -h, --help
-     - Show help message and exit
-     - Possible input
-     - None
-     - No
+     - show help message and exit
+     - possible input
+     - none
+     - no
    * - -f
-     - Metaloorganic coordination file
+     - metaloorganic coordination file
      - *.gro, *.pdb and other coordination formats supported by MDAnalysis
-     - None
-     - Yes
+     - none
+     - yes
    * - -p
-     - Metaloorganic force-field parameters of non-bonded model
+     - metaloorganic force-field parameters of non-bonded model
      - .top, .prmtop, etc. and other supported by ParmEd
-     - None
-     - Yes (unless prepare_topol specified)
+     - none
+     - yes (unless prepare_topol specified)
    * - -of
-     - Output metaloorganic structure
+     - output metaloorganic structure
      - .gro, .pdb and other formats supported by MDAnalysis
      - out.pdb
-     - No
+     - no
    * - -op
-     - Output metaloorganic topology
+     - output metaloorganic topology
      - .top, .prmtop and other formats supported by ParmEd
      - out.top
-     - No
+     - no
    * - -metal_and_charges
-     - Metal names and charges (optionally, multiplicity when parametrization needed)
-     - Names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
-     - None
-     - Yes
+     - metal names and charges (optionally, multiplicity when parametrization needed)
+     - names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
+     - none
+     - yes
    * - -keywords
      - autodE keywords for QM calculations
-     - See autodE or ORCA manual
+     - see autodE or ORCA manual
      - PBE0 D3BJ def2-SVP tightOPT freq
-     - No
+     - no
    * - -LJ_type
-     - Type of parameters for Lennard-Jones parameters
+     - type of parameters for Lennard-Jones parameters
      - uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew
      - uff
-     - No
+     - no
    * - -truncate
-     - Truncation scheme
-     - None, 3bond/dihedral, 2bond/angle, 1bond/bond
-     - None
-     - No
+     - truncation scheme
+     - none, 3bond/dihedral, 2bond/angle, 1bond/bond
+     - none
+     - no
    * - -improper_metal
-     - Calculate the improper dihedral of the metal-aromatic
-     - True/False
-     - False
-     - No
+     - calculate the improper dihedral of the metal-aromatic
+     - true/false
+     - false
+     - no
    * - -donors
-     - Donors from the connected ligands, usually electronegative atoms, such as N, S, O, but sometimes metal is connected to carbon
-     - Any element name separated by space
+     - donors from the connected ligands, usually electronegative atoms, such as N, S, O, but sometimes metal is connected to carbon
+     - any element name separated by space
      - N S O
-     - No
+     - no
    * - -prepare_topol
-     - Prepare initial topology using GAFF
-     - True/False
-     - False
-     - No
+     - prepare initial topology using GAFF
+     - true/false
+     - false
+     - no
    * - -linker_topol
-     - Linker force-field (topology) parameters, only used when prepare_topol=True
+     - linker force-field (topology) parameters, only used when prepare_topol=True
      - .top, .prmtop, etc. and other formats supported by ParmEd
-     - None
-     - No
+     - none
+     - no
 
 
 Available parameters
