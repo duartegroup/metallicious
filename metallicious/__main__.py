@@ -10,7 +10,7 @@ def get_args():
     parser.add_argument("-of", help="Output metaloorganic structure (*.gro, *.pdb, etc. supported by MDAnalysis)", default='out.pdb')
     parser.add_argument("-op", help="Output metaloorganic topology (*.top, *.prmtop, etc. supported by ParmEd)", default='out.top')
 
-    parser.add_argument("-metal_and_charge",nargs='+', help="Metal names and charges (optionally, multiplicity, when parametrization needed), for example: Pd 2 1 Ru 2 1")
+    parser.add_argument("-metal_charges",nargs='+', help="Metal names and charges (optionally, multiplicity, when parametrization needed), for example: Pd 2 1 Ru 2 1")
     parser.add_argument("-keywords", help="autodE keywords for QM calculations (default: PBE0 D3BJ def2-SVP tightOPT freq)", nargs='+')
     parser.add_argument("-LJ_type", default='uff',
                         help="Type of parameters for Lennard-Jones paramters (default: merz-opc; available: uff, merz-tip3p, merz-opc3, merz-spc/e, merz-tip3p-fb, merz-opc, merz-tip4p-fb, merz-tip4-ew, zhang-tip3p, zhang-opc3, zhang-spc/e, zhang-spc/eb, zhang-tip3p-fb, zhang-opc, zhang-tip4p/2005, zhang-tip4p-d, zhang-tip4p-fb, zhang-tip4p-ew")
@@ -40,30 +40,30 @@ def main():
         topol = args.p
 
     is_metal_charges_mult = False
-    if len(args.metal_and_charge) % 2==0 or len(args.metal_and_charge) % 3==0:
-        if len(args.metal_and_charge)>2:
-            if args.metal_and_charge[2].isnumeric():
+    if len(args.metal_charges) % 2==0 or len(args.metal_charges) % 3==0:
+        if len(args.metal_charges)>2:
+            if args.metal_charges[2].isnumeric():
                 is_metal_charges_mult = True
     else:
-        print("Not correct format of metal_and_charge, see: metallicious -h")
+        print("Not correct format of metal_charges, see: metallicious -h")
         return False
 
     metal_charge_mult = None
     metal_charges = None
 
     if is_metal_charges_mult:
-        if len(args.metal_and_charge) % 3==0:
+        if len(args.metal_charges) % 3==0:
             metal_charge_mult = {}
-            for idx in range(int(len(args.metal_and_charge)/3)):
-                metal_charge_mult[args.metal_and_charge[idx*3]] = (int(args.metal_and_charge[idx*3+1]), int(args.metal_and_charge[idx*3+2]))
+            for idx in range(int(len(args.metal_charges)/3)):
+                metal_charge_mult[args.metal_charges[idx*3]] = (int(args.metal_charges[idx*3+1]), int(args.metal_charges[idx*3+2]))
         else:
             print("Not correct format of metal_charges, see: metallicious -h")
             return False
     else:
-        if len(args.metal_and_charge) % 2==0:
+        if len(args.metal_charges) % 2==0:
             metal_charges = {}
-            for idx in range(int(len(args.metal_and_charge)/2)):
-                metal_charges[args.metal_and_charge[idx*2]] = int(args.metal_and_charge[idx*2+1])
+            for idx in range(int(len(args.metal_charges)/2)):
+                metal_charges[args.metal_charges[idx*2]] = int(args.metal_charges[idx*2+1])
         else:
             print("Not correct format of metal_charges, see: metallicious -h")
             return False

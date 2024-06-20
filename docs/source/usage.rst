@@ -223,7 +223,7 @@ Extended list of the bash command:
      - .top, .prmtop and other formats supported by ParmEd
      - out.top
      - no
-   * - -metal_and_charges
+   * - -metal_charges
      - metal names and charges (optionally, multiplicity when parametrization needed)
      - names and charges are separate by whitespace (e.g., Pd 2 Ru 2) or names, charges and multiplicities separated by spaces (e.g., Pd 2 1 Ru 2 1)
      - none
