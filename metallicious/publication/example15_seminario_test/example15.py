@@ -187,10 +187,10 @@ cage.unique_sites = []
 cage.parametrize(out_coord='saturated_template_bond.pdb', out_topol='saturated_template_bond.top')
 '''
 #
-# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
-# cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', vdw_type='merz-opc', search_library=False)
-# cage.prepare_initial_topology(homoleptic_ligand_topol='linker_small_resp.top')
-# cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
+os.chdir('/home/fd13/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
+cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', LJ_type='merz-opc')
+#cage.prepare_initial_topology(homoleptic_ligand_topol='linker_small_resp.top'),
+cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
 
 # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof')
 # cage = supramolecular_structure('topol/enormous.gro', {'Co': (2,4)}, topol='topol/enormous.top', vdw_type='merz-opc')
@@ -407,9 +407,9 @@ cage.parametrize()
 #                                 search_library=True)
 #
 # cage.parametrize(out_coord='new.pdb', out_topol='new.top')
-
-os.chdir("/u/fd/chem1540/Downloads/rafa")
-cage = supramolecular_structure('L2_m2l4.xyz', metal_charge_mult={'Pd': (2, 1)}, LJ_type='merz-opc')
-cage.prepare_initial_topology()
-cage.parametrize(out_coord='new.pdb', out_topol='new.top')
-
+#
+# os.chdir("/u/fd/chem1540/Downloads/rafa")
+# cage = supramolecular_structure('L2_m2l4.xyz', metal_charge_mult={'Pd': (2, 1)}, LJ_type='merz-opc')
+# cage.prepare_initial_topology()
+# cage.parametrize(out_coord='new.pdb', out_topol='new.top')
+#

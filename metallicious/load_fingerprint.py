@@ -309,7 +309,7 @@ def search_library_for_fp(metal_name, metal_charge, vdw_type, library_path, fing
     return fingerprints_names
 
 
-def guess_fingerprint(cage_filename, metal_index, metal_name=None, metal_charge=None, fingerprint_guess_list=None,
+def guess_fingerprint(cage_filename, metal_index, metal_charge, metal_name=None,  fingerprint_guess_list=None,
                       m_m_cutoff=10, vdw_type=None, library_path=f"{os.path.dirname(__file__):s}/library",
                       search_library=True, additional_fp_files=None, fp_style=None, rmsd_cutoff=2, donors=None):
     '''

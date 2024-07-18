@@ -1,3 +1,4 @@
+LICENSE.md
 MANIFEST.in
 README.md
 pyproject.toml
@@ -72,12 +73,6 @@ metallicious/examples/example2_no_topology/ru_pd.xyz
 metallicious/examples/example3_only_linker_topology/example3.py
 metallicious/examples/example3_only_linker_topology/linker.top
 metallicious/examples/example3_only_linker_topology/ru_pd.xyz
-metallicious/examples/example4_truncation_scheme/cage.pdb
-metallicious/examples/example4_truncation_scheme/example4.py
-metallicious/examples/example4_truncation_scheme/topol.top
-metallicious/examples/example5_protein/example5.py
-metallicious/examples/example5_protein/protein.gro
-metallicious/examples/example5_protein/protein.top
 metallicious/examples/example6_mof/Co_mof.pdb
 metallicious/examples/example6_mof/example6.py
 metallicious/library/.Pd1.top.swn
