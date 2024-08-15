@@ -21,7 +21,7 @@ def check_antechamber_if_available():
     return shutil.which('antechamber') is not None
 
 
-def antechamber(pdbfile,output, charge=None):
+def antechamber(pdbfile, output, charge=None):
     '''
     Simple antechamber interface.  It runs with GAFF2. Sometimes it gives charge which is not equal to formal charge:
     we simply subtract the diffrence over all atoms
@@ -57,9 +57,10 @@ def antechamber(pdbfile,output, charge=None):
     syst.atoms.write('temp.pdb')
 
     if charge is None:
-        mol = syst.atoms.convert_to("RDKIT")
+        # force=True ignores warning that there are missing hydrogens (needed for example for CO molecule)
+        mol = syst.atoms.convert_to("RDKIT", force=True)
         charge = rdkit.Chem.GetFormalCharge(mol)
-        logger.info(f"    Guessing charge: {charge:}")
+        logger.info(f"    Guessed charge: {charge:}")
 
     logger.info("[ ] Interfacing antechamber")
     File = open("tleap.in", "w")
@@ -68,7 +69,6 @@ def antechamber(pdbfile,output, charge=None):
     TEMP = loadmol2 temp.mol2\n
     check TEMP \n
     loadamberparams temp.frcmod\n
-    saveoff TEMP sus.lib \n
     saveamberparm TEMP temp.prmtop temp.inpcrd\n
     quit\n''')
     File.close()

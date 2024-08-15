@@ -186,13 +186,13 @@ cage.sites[0].set_cutoff()
 cage.unique_sites = []
 cage.parametrize(out_coord='saturated_template_bond.pdb', out_topol='saturated_template_bond.top')
 '''
+# #
+# os.chdir('/home/fd13/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
+# cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', LJ_type='merz-opc')
+# #cage.prepare_initial_topology(homoleptic_ligand_topol='linker_small_resp.top'),
+# cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
 #
-os.chdir('/home/fd13/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Zn_mof')
-cage = supramolecular_structure('topol/enormous.gro', {'Zn': (2,1)}, topol='topol/enormous.top', LJ_type='merz-opc')
-#cage.prepare_initial_topology(homoleptic_ligand_topol='linker_small_resp.top'),
-cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
-
-# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof')
+# # os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_10/Co_mof')
 # cage = supramolecular_structure('topol/enormous.gro', {'Co': (2,4)}, topol='topol/enormous.top', vdw_type='merz-opc')
 # cage.parametrize(out_topol='out_enormous.top', out_coord='out_enormous.pdb')
 #
@@ -413,3 +413,20 @@ cage.parametrize()
 # cage.prepare_initial_topology()
 # cage.parametrize(out_coord='new.pdb', out_topol='new.top')
 #
+
+#os.chdir("/u/fd/chem1540/temp/matthijs/mo")
+#cage = supramolecular_structure('topol.pdb', topol="topol.top", metal_charge_mult={'Mo': (0, 1)}, LJ_type='uff', donors=['C'])
+#cage.parametrize(out_coord='new.pdb', out_topol='new.top')
+
+
+
+os.chdir("/u/fd/chem1540/temp/matthijs/")
+cage = supramolecular_structure('start.xyz', metal_charge_mult={'Ru': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
+cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topology=True)
+
+
+
+#os.chdir("/u/fd/chem1540/temp/matthijs/mo")
+#cage = supramolecular_structure('topol.pdb', topol="topol.top", metal_charge_mult={'Mo': (0, 1)}, LJ_type='uff', donors=['C'])
+#cage.parametrize(out_coord='new.pdb', out_topol='new.top')
+

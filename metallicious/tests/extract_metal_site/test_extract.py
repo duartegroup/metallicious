@@ -1,7 +1,41 @@
-from metallicious.extract_metal_site import extract_metal_structure
+from metallicious.extract_metal_site import extract_metal_structure, add_hydrogens
 
 import MDAnalysis
 import shutil
+import networkx as nx
+
+
+
+selection_site = MDAnalysis.Universe("unsaturated_fragment_1.xyz").atoms
+with_hydrogens, _ = add_hydrogens(selection_site, "", [24, 25])
+G_after = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(with_hydrogens.atoms, with_hydrogens.atoms.positions))
+number_bonds_after = len(G_after.edges())
+assert number_bonds_after==35
+
+selection_site = MDAnalysis.Universe("unsaturated_fragment_2.pdb").atoms
+with_hydrogens, _ = add_hydrogens(selection_site, "Pd", [2, 24, 35, 13])
+with_hydrogens.atoms.write("temp.xyz")
+G_after = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(with_hydrogens.atoms, with_hydrogens.atoms.positions))
+number_bonds_after = len(G_after.edges())
+assert number_bonds_after==56
+
+selection_site = MDAnalysis.Universe("unsaturated_fragment_3.pdb").atoms
+with_hydrogens, _ = add_hydrogens(selection_site, "FE", [6, 1, 49, 54, 25, 30])
+G_after = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(with_hydrogens.atoms, with_hydrogens.atoms.positions, vdwradii={"FE": 0.1}))
+number_bonds_after = len(G_after.edges())
+assert number_bonds_after==87
+
+selection_site = MDAnalysis.Universe("unsaturated_fragment_4.pdb").atoms
+with_hydrogens, _ = add_hydrogens(selection_site, "", [18, 35, 46, 7])
+with_hydrogens.atoms.write("temp.xyz")
+G_after = nx.Graph(MDAnalysis.topology.guessers.guess_bonds(with_hydrogens.atoms, with_hydrogens.atoms.positions))
+number_bonds_after = len(G_after.edges())
+assert number_bonds_after==35
+
+
+
+
+
 
 
 extract_metal_structure('tall_cage.pdb', 'tall_cage.top', 'Pd', 'out_tall_cage')
@@ -20,7 +54,6 @@ extract_metal_structure('pyryne_cage.pdb', 'pyryne_cage.top', 'Pd', 'out_pyryne_
 syst = MDAnalysis.Universe("out_pyryne_cage0/saturated_template.xyz")
 assert len(syst.atoms) == 113
 shutil.rmtree('out_pyryne_cage0')
-
 
 
 

@@ -44,12 +44,14 @@ def guess_aromaticities(syst):
     '''
     aromaticity = [False] * len(syst)
     not_dummy = [idx for idx, name in enumerate(syst.elements) if name != 'DUMMY']
-    aromaticity_from_mdanalysis = MDAnalysis.topology.guessers.guess_aromaticities(syst[not_dummy])
+
+    #aromaticity_from_mdanalysis = MDAnalysis.topology.guessers.guess_aromaticities(syst[not_dummy], force=True)
+    mol = syst[not_dummy].convert_to("RDKIT", force=True)
+    aromaticity_from_mdanalysis = np.array([atom.GetIsAromatic() for atom in mol.GetAtoms()])
 
     for idx, _ in enumerate(not_dummy):
         aromaticity[not_dummy[idx]] = aromaticity_from_mdanalysis[idx]
     return aromaticity
-
 
 def guess_chirality(syst):
     '''
@@ -60,7 +62,7 @@ def guess_chirality(syst):
     '''
     chirality = [rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED] * len(syst)
     not_dummy = [idx for idx, name in enumerate(syst.elements) if name != 'DUMMY']
-    mol1 = syst[not_dummy].convert_to("RDKIT")
+    mol1 = syst[not_dummy].convert_to("RDKIT", force=True)
 
     for idx, atom in enumerate(mol1.GetAtoms()):
         chirality[not_dummy[idx]]  = atom.GetChiralTag()

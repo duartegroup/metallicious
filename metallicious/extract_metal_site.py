@@ -126,6 +126,9 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
 
     logger.info(f"\t\t\t{closest_atoms_string}")
 
+    if sum([len(closest_atom)==0 for closest_atom in closest_atoms_ligands]) != 0:
+        raise ValueError("Something's not right. One of the ligands not connected to metal. Are donors selected correctly?")
+
     G_sub_cages_bound_cutoff = []
     closest_atoms_ligands_cutoff = []
     if neighbhor_cutoff is not None:
@@ -226,7 +229,7 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
                 if selected_closest_atom in ring:
                     rings_with_closest_atom += ring
                 else:
-                    # We remove other rings, which would become fragmets otherwise
+                    # We remove other rings, which would become fragments otherwise
                     for atom in ring:
                         if atom in atoms_within_cutoff:
                             atoms_within_cutoff.remove(atom)
@@ -243,7 +246,7 @@ def find_closest_and_add_rings(metal_index, cage, bound_ligands, selected_closes
 
         adj_atoms = []
 
-        # we add adjecent atoms
+        # we add adjacent atoms
         for edge in selected_bound_ligand.edges:
             if edge[0] in close_atoms_and_in_rings and edge[1] not in close_atoms_and_in_rings:
                 adj_atoms.append(edge[1])
@@ -310,6 +313,7 @@ def find_closest_and_add_rings_iterate(metal_indices, cage, all_metal_indecies, 
         bound_ligands, selected_closest_atoms = find_bound_ligands_nx(cage, metal_index, cutoff=None,
                                                                       cutoff_covalent=covalent_cutoff, donors=donors,
                                                                       closest_neighbhors=closest_neighbhors)
+
         site_single, _, site_link_atoms_single = find_closest_and_add_rings(metal_index, cage, bound_ligands,
                                                                             selected_closest_atoms, aromaticity)
         site += site_single
@@ -376,19 +380,28 @@ def check_uniqueness(binding_sites_graphs, site_link_atoms, structure, metal_nam
     return unique_sites, unique_site_link_atoms
 
 
-def rotation_matrix_from_vectors(vec1, vec2):
+def rotation_matrix_from_vectors(vector1, vector2, theta):
     """ Find the rotation matrix that aligns vec1 to vec2
-    :param vec1: A 3d "source" vector
-    :param vec2: A 3d "destination" vector
+    From: https://stackoverflow.com/questions/45142959/calculate-rotation-matrix-to-align-two-vectors-in-3d-space
+    :param vector1: A 3d "source" vector
+    :param vector2: A 3d "destination" vector
     :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
     """
-    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
+    a, b = (vector1 / np.linalg.norm(vector1)).reshape(3), (vector2 / np.linalg.norm(vector2)).reshape(3)
     v = np.cross(a, b)
     c = np.dot(a, b)
     s = np.linalg.norm(v)
     kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
     rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
-    return rotation_matrix
+
+    # https://en.wikipedia.org/wiki/Rotation_matrix
+    v1 = vector1 / np.linalg.norm(vector1)
+    kmat2 = np.array([[0, -v1[2], v1[1]], [v1[2], 0, -v1[0]], [-v1[1], v1[0], 0]])
+
+    th = np.deg2rad(theta)
+    rotation_matrix_around_vector2 = np.cos(th)*np.eye(3) + np.sin(th)*kmat2 + (1-np.cos(th))*np.outer(v1, v1)
+
+    return rotation_matrix.dot(rotation_matrix_around_vector2)
 
 
 def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
@@ -422,6 +435,7 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
                         [-0.25250322, -0.96369492, -0.90939079]])
 
     positions = []
+    positions_of_additional_hydrogens = []
     for link_atom in add_atoms_to_this_atom:
 
         if selection_site.universe.dimensions is not None:
@@ -459,10 +473,30 @@ def add_hydrogens(selection_site, metal_name, add_atoms_to_this_atom):
         elif link_atom_name == 'S':
             molecule = sulfide
 
-        rot = rotation_matrix_from_vectors(molecule[1] - molecule[0], bond_vector)
-        newpos = rot.dot(molecule.T).T[2:]
+        min_dist = -1
 
-        positions.extend(np.array(newpos) + atom1_pos)
+        # rot = rotation_matrix_from_vectors(molecule[1] - molecule[0], bond_vector, 0)
+        # newpos_final = rot.dot(molecule.T).T[2:]
+
+
+        # we add radomly first hydrogens
+        if len(positions_of_additional_hydrogens) == 0:
+            rot = rotation_matrix_from_vectors(molecule[1] - molecule[0], bond_vector, 0)
+            newpos_final = rot.dot(molecule.T).T[2:]
+
+        else:
+            # we try to add next hydrogens that they do not overlap with the previous ones... this happens for larger strucutres
+            for theta in range(0, 360, 12):
+                rot = rotation_matrix_from_vectors(molecule[1] - molecule[0], bond_vector, theta)
+                newpos = rot.dot(molecule.T).T[2:]
+                dist = np.min(distance_array(np.concatenate(positions_of_additional_hydrogens), newpos))
+                if dist > min_dist:
+                    min_dist = dist
+                    newpos_final = newpos
+
+        positions_of_additional_hydrogens.append(newpos_final)
+
+        positions.extend(np.array(newpos_final) + atom1_pos)
 
     # create the Universe
     n_atoms = len(positions)
@@ -529,11 +563,11 @@ def find_ligand_pattern(new_syst, ligands_nodes):
         exist = False
 
         selected_ligand_1 = MDAnalysis.Merge(new_syst.atoms[ligands_node])
-        mol1 = selected_ligand_1.select_atoms("not element DUMMY").convert_to("RDKIT")
+        mol1 = selected_ligand_1.select_atoms("not element DUMMY").convert_to("RDKIT", force=True)
 
         for idx, unique_lingad in enumerate(unique_ligands):
             selected_ligand_2 = MDAnalysis.Merge(new_syst.atoms[unique_lingad])
-            mol2 = selected_ligand_2.select_atoms("not element DUMMY").convert_to("RDKIT")
+            mol2 = selected_ligand_2.select_atoms("not element DUMMY").convert_to("RDKIT", force=True)
 
             if (mol1.HasSubstructMatch(mol2) and mol2.HasSubstructMatch(mol1)):
                 exist = True
@@ -751,7 +785,7 @@ def extract_metal_structure(filename, topol_filename, metal_name, output = None,
 
             unique_ligand_filenames.append(f"{output:s}{n_site:d}/ligand_{idx:}.xyz")
 
-            mol = ligand_coord.select_atoms("not element DUMMY").convert_to("RDKIT")
+            mol = ligand_coord.select_atoms("not element DUMMY").convert_to("RDKIT", force=True)
             charge = Chem.GetFormalCharge(mol)
             unique_ligands_charges.append(charge)
             unique_ligands_smiles.append(Chem.MolToSmiles(mol))
