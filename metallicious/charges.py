@@ -75,7 +75,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
 
             params (list(str)): e.g. [/path/to/method, input-filename]
         """
-        print("running new execute", params)
+
         with open(output_filename, 'w') as output_file:
             # /path/to/method input_filename > output_filename
             process = Popen(params, stdout=output_file, stderr=PIPE, close_fds=True)
@@ -141,8 +141,12 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
     if metal_radius is not None and metal_name is not None:
         GridOptions.vdw_radii[metal_name] = metal_radius
 
-    # create reorientations of the single conformer
-    molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
+    # create re-orientations of the single conformer, if molecules has 2 atoms (carbon monoxide), don't reorient
+    if len(site.n_atoms) < 3:
+        molecule_psiresp.generate_transformations(n_reorientations=0)
+    else:
+        molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
+
     molecule_psiresp.generate_orientations(True)
     conf = molecule_psiresp.conformers[0]
     name = site.name

@@ -127,7 +127,7 @@ def find_bound_ligands_nx(cage, metal_index, cutoff=7, cutoff_covalent=3.0, clos
     logger.info(f"\t\t\t{closest_atoms_string}")
 
     if sum([len(closest_atom)==0 for closest_atom in closest_atoms_ligands]) != 0:
-        raise ValueError("Something's not right. One of the ligands not connected to metal. Are donors selected correctly?")
+        raise ValueError(f"Something's not right. One of the ligands not connected to metal. Are donors selected correctly? (currently: {donors:}")
 
     G_sub_cages_bound_cutoff = []
     closest_atoms_ligands_cutoff = []

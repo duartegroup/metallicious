@@ -420,9 +420,9 @@ cage.parametrize()
 
 
 
-os.chdir("/u/fd/chem1540/temp/matthijs/")
-cage = supramolecular_structure('start.xyz', metal_charge_mult={'Ru': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
-cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topology=True)
+#os.chdir("/u/fd/chem1540/temp/matthijs/")
+#cage = supramolecular_structure('start.xyz', metal_charge_mult={'Ru': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
+#cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topology=True)
 
 
 
@@ -430,3 +430,7 @@ cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topol
 #cage = supramolecular_structure('topol.pdb', topol="topol.top", metal_charge_mult={'Mo': (0, 1)}, LJ_type='uff', donors=['C'])
 #cage.parametrize(out_coord='new.pdb', out_topol='new.top')
 
+
+os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/paddlewheel")
+cage = supramolecular_structure('start.xyz', metal_charge_mult={'Cu': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
+cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topology=True)
