@@ -432,5 +432,9 @@ cage.parametrize()
 
 
 os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/paddlewheel")
-cage = supramolecular_structure('start.xyz', metal_charge_mult={'Cu': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
-cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topology=True)
+cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', topol="init_topol/noncovalent_complex.top" , metal_charge_mult={'Cu': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
+cage.extract_unique_metal_sites()
+
+
+
+#cage.parametrize(out_coord='new.pdb', out_topol='new.top', prepare_initial_topology=True)

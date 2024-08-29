@@ -27,7 +27,7 @@ class supramolecular_structure:
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=False,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
-                 fingerprint_guess_list=None, truncation_scheme=None, covalent_cutoff=3):
+                 fingerprint_guess_list=None, truncation_scheme=None, covalent_cutoff=3, rmsd_cutoff=2):
         '''
         Initialize the class
 
@@ -48,6 +48,7 @@ class supramolecular_structure:
         :param fingerprint_guess_list: (list(str)) list of templates to check
         :param truncation_scheme: (str) name of the truncation scheme
         :param covalent_cutoff: (float) if metal-atoms smaller then cutoff it creates bonds ligand with metal
+        :param rmsd_cutoff: (float) cutoff for the RMSD acceptance of the template
         '''
 
         logger.info(f"Library with templates is located: {library_path:}")
@@ -64,6 +65,8 @@ class supramolecular_structure:
 
         self.covalent_cutoff = covalent_cutoff
         self.closest_neighbhors = 3
+
+        self.rmsd_cutoff = rmsd_cutoff
 
         #if topol is not None:
         #self.topol = self.make_metals_first(topol)
@@ -150,7 +153,8 @@ class supramolecular_structure:
                                         fingerprint_guess_list=self.fingerprint_guess_list,
                                         m_m_cutoff=10, vdw_type=self.vdw_type, library_path=self.library_path,
                                         search_library=self.search_library,
-                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme, donors=self.donors)
+                                        additional_fp_files=additional_fp_coords, fp_style=self.truncation_scheme,
+                                        donors=self.donors, rmsd_cutoff=self.rmsd_cutoff)
 
             if guessed is not False:  # do not change to True...
                 site.fp_coord_file = f"{guessed:}.pdb"
@@ -174,7 +178,7 @@ class supramolecular_structure:
                 if self.metal_mult_dict is not None:
                     site_list[2] = self.metal_mult_dict[metal_name]  # we change the multiplicity
 
-                site_list += [self.autode_keywords, self.improper_metal, self.donors, self.vdw_type]
+                site_list += [self.autode_keywords, self.improper_metal, self.donors, self.vdw_type, self.rmsd_cutoff]
                 unique_sites += [new_metal_site(*site_list)]
 
         self.unique_sites = unique_sites
@@ -354,7 +358,7 @@ class new_metal_site():
                  link_atoms=None, additional_atoms=None, starting_index=None, indecies=None, ligand_charges=None,
                  ligand_smiles=None, topol=None,
                  keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=True,
-                 donors=['N', 'S', 'O'], vdw_type='uff'):
+                 donors=['N', 'S', 'O'], vdw_type='uff', rmsd_cutoff=2):
         '''
         The class stores and processes information needed for new template parametrization
 
@@ -375,6 +379,7 @@ class new_metal_site():
         :param improper_metal: (bool) if True improper dihedral involving metal will be parametrized
         :param donors: (list(str)) list of element names with which metal are connected
         :param vdw_type: (str) name of the dataset used for metal Lennard-Jones parameters
+        :param rmsd_cutoff: (float) cutoff for the RMSD acceptance of the template
         '''
 
         self.unique_ligands_pattern = unique_ligands_pattern
@@ -415,8 +420,9 @@ class new_metal_site():
 
         self.vibrational_scaling = None
 
-        if vdw_type is not None:
+        self.rmsd_cutoff = rmsd_cutoff
 
+        if vdw_type is not None:
             if metal_name in vdw_data[vdw_type]:
                 vdw_entry = metal_name
             elif f"{metal_name:}{metal_charge:}" in vdw_data[vdw_type]:
@@ -537,7 +543,7 @@ class new_metal_site():
         Guess the template of the metal site
         :return:
         '''
-        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name, metal_charge=self.metal_charge, vdw_type=self.vdw_type)
+        return guess_fingerprint(self.directory + "/saturated_template.xyz", 0, metal_name=self.metal_name, metal_charge=self.metal_charge, vdw_type=self.vdw_type, rmsd_cutoff=self.rmsd_cutoff)
 
     def parametrize(self):
         '''

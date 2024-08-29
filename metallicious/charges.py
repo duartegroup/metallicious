@@ -142,7 +142,7 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
         GridOptions.vdw_radii[metal_name] = metal_radius
 
     # create re-orientations of the single conformer, if molecules has 2 atoms (carbon monoxide), don't reorient
-    if len(site.n_atoms) < 3:
+    if site.n_atoms < 3:
         molecule_psiresp.generate_transformations(n_reorientations=0)
     else:
         molecule_psiresp.generate_transformations(n_reorientations=n_reorientations)
