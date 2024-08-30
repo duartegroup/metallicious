@@ -95,9 +95,9 @@ This requires only change of the library_directory, as there are no templates in
 Tutorial 5: GROMACS tutorial for MD simulations of metallorganic structures from scratch
 -----------
 
-
-This tutorial will guide you how to perform whole MD simulations from scratch. We will simulate a Ga4L6 cage in water.
-Firstly, let's do the topology of the cage from *.xyz structure:
+This tutorial will guide you in performing an MD simulation from scratch. We will simulate a Fujita's Pd4L6 cage in water.
+The files needed for this tutorial are available `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/tutorial.zip>`_.
+Firstly, let's do the topology of the cage from *.xyz structure using metallicious:
 
 .. code-block:: python
     from metallicious import supramolecular_structure
@@ -105,66 +105,85 @@ Firstly, let's do the topology of the cage from *.xyz structure:
     cage.parametrize(out_coord='0_cage.pdb', out_topol='topol.top', prepare_initial_topology=True)
 
 
-Execule the program:
+Execute the program:
 
 .. code-block:: bash
 
     python script.py
 
-With the topology read, let's setup the system. Firstly let's modify the size of the simulation box:
+With the topology read, we will set up the system. Firstly, let's modify the size of the simulation box to accommodate
+the cage (we use 2 nm from the cage to the wall of the simulation box):
 
 .. code-block:: bash
-gmx editconf -f 0_cage.pdb -d 2 -o 1_box.pdb
 
-We solvate the system with water (we usee 3-site water model):
+    gmx editconf -f 0_cage.pdb -d 2 -o 1_box.pdb
+
+We solvate the system with water (we will use a 3-site water model):
 
 .. code-block:: bash
-gmx solvate -cp 1_box.pdb -cs spc216.gro -o 2_solv.gro -p topol.top
+
+    gmx solvate -cp 1_box.pdb -cs spc216.gro -o 2_solv.gro -p topol.top
 
 Now, the topology file needs to be changed. Open the "topol.top" file. Firstly, we will change the header:
 
 .. code-block:: bash
-[ defaults ]
-; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
-1               2               yes             0.5          0.833333
 
-to:
+    [ defaults ]
+    ; nbfunc        comb-rule       gen-pairs       fudgeLJ fudgeQQ
+    1               2               yes             0.5          0.833333
 
-#include "amber99sb-ildn.ff/forcefield.itp"
+to force-field parameters, which include atom types of water:
 
-This will include all LJ paramters for atoms (including solvent and ions). Under the section "[ atomtypes ]" (just
-before first [ moleculetype ]) we add information about the force-field paramters for water and ions topology.
-In this case we will use SPC/E water model:
+.. code-block:: bash
 
-#include "amber99sb-ildn.ff/spce.itp"
-#include "amber99sb-ildn.ff/ions.itp"
+    #include "amber99sb-ildn.ff/forcefield.itp"
 
-Now we need to add ions. Firstly, we need to create a tpr file
+This will include all LJ parameters for atoms (including solvent and ions). Next, add information about the force-field
+parameters for water and ions just under the section "[ atomtypes ]" (just
+before the first [ moleculetype ]). In this case, we will use SPC/E water model:
 
+.. code-block:: bash
 
-gmx grompp -f em.mdp -c 2_solv.gro -p topol.top -o ions.tpr -maxwarn  2
+    #include "amber99sb-ildn.ff/spce.itp"
+    #include "amber99sb-ildn.ff/ions.itp"
 
-Then you add ions:
+Now, we need to add ions. Firstly, we need to create a *.tpr file:
 
-gmx genion -s ions.tpr -o 3_ions.gro -p topol.top -pname NA -nname CL -neutral
+.. code-block:: bash
+
+    gmx grompp -f em.mdp -c 2_solv.gro -p topol.top -o ions.tpr -maxwarn  2
+
+Then, let's add ions:
+
+.. code-block:: bash
+
+    gmx genion -s ions.tpr -o 3_ions.gro -p topol.top -pname NA -nname CL -neutral
 
 Select "SOL" to replace bulk water with the counterions.
-We minimize the created system (to "remove bad contacts") by firstly creating *tpr file, and then performing miniization.
+We minimize the created system (to "remove bad contacts") by making a *.tpr file and then performing minimization.
 
-gmx grompp -f em.mdp -c 3_ions.gro -p topol.top -o 4_em.tpr
-gmx mdrun -v -deffnm 4_em
+.. code-block:: bash
 
-Equilibration using NVT and NPT:
+    gmx grompp -f em.mdp -c 3_ions.gro -p topol.top -o 4_em.tpr
+    gmx mdrun -v -deffnm 4_em
 
-gmx grompp -f nvt.mdp -c 4_em.gro -p topol.top -o 5_nvt.tpr
-gmx mdrun -v -deffnm 5_nvt
+We equilibrate system using NVT and NPT ensemble:
 
-gmx grompp -f npt.mdp -c 5_nvt.gro -p topol.top -o 6_npt.tpr
-gmx mdrun -v -deffnm 6_npt
+.. code-block:: bash
 
-And finally production run (ideally done on high performance cluster (HPC) with GPUs):
+    gmx grompp -f nvt.mdp -c 4_em.gro -p topol.top -o 5_nvt.tpr
+    gmx mdrun -v -deffnm 5_nvt
 
-gmx grompp -f run.mdp -c 6_npt.gro -p topol.top -o 7_run.tpr
-gmx mdrun -v -deffnm 7_run
+    gmx grompp -f npt.mdp -c 5_nvt.gro -p topol.top -o 6_npt.tpr
+    gmx mdrun -v -deffnm 6_npt
 
-As result you obtaine final frame 7_run.gro and trajectory 7_run.xtc, which you can visualise using for example VMD.
+Finally, we perform production run (ideally done on a performance cluster (HPC) with GPUs):
+
+.. code-block:: bash
+
+    gmx grompp -f run.mdp -c 6_npt.gro -p topol.top -o 7_run.tpr
+    gmx mdrun -v -deffnm 7_run
+
+
+As a result, we should obtain the final frame 7_run.gro and trajectory 7_run.xtc, which you can visualise using a
+molecular visualization program (i.g., VMD). For your convenience, `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/final.zip>`_ are the final files compliled.

@@ -114,6 +114,8 @@ metallicious/library/Fe_2_merz-opc_3.pdb
 metallicious/library/Fe_2_merz-opc_3.top
 metallicious/library/Fe_2_uff_0.pdb
 metallicious/library/Fe_2_uff_0.top
+metallicious/library/Fe_2_uff_1.pdb
+metallicious/library/Fe_2_uff_1.top
 metallicious/library/Fe_2_zhang-opc_0.pdb
 metallicious/library/Fe_2_zhang-opc_0.top
 metallicious/library/Fe_2_zhang-opc_1.pdb

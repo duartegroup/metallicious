@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: metallicious
-Version: 0.2.32
+Version: 0.2.33
 License-File: LICENSE.md
 Requires-Dist: numpy
 Requires-Dist: MDAnalysis

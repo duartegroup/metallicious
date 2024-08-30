@@ -97,7 +97,6 @@ class supramolecular_structure:
 
         elif LJ_type is None:
             for LJ_type in vdw_data:
-
                 present = [(metal_name in vdw_data[LJ_type] or f"{metal_name:}{self.metal_charge_dict[metal_name]:}" in vdw_data[LJ_type]) for metal_name in self.metal_names]
                 if sum(present) == len(present):
                     self.vdw_type = LJ_type
