@@ -95,36 +95,38 @@ This requires only change of the library_directory, as there are no templates in
 Tutorial 5: GROMACS tutorial for MD simulations of metallorganic structures from scratch
 -----------
 
-This tutorial will guide you in performing an MD simulation from scratch. We will simulate a Fujita's Pd4L6 cage in water.
+This tutorial will guide you in performing an MD simulation from scratch using `GROMACS <https://www.gromacs.org/>`_. We will simulate a Fujita's Pd4L6 cage in water.
 The files needed for this tutorial are available `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/tutorial.zip>`_.
-Firstly, let's do the topology of the cage from *.xyz structure using metallicious:
+
+Firstly, create the topology (force-field parameters) files from .xyz file using *metallicious*:
 
 .. code-block:: python
+
     from metallicious import supramolecular_structure
     cage = supramolecular_structure('cage_start.pdb', metal_charges={'Pd': 2}, LJ_type='uff')
     cage.parametrize(out_coord='0_cage.pdb', out_topol='topol.top', prepare_initial_topology=True)
 
 
-Execute the program:
+Execute the script:
 
 .. code-block:: bash
 
     python script.py
 
-With the topology read, we will set up the system. Firstly, let's modify the size of the simulation box to accommodate
-the cage (we use 2 nm from the cage to the wall of the simulation box):
+With the topology ready, we will set up the system. Modify the size of the simulation box to accommodate
+the cage (we use 2 nm distance from the cage to the wall):
 
 .. code-block:: bash
 
     gmx editconf -f 0_cage.pdb -d 2 -o 1_box.pdb
 
-We solvate the system with water (we will use a 3-site water model):
+Solvate the system with water (here, we use a 3-site water model):
 
 .. code-block:: bash
 
     gmx solvate -cp 1_box.pdb -cs spc216.gro -o 2_solv.gro -p topol.top
 
-Now, the topology file needs to be changed. Open the "topol.top" file. Firstly, we will change the header:
+Change the topology files. Open the "topol.top" file and change the header:
 
 .. code-block:: bash
 
@@ -139,35 +141,35 @@ to force-field parameters, which include atom types of water:
     #include "amber99sb-ildn.ff/forcefield.itp"
 
 This will include all LJ parameters for atoms (including solvent and ions). Next, add information about the force-field
-parameters for water and ions just under the section "[ atomtypes ]" (just
-before the first [ moleculetype ]). In this case, we will use SPC/E water model:
+parameters for water and ions just under the section "[ atomtypes ]" (before the first [ moleculetype ]).
+In this case, we will use SPC/E water model:
 
 .. code-block:: bash
 
     #include "amber99sb-ildn.ff/spce.itp"
     #include "amber99sb-ildn.ff/ions.itp"
 
-Now, we need to add ions. Firstly, we need to create a *.tpr file:
+Now, we will add counter ions. Firstly, create a .tpr file:
 
 .. code-block:: bash
 
     gmx grompp -f em.mdp -c 2_solv.gro -p topol.top -o ions.tpr -maxwarn  2
 
-Then, let's add ions:
+Replace the water molecules with ions:
 
 .. code-block:: bash
 
     gmx genion -s ions.tpr -o 3_ions.gro -p topol.top -pname NA -nname CL -neutral
 
-Select "SOL" to replace bulk water with the counterions.
-We minimize the created system (to "remove bad contacts") by making a *.tpr file and then performing minimization.
+Select "SOL" to replace some of bulk water molecules with the counter ions to neutralize the cage charge.
+Minimize the created system (to "remove bad contacts") by making a .tpr file and performing minimization.
 
 .. code-block:: bash
 
     gmx grompp -f em.mdp -c 3_ions.gro -p topol.top -o 4_em.tpr
     gmx mdrun -v -deffnm 4_em
 
-We equilibrate system using NVT and NPT ensemble:
+Equilibrate system using NVT and NPT ensemble:
 
 .. code-block:: bash
 
@@ -177,7 +179,7 @@ We equilibrate system using NVT and NPT ensemble:
     gmx grompp -f npt.mdp -c 5_nvt.gro -p topol.top -o 6_npt.tpr
     gmx mdrun -v -deffnm 6_npt
 
-Finally, we perform production run (ideally done on a performance cluster (HPC) with GPUs):
+Finally, perform production run (ideally done on a high performance cluster (HPC) with GPUs):
 
 .. code-block:: bash
 
@@ -185,5 +187,5 @@ Finally, we perform production run (ideally done on a performance cluster (HPC) 
     gmx mdrun -v -deffnm 7_run
 
 
-As a result, we should obtain the final frame 7_run.gro and trajectory 7_run.xtc, which you can visualise using a
-molecular visualization program (i.g., VMD). For your convenience, `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/final.zip>`_ are the final files compliled.
+As a result, you should obtain the final frame 7_run.gro and trajectory 7_run.xtc, which you can visualise using a
+molecular visualization program (e.g., VMD). For your convenience, `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/final.zip>`_ are the final files compliled.
