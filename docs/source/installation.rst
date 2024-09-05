@@ -22,7 +22,7 @@ Alternatively, if you do not need to parametrize templates, install core depende
 
 .. code-block:: bash
 
-    conda install rdkit mdanalysis networkx ambertools --channel conda-forge
+    conda install rdkit parmed mdanalysis networkx ambertools --channel conda-forge
     pip install metallicious
 
 
