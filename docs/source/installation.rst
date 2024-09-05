@@ -13,11 +13,18 @@ Create a new conda environment:
 
 Install dependencies and the *metallicious*:
 
+.. code-block:: bash
+
+    conda install rdkit parmed autode psiresp mdanalysis networkx qcelemental==0.25.1 ambertools --channel conda-forge
+    pip install metallicious
+
+Alternatively, if you do not need to parametrize templates, install core dependencies + antechamber :
 
 .. code-block:: bash
 
-    conda install rdkit autode psiresp mdanalysis networkx qcelemental==0.25.1 ambertools --channel conda-forge
+    conda install rdkit mdanalysis networkx ambertools --channel conda-forge
     pip install metallicious
+
 
 Dependencies
 ----------------
