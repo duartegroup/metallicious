@@ -20,6 +20,7 @@ def get_args():
     parser.add_argument("-donors", nargs='+', default=['N', 'S', 'O'],
                         help = "Donors from the connected ligands, usually electronegative atom, such as N, S, O, but sometimes metal is connected to carbon (default: N S O)")
     parser.add_argument("-prepare_initial_topol", action='store_true', default=False, help="Prepare initial topology using GAFF")
+    parser.add_argument("-rmsd_cutoff", default=2, help="Prepare initial topology using GAFF")
     parser.add_argument("-linker_topol", default=None, help="Linker force-field (topology) parameters")
     return parser.parse_args()
 
@@ -76,6 +77,7 @@ def main():
 
 
     vdw_type = args.LJ_type
+    rmsd_cutoff = float(args.rmsd_cutoff)
 
     improper_metal = args.improper_metal
     donors = args.donors
@@ -84,7 +86,7 @@ def main():
     cage = supramolecular_structure(filename=filename, metal_charge_mult=metal_charge_mult,
                                     metal_charges=metal_charges, LJ_type=vdw_type, topol=topol, keywords=keywords,
                                     improper_metal=improper_metal, donors=donors,
-                                    truncation_scheme=truncation_scheme)
+                                    truncation_scheme=truncation_scheme, rmsd_cutoff=rmsd_cutoff)
 
     if args.prepare_initial_topol:
         cage.prepare_initial_topology(homoleptic_ligand_topol=args.linker_topol)

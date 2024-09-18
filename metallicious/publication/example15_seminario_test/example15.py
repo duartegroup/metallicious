@@ -204,8 +204,9 @@ cage.parametrize(out_coord='saturated_template_bond.pdb', out_topol='saturated_t
 # cage.parametrize()
 # print("A")
 
-# os.chdir('/home/fd05/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_06/Co_mof')
-# cage = supramolecular_structure('Co_tet.pdb', {'Co': (2,4)}, vdw_type='merz-tip3p',  improper_metal=False)
+#os.chdir('/home/fd13/fd/chem1540/Research/2021_11_02_Pullen/classic_cages_07_06/Co_mof')
+#cage = supramolecular_structure('Co_tet.pdb', {'Co': (2,4)}, LJ_type='merz-tip3p')
+#print(cage.improper_metal)
 # cage.prepare_initial_topology(homoleptic_ligand_topol='linker0_new.top')
 #cage.parametrize()
 
@@ -378,8 +379,11 @@ cage.parametrize()
 
 #os.chdir("/u/fd/chem1540/Research/DA/pd2l4_6+/MD/init_topol/")
 #
+# print("A")
 # os.chdir("/u/fd/chem1540/Research/ClE/MD")
-# cage = supramolecular_structure('cage.xyz', metal_charges={'Pd':2 }, vdw_type='merz-opc')
+# cage = supramolecular_structure('cage.xyz', metal_charges={'Pd':2 }, LJ_type='merz-opc')
+
+
 # cage.parametrize(out_coord='parameters/C4.pdb', out_topol='C4.top', prepare_initial_topology=True)
 
 
@@ -431,9 +435,9 @@ cage.parametrize()
 #cage.parametrize(out_coord='new.pdb', out_topol='new.top')
 
 
-os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/paddlewheel")
-cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', topol="init_topol/noncovalent_complex.top" , metal_charge_mult={'Cu': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
-cage.extract_unique_metal_sites()
+#os.chdir("/u/fd/chem1540/Research/2021_11_02_Pullen/paddlewheel")
+#cage = supramolecular_structure('init_topol/noncovalent_complex.pdb', topol="init_topol/noncovalent_complex.top" , metal_charge_mult={'Cu': (2, 1)}, LJ_type='uff', donors=['C', 'N', 'S', 'O' ])
+#cage.extract_unique_metal_sites()
 
 
 

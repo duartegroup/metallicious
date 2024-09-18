@@ -24,7 +24,7 @@ class supramolecular_structure:
 
     '''
     def __init__(self, filename, metal_charge_mult=None, metal_charges=None, LJ_type=None, topol=None,
-                 keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=False,
+                 keywords=['PBE0', 'D3BJ', 'def2-SVP', 'tightOPT', 'freq'], improper_metal=None,
                  donors=['N', 'S', 'O'],
                  library_path=f'{os.path.dirname(__file__):s}/library/', ff='gaff', search_library=True,
                  fingerprint_guess_list=None, truncation_scheme=None, covalent_cutoff=3, rmsd_cutoff=2):
@@ -60,13 +60,13 @@ class supramolecular_structure:
 
         self.autode_keywords = keywords
         self.donors = donors
-        self.improper_metal = improper_metal
         self.ff = ff
 
         self.covalent_cutoff = covalent_cutoff
         self.closest_neighbhors = 3
 
         self.rmsd_cutoff = rmsd_cutoff
+
 
         #if topol is not None:
         #self.topol = self.make_metals_first(topol)
@@ -91,6 +91,16 @@ class supramolecular_structure:
             self.allow_new_templates = False
         else:
             raise ValueError("Not correct format of metal_charge_mult/metal_charges")
+
+        if improper_metal is None:
+            self.improper_metal = False
+            for metal_name in self.metal_charge_dict:
+                if (metal_name in ["Pd", "Pt"] and self.metal_charge_dict[metal_name] == 2) or (
+                        metal_name in ["Rh", "Ir"] and self.metal_charge_dict[metal_name] == 1) or (
+                        metal_name in ["Au"] and self.metal_charge_dict[metal_name] == 3):
+                    self.improper_metal = True
+        else:
+            self.improper_metal = improper_metal
 
         if LJ_type == 'custom' and topol is not None:
             self.vdw_type = 'custom'
