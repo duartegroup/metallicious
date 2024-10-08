@@ -157,7 +157,6 @@ def resp_orca(filename, charge=0, opt=True, metal_name=None, metal_radius=None, 
 
         # this does not work if already ortogonalized. it will break if file is reused.... :-(
         orient.compute_grid(GridOptions)
-        print(orient.grid)
 
         # create grid for ORCA, which uses Bohr as length
         with open("grid.vpot.xyz", "w") as File:

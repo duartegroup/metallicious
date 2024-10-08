@@ -190,3 +190,68 @@ Finally, perform production run (ideally done on a high performance cluster (HPC
 As a result, you should obtain the final frame 7_run.gro and trajectory 7_run.xtc, which you can visualise using a
 molecular visualization program (e.g., VMD). For your convenience, `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/final.zip>`_ are the final files compliled.
 
+
+Tutorial 6: Complex parametrization
+-----------
+
+Parametrization of the host-guest complex involves separate parametrization of the host and guest. In this example, we will parametrize `benzoquinone bound in the [Pd2L4]4+ cage <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial6/start.xyz>`_.:
+
+.. image:: images/benzoquinone_complex.png
+  :width: 200
+  :align: center
+  :alt:
+
+Firstly, extract the host and guest structures into separate coordination files. While visualization programs like Avogadro or PyMOL can be used for this task, a more straightforward approach is to use OpenBabel:
+
+.. code-block:: bash
+
+    obabel -ixyz start.xyz -oxyz -O separate.xyz -m --separate
+
+
+This command will create two separate files: separate1.xyz and separate2.xyz. In this case, separate1.xyz corresponds to the guest, and separate2.xyz to the cage.
+
+The guest molecule can be parametrized using the antechamber interface in the metallicious package:
+
+.. code-block:: python
+
+    from metallicious.antechamber_interface import antechamber
+    antechamber("separate1.xyz", "ligand.top", charge=0)
+
+This will produce two files: ligand.top (force-field parameters) and ligand.pdb (the coordination files).
+
+Perform standard parametrization of the cage using metallicious:
+
+.. code-block:: python
+
+    from metallicious import supramolecular_structure
+    cage = supramolecular_structure("separate2.xyz", metal_charges={'Pd':2 }, LJ_type='merz-opc')
+    cage.prepare_initial_topology()
+    cage.parametrize(out_coord=f'cage_out.pdb', out_topol=f'cage_out.top')
+
+This will generate the coordination file (cage_out.pdb) and force-field files (cage_out.top) for the cage. (remember that metallicious reorders atoms, so you need to use cage_out.pdb, not separate2.xyz!).
+
+To merge the coordinate files for the guest and cage, use the MDAnalysis package:
+
+.. code-block:: python
+
+    import MDAnalysis
+    syst1 = MDAnalysis.Universe("ligand.pdb")
+    syst2 = MDAnalysis.Universe("cage_out.pdb")
+    syst_sum = MDAnalysis.Merge(syst1.atoms, syst2.atoms)
+    syst_sum.atoms.write('complex_out.pdb')
+
+The output file, complex_out.pdb, will contain the combined coordinates of the host-guest complex.
+
+To merge the force-field parameters, use parmed:
+
+.. code-block:: python
+
+    import parmed as pmd
+    topol1 = pmd.load_file("ligand.top")
+    topol2 = pmd.load_file("cage_out.top")
+    topol_sum = topol1 + topol2
+    topol_sum.write("complex_out.top")
+
+This will produce complex_out.top file containing the combined parameters of the guest and cage.
+
+At the end of this process, you should obtain complex_out.pdb (coordination file) and complex_out.top (force-field parameters), which can be used for molecular dynamics with GROMACS. You can save them in different formats if you want to use them with a different molecular dynamics engine (for example, force-field with *.prmtop and coordination file with *.inpcrd, which can be used with AMBER).

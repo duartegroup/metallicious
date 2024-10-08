@@ -20,7 +20,7 @@ def get_args():
     parser.add_argument("-donors", nargs='+', default=['N', 'S', 'O'],
                         help = "Donors from the connected ligands, usually electronegative atom, such as N, S, O, but sometimes metal is connected to carbon (default: N S O)")
     parser.add_argument("-prepare_initial_topol", action='store_true', default=False, help="Prepare initial topology using GAFF")
-    parser.add_argument("-rmsd_cutoff", default=2, help="Prepare initial topology using GAFF")
+    parser.add_argument("-rmsd_cutoff", default=2, help="cutoff for the RMSD acceptance of the template")
     parser.add_argument("-linker_topol", default=None, help="Linker force-field (topology) parameters")
     return parser.parse_args()
 
