@@ -228,7 +228,7 @@ Perform standard parametrization of the cage using metallicious:
     cage.prepare_initial_topology()
     cage.parametrize(out_coord=f'cage_out.pdb', out_topol=f'cage_out.top')
 
-This will generate the coordination file (cage_out.pdb) and force-field files (cage_out.top) for the cage. (remember that metallicious reorders atoms, so you need to use cage_out.pdb, not separate2.xyz!).
+This will generate the coordination file (cage_out.pdb) and force-field files (cage_out.top) for the cage. (Remember that metallicious reorders atoms, so you need to use cage_out.pdb, not separate2.xyz).
 
 To merge the coordinate files for the guest and cage, use the MDAnalysis package:
 
