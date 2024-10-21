@@ -65,8 +65,8 @@ One might use this template on purpose for specific application
                                     LJ_type = 'uff',
                                     search_library=False)
     cage.extract_unique_metal_sites() # extracts template structures (needed to detect sites)
-    cage.sites[0].fp_coord_file = f'selected_template.pdb' # loads coordinates of the template
-    cage.sites[0].fp_topol_file = f'selected_template.top' # loads force-field parameters of the template
+    cage.sites[0].fp_coord_file = 'selected_template.pdb' # loads coordinates of the template
+    cage.sites[0].fp_topol_file = 'selected_template.top' # loads force-field parameters of the template
     cage.sites[0].load_fingerprint() # loads template into the class
     cage.sites[0].set_cutoff() # reads the radius of the template
     cage.unique_sites = [] # overwrites list with templates to parameterize (no template parametrization needed)
@@ -191,10 +191,10 @@ As a result, you should obtain the final frame 7_run.gro and trajectory 7_run.xt
 molecular visualization program (e.g., VMD). For your convenience, `here <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial5/final.zip>`_ are the final files compliled.
 
 
-Tutorial 6: Complex parametrization
+Tutorial 6: Host-guest complex parametrization
 -----------
 
-Parametrization of the host-guest complex involves separate parametrization of the host and guest. In this example, we will parametrize `benzoquinone bound in the [Pd2L4]4+ cage <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial6/start.xyz>`_.:
+Parametrization of the host-guest complex involves separate parametrization of the host and guest. In this example, we will parametrize `benzoquinone bound in the [Pd2L4]4+ cage <https://github.com/duartegroup/metallicious/tree/main/metallicious/examples/tutorial6/start.xyz>`_:
 
 .. image:: images/benzoquinone_complex.png
   :width: 200
@@ -228,7 +228,7 @@ Perform standard parametrization of the cage using metallicious:
     cage.prepare_initial_topology()
     cage.parametrize(out_coord=f'cage_out.pdb', out_topol=f'cage_out.top')
 
-This will generate the coordination file (cage_out.pdb) and force-field files (cage_out.top) for the cage. (Remember that metallicious reorders atoms, so you need to use cage_out.pdb, not separate2.xyz).
+This will generate the coordination file (cage_out.pdb) and force-field files (cage_out.top) for the cage. (Remember that metallicious reorders atoms, so for the next steps, you need to use cage_out.pdb, not separate2.xyz).
 
 To merge the coordinate files for the guest and cage, use the MDAnalysis package:
 
