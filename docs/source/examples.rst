@@ -116,7 +116,7 @@ dependencies (see installation guide) are needed (`autode <https://github.com/du
 .. code-block:: python
 
     from metallicious import supramolecular_structure
-    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charges_mult={'Pd': (2,1)},
+    cage = supramolecular_structure('cage.pdb', topol='topol.top', metal_charge_mult={'Pd': (2,1)},
                                     LJ_type='merz-opc')
     cage.parametrize(out_coord='out.pdb', out_topol='out.top', prepare_initial_topology=True)
 
