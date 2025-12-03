@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: metallicious
 Version: 0.2.34
 License-File: LICENSE.md
@@ -7,3 +7,4 @@ Requires-Dist: MDAnalysis
 Requires-Dist: rdkit
 Requires-Dist: parmed
 Requires-Dist: networkx
+Dynamic: license-file

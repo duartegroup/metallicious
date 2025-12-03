@@ -1,0 +1,5 @@
+numpy
+MDAnalysis
+rdkit
+parmed
+networkx
