@@ -1,0 +1,34 @@
+HEADER    
+TITLE     MDANALYSIS FRAME 0: Created by PDBWriter
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1
+REMARK     285 UNITARY VALUES FOR THE UNIT CELL AUTOMATICALLY SET
+REMARK     285 BY MDANALYSIS PDBWRITER BECAUSE UNIT CELL INFORMATION
+REMARK     285 WAS MISSING.
+REMARK     285 PROTEIN DATA BANK CONVENTIONS REQUIRE THAT
+REMARK     285 CRYST1 RECORD IS INCLUDED, BUT THE VALUES ON
+REMARK     285 THIS RECORD ARE MEANINGLESS.
+ATOM      1  Cu  UNK X   1      -1.976   2.045  -0.025  1.00  0.00      X       
+ATOM      2  Cu  UNK X   1      -2.012  -0.479   0.061  1.00  0.00      X       
+ATOM      3  O0  UNK X   1      -0.038   1.865  -0.031  1.00  0.00      X       
+ATOM      4  C1  UNK X   1       0.524   0.740   0.006  1.00  0.00      X       
+ATOM      5  C2  UNK X   1       2.029   0.734  -0.005  1.00  0.00      X       
+ATOM      6  O3  UNK X   1      -0.067  -0.367   0.051  1.00  0.00      X       
+ATOM      7  O0  UNK X   1      -1.969   1.973   1.920  1.00  0.00      X       
+ATOM      8  C1  UNK X   1      -1.983   0.876   2.534  1.00  0.00      X       
+ATOM      9  C2  UNK X   1      -1.986   0.943   4.039  1.00  0.00      X       
+ATOM     10  O3  UNK X   1      -2.001  -0.259   1.997  1.00  0.00      X       
+ATOM     11  O0  UNK X   1      -3.920   1.954  -0.013  1.00  0.00      X       
+ATOM     12  C1  UNK X   1      -4.511   0.847   0.028  1.00  0.00      X       
+ATOM     13  C2  UNK X   1      -6.017   0.854   0.039  1.00  0.00      X       
+ATOM     14  O3  UNK X   1      -3.950  -0.278   0.062  1.00  0.00      X       
+ATOM     15  O0  UNK X   1      -1.991   1.803  -1.961  1.00  0.00      X       
+ATOM     16  C1  UNK X   1      -2.010   0.667  -2.498  1.00  0.00      X       
+ATOM     17  C2  UNK X   1      -2.064   0.613  -4.001  1.00  0.00      X       
+ATOM     18  O3  UNK X   1      -2.015  -0.429  -1.883  1.00  0.00      X       
+END

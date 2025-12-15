@@ -3,13 +3,15 @@ Installation
 .. _installation:
 
 
-The easiest way to install *metallicious* is to use `Anaconda <https://anaconda.org/anaconda/python>`_, as *metallicious* depends on external packages.
+The easiest way to install *metallicious* is to use `Anaconda <https://anaconda.org/anaconda/python>`_, as *metallicious* depends on external packages. 
 Create a new conda environment:
 
 .. code-block:: bash
 
-    conda create --name metallicious
+    conda create --name metallicious python=3.9
     conda activate metallicious
+
+[As for Dec 2025, some of the packages are only available for Python]
 
 Install dependencies and the *metallicious*:
 
