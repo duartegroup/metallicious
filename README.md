@@ -19,6 +19,8 @@ results. Therefore, it is recommended to use the tool with caution.
 
 ## Installation:
 ```
+conda create --name metallicious python=3.9
+conda activate metallicious
 conda install rdkit autode psiresp mdanalysis networkx qcelemental==0.25.1 ambertools --channel conda-forge
 pip install metallicious
 ```

@@ -8,8 +8,10 @@ Create a new conda environment:
 
 .. code-block:: bash
 
-    conda create --name metallicious
+    conda create --name metallicious python=3.9
     conda activate metallicious
+
+As for Dec 2025, some of the packages are only available for Python \< 3.10.
 
 Install dependencies and the *metallicious*:
 
